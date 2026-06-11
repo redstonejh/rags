@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArchetypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_archetype.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "night_shift"
+display_name = "Night-Shifter"
+color = Color(0.45, 0.5, 0.6, 1)
+count = 14
+workplace_id = "loc_site"
+stat_bias = {"CON": 1.5}
+schedule = [{"h": 6, "loc": "home", "activity": "sleeping"}, {"h": 14, "loc": "loc_store", "activity": "shopping"}, {"h": 16, "loc": "home", "activity": "relaxing"}, {"h": 21, "loc": "work", "activity": "working"}]
+tags = []

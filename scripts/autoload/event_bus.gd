@@ -16,3 +16,5 @@ signal player_need_changed(need_id: String, value: float)
 signal money_changed(cash_cents: int)
 signal interact_target_changed(prompt: String) # "" when nothing in range
 signal player_interacted(target: Node)
+signal travel_requested(location_id: String)
+signal player_location_changed(location_id: String)

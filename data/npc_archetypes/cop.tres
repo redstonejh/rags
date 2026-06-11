@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArchetypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_archetype.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cop"
+display_name = "Patrol Officer"
+color = Color(0.3, 0.45, 0.85, 1)
+count = 8
+workplace_id = ""
+stat_bias = {"STR": 1.5, "WIS": 1.0}
+schedule = [{"h": 7, "loc": "exterior", "activity": "patrolling"}, {"h": 15, "loc": "loc_diner", "activity": "eating"}, {"h": 16, "loc": "exterior", "activity": "patrolling"}, {"h": 20, "loc": "home", "activity": "relaxing"}, {"h": 23, "loc": "home", "activity": "sleeping"}]
+tags = ["cop"]

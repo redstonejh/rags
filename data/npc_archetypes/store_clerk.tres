@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArchetypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_archetype.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "store_clerk"
+display_name = "Store Clerk"
+color = Color(0.4, 0.7, 0.9, 1)
+count = 8
+workplace_id = "loc_store"
+stat_bias = {"WIS": 1.0, "CHA": 0.5}
+schedule = [{"h": 7, "loc": "work", "activity": "working"}, {"h": 16, "loc": "home", "activity": "relaxing"}, {"h": 23, "loc": "home", "activity": "sleeping"}]
+tags = []

@@ -78,9 +78,9 @@ const BIO_HOOKS := [
 ]
 
 
-static func random_appearance(rng: RandomNumberGenerator, origin: OriginDef, count: int = 3) -> Array:
-	# Weight appearance tags by how well they align with the origin's stat
-	# bias, so the exec tends well_dressed and the tweaker tends street.
+static func random_appearance(rng: RandomNumberGenerator, bias: Dictionary, count: int = 3) -> Array:
+	# Weight appearance tags by how well they align with the given stat bias,
+	# so the exec tends well_dressed and the tweaker tends street.
 	var tags := APPEARANCES.keys()
 	var picked: Array = []
 	for _i in count:
@@ -92,7 +92,7 @@ static func random_appearance(rng: RandomNumberGenerator, origin: OriginDef, cou
 				continue
 			var w := 1.0
 			for stat in APPEARANCES[tag]:
-				w += float(APPEARANCES[tag][stat]) * float(origin.stat_bias.get(stat, 0.0)) * 0.5
+				w += float(APPEARANCES[tag][stat]) * float(bias.get(stat, 0.0)) * 0.5
 			weights.append(w)
 			total += w
 		var roll := rng.randf() * total
@@ -106,14 +106,14 @@ static func random_appearance(rng: RandomNumberGenerator, origin: OriginDef, cou
 
 ## Spend the point-buy pool with weighted-random purchases instead of
 ## uniform randomness — the allocation tells the same story the body does.
-static func allocate_stats(rng: RandomNumberGenerator, origin: OriginDef, appearance: Array) -> Dictionary:
+static func allocate_stats(rng: RandomNumberGenerator, bias: Dictionary, appearance: Array) -> Dictionary:
 	var stats: Dictionary = {}
 	for s in CharacterSheet.STAT_IDS:
 		stats[s] = CharacterSheet.STAT_BASE
 
 	var weights: Dictionary = {}
 	for s in CharacterSheet.STAT_IDS:
-		var w := 1.0 + float(origin.stat_bias.get(s, 0.0))
+		var w := 1.0 + float(bias.get(s, 0.0))
 		for tag in appearance:
 			w += float(APPEARANCES.get(tag, {}).get(s, 0.0))
 		w += rng.randf_range(0.0, 0.8) # a little chaos, people contain multitudes
@@ -221,13 +221,13 @@ static func deal(locks: Dictionary, current: Dictionary) -> Dictionary:
 		var origins: Array = ContentDB.all_origins()
 		origin = origins[rng.randi() % origins.size()]
 
-	var appearance := random_appearance(rng, origin)
+	var appearance := random_appearance(rng, origin.stat_bias)
 
 	var stats: Dictionary
 	if locks.get("stats", false) and current.has("base_stats"):
 		stats = current.base_stats.duplicate()
 	else:
-		stats = allocate_stats(rng, origin, appearance)
+		stats = allocate_stats(rng, origin.stat_bias, appearance)
 
 	var trait_ids: Array
 	if locks.get("traits", false) and current.has("trait_ids"):

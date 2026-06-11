@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArchetypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_archetype.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "diner_waiter"
+display_name = "Waiter"
+color = Color(0.9, 0.7, 0.3, 1)
+count = 7
+workplace_id = "loc_diner"
+stat_bias = {"CHA": 1.5, "DEX": 1.0}
+schedule = [{"h": 6, "loc": "work", "activity": "working"}, {"h": 15, "loc": "exterior", "activity": "wandering"}, {"h": 17, "loc": "home", "activity": "relaxing"}, {"h": 22, "loc": "home", "activity": "sleeping"}]
+tags = []

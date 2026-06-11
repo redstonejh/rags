@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArchetypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_archetype.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "barfly"
+display_name = "Barfly"
+color = Color(0.6, 0.35, 0.5, 1)
+count = 18
+workplace_id = ""
+stat_bias = {"CON": 1.0}
+schedule = [{"h": 4, "loc": "home", "activity": "sleeping"}, {"h": 11, "loc": "exterior", "activity": "wandering"}, {"h": 14, "loc": "loc_bar", "activity": "drinking"}, {"h": 26, "loc": "home", "activity": "sleeping"}]
+tags = ["criminal_leaning"]

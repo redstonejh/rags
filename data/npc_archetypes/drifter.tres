@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArchetypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_archetype.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "drifter"
+display_name = "Drifter"
+color = Color(0.5, 0.6, 0.45, 1)
+count = 14
+workplace_id = ""
+stat_bias = {"DEX": 1.0, "WIS": 1.0}
+schedule = [{"h": 7, "loc": "exterior", "activity": "wandering"}, {"h": 12, "loc": "loc_diner", "activity": "loitering"}, {"h": 14, "loc": "exterior", "activity": "wandering"}, {"h": 22, "loc": "home", "activity": "sleeping"}]
+tags = ["criminal_leaning"]

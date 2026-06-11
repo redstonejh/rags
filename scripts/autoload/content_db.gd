@@ -9,6 +9,7 @@ var origins: Dictionary = {}
 var traits: Dictionary = {}
 var perks: Dictionary = {}
 var items: Dictionary = {}
+var archetypes: Dictionary = {}
 
 ## class -> destination index
 @onready var _index_for_type := {
@@ -16,13 +17,14 @@ var items: Dictionary = {}
 	"TraitDef": traits,
 	"PerkDef": perks,
 	"ItemDef": items,
+	"ArchetypeDef": archetypes,
 }
 
 
 func _ready() -> void:
 	_scan_dir(DATA_ROOT)
-	print("ContentDB: %d origins, %d traits, %d perks, %d items" % [
-		origins.size(), traits.size(), perks.size(), items.size()])
+	print("ContentDB: %d origins, %d traits, %d perks, %d items, %d archetypes" % [
+		origins.size(), traits.size(), perks.size(), items.size(), archetypes.size()])
 
 
 func _scan_dir(path: String) -> void:
