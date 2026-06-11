@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="OriginDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/origin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fired_exec"
+display_name = "The Fired Corporate Exec"
+title = "The Golden Parachute That Didn't Open"
+blurb = "You had the corner office until the merger. Security walked you out with a box.
+
++ Business & Charisma start high. Old Rolodex: three wealthy contacts still take your calls. One VERY nice suit.
+- Champagne Taste: cheap food, cheap beds, and bus rides drain your Mood twice as fast. Industry Blacklist: your old rival is out there, badmouthing you. Car payments due on a car you can't afford.
+
+Comfortable start. Expensive soul."
+difficulty = 2
+starting_cash_cents = 240000
+starting_items = ["nice_suit", "leased_car_keys"]
+starting_location_id = "loc_decent_apartment"
+stat_mods = {
+"CHA": 2,
+"CON": -1,
+"INT": 1,
+"STR": -1,
+"WIS": -1
+}
+stat_bias = {
+"CHA": 3.0,
+"INT": 2.0
+}
+skill_seeds = {
+"business": 5,
+"persuasion": 3
+}
+free_traits = []
+locked_traits = []
+bonus_trait_points = 0
+tags = ["champagne_taste", "blacklist", "rival", "old_rolodex", "car_payments"]

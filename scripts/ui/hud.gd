@@ -2,6 +2,8 @@ extends CanvasLayer
 ## HUD: need bars, clock, time-speed indicator, interaction prompt.
 ## Updated entirely via EventBus signals — never polls game state.
 
+@onready var name_label: Label = %NameLabel
+@onready var cash_label: Label = %CashLabel
 @onready var clock_label: Label = %ClockLabel
 @onready var speed_label: Label = %SpeedLabel
 @onready var hunger_bar: ProgressBar = %HungerBar
@@ -19,11 +21,19 @@ func _ready() -> void:
 	EventBus.minute_passed.connect(func(_t: int) -> void: _update_clock())
 	EventBus.time_scale_changed.connect(_on_time_scale_changed)
 	EventBus.player_need_changed.connect(_on_need_changed)
+	EventBus.money_changed.connect(_on_money_changed)
 	EventBus.interact_target_changed.connect(func(p: String) -> void: prompt_label.text = p)
 
 	_update_clock()
 	_on_time_scale_changed(GameClock.time_scale)
 	prompt_label.text = ""
+	if WorldState.player_sheet:
+		name_label.text = WorldState.player_sheet.char_name
+		_on_money_changed(WorldState.player_sheet.cash_cents)
+
+
+func _on_money_changed(cash_cents: int) -> void:
+	cash_label.text = "$%.2f" % (cash_cents / 100.0)
 
 
 func _update_clock() -> void:

@@ -7,3 +7,8 @@ extends Node2D
 
 func _ready() -> void:
 	player.global_position = town.player_spawn
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		GameFlow.to_main_menu()

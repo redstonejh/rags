@@ -13,5 +13,6 @@ signal time_scale_changed(scale: float)
 
 # -- Player --
 signal player_need_changed(need_id: String, value: float)
+signal money_changed(cash_cents: int)
 signal interact_target_changed(prompt: String) # "" when nothing in range
 signal player_interacted(target: Node)

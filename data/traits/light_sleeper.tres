@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "light_sleeper"
+display_name = "Light Sleeper"
+description = "You wake at every sound. Sleep restores a little less; nobody robs you twice."
+point_cost = -1
+need_decay_multipliers = {"energy": 1.1}
+stat_mods = {}
+tags = ["light_sleeper"]
+conflicts_with = []
+coherence_tags = ["street", "haggard"]

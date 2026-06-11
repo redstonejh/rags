@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sweet_tooth"
+display_name = "Sweet Tooth"
+description = "Junk-food cravings tax your wallet, your waistline, and your hunger bar."
+point_cost = -2
+need_decay_multipliers = {"hunger": 1.15}
+stat_mods = {}
+tags = ["sweet_tooth"]
+conflicts_with = []
+coherence_tags = ["heavyset"]

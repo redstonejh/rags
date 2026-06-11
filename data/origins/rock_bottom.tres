@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="OriginDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/origin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rock_bottom"
+display_name = "The Tweaker"
+title = "Rock Bottom"
+blurb = "You live behind the gas station. You know which dumpsters are good. You are, in a very specific way, free.
+
++ Street Eyes: pickpocketing, stealth, and scavenging start high; you see what others walk past. Nothing Left to Lose: crime stress halved. The street community shares food and tips.
+- The Need: a full addiction with a craving meter, and it is not patient. No Papers: no legal jobs, no bank, no lease until you rebuild your ID. Cops search you on sight in nice neighborhoods.
+
+The hardest life in the game. Getting clean is the greatest run RAGS has."
+difficulty = 5
+starting_cash_cents = 700
+starting_items = ["shopping_cart"]
+starting_location_id = "loc_gas_station_rear"
+stat_mods = {
+"CHA": -1,
+"CON": -2,
+"DEX": 1,
+"WIS": 1
+}
+stat_bias = {
+"DEX": 2.0,
+"WIS": 1.5
+}
+skill_seeds = {
+"scavenging": 4,
+"stealth": 4,
+"streetwise": 6
+}
+free_traits = ["light_sleeper"]
+locked_traits = ["iron_will"]
+bonus_trait_points = 0
+tags = ["addiction_meth", "no_papers", "street_family", "nothing_to_lose"]

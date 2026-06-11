@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "recognizable_laugh"
+display_name = "Recognizable Laugh"
+description = "Anyone who has ever heard you laugh can identify you by it. Even masked."
+point_cost = -2
+need_decay_multipliers = {}
+stat_mods = {}
+tags = ["recognizable_laugh"]
+conflicts_with = ["forgettable_face"]
+coherence_tags = ["loud"]

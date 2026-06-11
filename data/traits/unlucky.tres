@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "unlucky"
+display_name = "Unlucky"
+description = "A small but real penalty on every random roll in the game. The universe has a grudge."
+point_cost = -6
+need_decay_multipliers = {}
+stat_mods = {}
+tags = ["unlucky"]
+conflicts_with = []
+coherence_tags = ["haggard"]

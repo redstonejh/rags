@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "forgettable_face"
+display_name = "Forgettable Face"
+description = "Witnesses are 50% less likely to identify you. Bartenders forget your order."
+point_cost = 5
+need_decay_multipliers = {}
+stat_mods = {}
+tags = ["forgettable_face"]
+conflicts_with = ["recognizable_laugh"]
+coherence_tags = ["plain"]

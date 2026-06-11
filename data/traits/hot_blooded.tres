@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hot_blooded"
+display_name = "Hot-Blooded"
+description = "Romance options bloom everywhere you go. So do jealousy events. Constantly."
+point_cost = -5
+need_decay_multipliers = {}
+stat_mods = {"CHA": 1}
+tags = ["hot_blooded"]
+conflicts_with = []
+coherence_tags = ["attractive", "loud"]

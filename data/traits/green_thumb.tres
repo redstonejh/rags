@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "green_thumb"
+display_name = "Green Thumb"
+description = "Grow food at home. Free calories, eventually."
+point_cost = 3
+need_decay_multipliers = {}
+stat_mods = {}
+tags = ["green_thumb"]
+conflicts_with = []
+coherence_tags = ["rugged", "homebody"]

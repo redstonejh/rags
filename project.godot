@@ -8,13 +8,17 @@ config_version=5
 
 config/name="RAGS"
 config/description="A dark-comedy life sim about starting from nothing. Everyone starts in rags; riches optional."
-run/main_scene="res://scenes/main/Main.tscn"
+run/main_scene="res://scenes/ui/MainMenu.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 
 [autoload]
 
 EventBus="*res://scripts/autoload/event_bus.gd"
 GameClock="*res://scripts/autoload/game_clock.gd"
+ContentDB="*res://scripts/autoload/content_db.gd"
+WorldState="*res://scripts/autoload/world_state.gd"
+SaveManager="*res://scripts/autoload/save_manager.gd"
+GameFlow="*res://scripts/autoload/game_flow.gd"
 
 [display]
 

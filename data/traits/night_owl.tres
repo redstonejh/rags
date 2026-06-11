@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "night_owl"
+display_name = "Night Owl"
+description = "No energy penalty between midnight and 4 AM. The town is quieter then. Fewer witnesses, too."
+point_cost = 2
+need_decay_multipliers = {}
+stat_mods = {}
+tags = ["night_owl"]
+conflicts_with = []
+coherence_tags = ["street", "artsy"]

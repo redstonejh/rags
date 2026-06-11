@@ -7,7 +7,8 @@ const WALK_SPEED := 150.0
 const LOW_NEED_THRESHOLD := 18.0
 const LOW_NEED_SPEED_MULT := 0.55
 
-var needs := Needs.new()
+## Owned by the CharacterSheet in WorldState — the player node is a view.
+var needs: Needs
 
 var _interact_target: Interactable = null
 
@@ -15,6 +16,8 @@ var _interact_target: Interactable = null
 
 
 func _ready() -> void:
+	WorldState.ensure_player_sheet()
+	needs = WorldState.player_sheet.needs
 	EventBus.minute_passed.connect(_on_minute_passed)
 	needs.changed.connect(_on_need_changed)
 	# Deferred so the HUD (added after the player) is connected before the

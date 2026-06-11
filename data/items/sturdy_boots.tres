@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sturdy_boots"
+display_name = "Sturdy Boots"
+description = "Good boots. The one thing nobody back home would let you leave without."
+value_cents = 4000
+need_effects = {}
+tags = ["clothing"]

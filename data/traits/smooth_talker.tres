@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TraitDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trait_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "smooth_talker"
+display_name = "Smooth Talker"
+description = "Stronger persuasion options in dialogue, and they show better odds."
+point_cost = 4
+need_decay_multipliers = {}
+stat_mods = {"CHA": 1}
+tags = ["smooth_talker"]
+conflicts_with = []
+coherence_tags = ["well_dressed", "friendly"]

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="OriginDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/origin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "off_the_bus"
+display_name = "The Small-Town Transplant"
+title = "Off the Bus"
+blurb = "Population 312 to population 80,000. You have a duffel bag, sturdy boots, and a cousin's address that turned out to be fake.
+
++ Clean Slate: nobody's chasing you. Honest face. Hard worker (+10% job skill XP).
+- You know NOBODY. Naive to city scams. No skills above baseline.
+
+The tutorial life: lowest highs, highest floor."
+difficulty = 1
+starting_cash_cents = 40000
+starting_items = ["duffel_bag", "sturdy_boots"]
+starting_location_id = "loc_bus_stop"
+stat_mods = {}
+stat_bias = {
+"CON": 1.5,
+"WIS": 1.5
+}
+skill_seeds = {}
+free_traits = []
+locked_traits = []
+bonus_trait_points = 0
+tags = ["clean_slate", "honest_face", "hardworking", "naive"]
