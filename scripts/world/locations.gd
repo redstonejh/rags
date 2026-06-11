@@ -14,11 +14,11 @@ static var defs := {
 	"loc_diner": {"display_name": "Mel's Diner", "kind": "interior"},
 	"loc_store": {"display_name": "QuikStop Corner Store", "kind": "interior"},
 	"loc_bricks": {"display_name": "The Bricks (lobby)", "kind": "interior"},
-	"loc_offices": {"display_name": "Vantage Plaza offices", "kind": "abstract"},
+	"loc_offices": {"display_name": "Vantage Plaza", "kind": "interior"},
 	"loc_rowhouse_a": {"display_name": "Rowhouses (east)", "kind": "abstract"},
 	"loc_rowhouse_b": {"display_name": "Rowhouses (west)", "kind": "abstract"},
-	"loc_bar": {"display_name": "The Rusty Anchor", "kind": "abstract"},
-	"loc_site": {"display_name": "the construction site", "kind": "abstract"},
+	"loc_bar": {"display_name": "The Rusty Anchor", "kind": "interior"},
+	"loc_site": {"display_name": "Site 9", "kind": "interior"},
 }
 
 ## Filled by town.gd at build time: id -> Vector2 (world position of the door).

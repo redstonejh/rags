@@ -57,6 +57,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			EventBus.time_scale_changed.emit(time_scale)
 
 
+## Fast-forward time synchronously (sleep, work shifts, queues). Fires every
+## minute signal along the way so the whole simulation stays consistent —
+## NPCs keep their schedules, needs decay, bills come due mid-skip.
+func skip_minutes(minutes: int) -> void:
+	for _i in maxi(minutes, 0):
+		_advance_minute()
+
+
 ## "Day 3, 7:05 AM" — used by the HUD and (later) save metadata.
 func time_string() -> String:
 	var h12 := hour % 12

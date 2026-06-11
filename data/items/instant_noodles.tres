@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "instant_noodles"
+display_name = "Instant Noodles"
+description = "Chicken-adjacent flavor. The foundation of every empire."
+value_cents = 150
+need_effects = {"hunger": 22.0}
+tags = ["consumable", "cheap", "junk"]

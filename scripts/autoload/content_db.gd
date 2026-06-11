@@ -10,6 +10,7 @@ var traits: Dictionary = {}
 var perks: Dictionary = {}
 var items: Dictionary = {}
 var archetypes: Dictionary = {}
+var jobs: Dictionary = {}
 
 ## class -> destination index
 @onready var _index_for_type := {
@@ -18,6 +19,7 @@ var archetypes: Dictionary = {}
 	"PerkDef": perks,
 	"ItemDef": items,
 	"ArchetypeDef": archetypes,
+	"JobDef": jobs,
 }
 
 
@@ -70,6 +72,17 @@ func get_perk(id: String) -> PerkDef:
 
 func get_item(id: String) -> ItemDef:
 	return items.get(id)
+
+
+func get_job(id: String) -> JobDef:
+	return jobs.get(id)
+
+
+func all_jobs() -> Array:
+	var list := jobs.values()
+	list.sort_custom(func(a: JobDef, b: JobDef) -> bool:
+		return a.rung < b.rung if a.ladder_id == b.ladder_id else a.ladder_id < b.ladder_id)
+	return list
 
 
 func all_origins() -> Array:

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="JobDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/job_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "line_cook"
+display_name = "Line Cook"
+ladder_id = "food"
+rung = 2
+workplace_id = "loc_diner"
+wage_cents_per_shift = 8400
+shift_start_hour = 11
+shift_len_hours = 6
+work_days = [0, 1, 2, 3, 4]
+requires_id = false
+skill_reqs = {"cooking": 2}
+min_shifts_for_promotion = 20
+next_job_id = ""
+trains_skill = "cooking"
+skill_xp_per_shift = 4.0
+blurb = "Promoted to the flat-top. The burns are a salary negotiation."

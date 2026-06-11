@@ -1,0 +1,61 @@
+class_name Amenity
+extends Interactable
+## Time-consuming need stations: beds, showers, TVs, benches.
+## kind drives behavior; quality scales the payoff.
+
+@export var kind: String = "shower" # shower | tv | bed | bench
+@export var quality: float = 1.0
+
+
+func _init() -> void:
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(30, 30)
+	shape.shape = rect
+	add_child(shape)
+
+
+func configure(p_kind: String, p_quality: float, p_name: String, p_verb: String, color: Color) -> void:
+	kind = p_kind
+	quality = p_quality
+	display_name = p_name
+	verb = p_verb
+	var visual := Polygon2D.new()
+	visual.polygon = PackedVector2Array([
+		Vector2(-13, -10), Vector2(13, -10), Vector2(13, 12), Vector2(-13, 12)])
+	visual.color = color
+	add_child(visual)
+
+
+func interact(actor: Node) -> void:
+	if not ("needs" in actor and actor.needs is Needs):
+		return
+	var sheet: CharacterSheet = WorldState.player_sheet
+	match kind:
+		"shower":
+			GameClock.skip_minutes(20)
+			sheet.needs.change("hygiene", 70.0 * quality)
+		"tv":
+			GameClock.skip_minutes(45)
+			sheet.needs.change("fun", 30.0 * quality)
+		"bed":
+			if sheet.housing_id == "":
+				EventBus.toast.emit("You don't live here. The bed knows.")
+				return
+			_sleep(sheet, 12.0 * quality)
+		"bench":
+			_sleep(sheet, 6.0 * quality)
+			sheet.needs.change("hygiene", -15.0)
+	EventBus.player_interacted.emit(self)
+
+
+## Sleep until 7 AM (or at least 1 hour if it's already morning).
+func _sleep(sheet: CharacterSheet, restore_per_hour: float) -> void:
+	var now := GameClock.total_minutes
+	var to_seven := (7 * 60 - (now % GameClock.MINUTES_PER_DAY) + GameClock.MINUTES_PER_DAY) % GameClock.MINUTES_PER_DAY
+	if to_seven < 60:
+		to_seven = 60
+	var hours := to_seven / 60.0
+	GameClock.skip_minutes(to_seven)
+	sheet.needs.change("energy", restore_per_hour * hours)
+	EventBus.toast.emit("You wake up. It is, regrettably, tomorrow.")

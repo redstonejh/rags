@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="JobDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/job_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "dishwasher"
+display_name = "Dishwasher"
+ladder_id = "food"
+rung = 1
+workplace_id = "loc_diner"
+wage_cents_per_shift = 5400
+shift_start_hour = 16
+shift_len_hours = 6
+work_days = [0, 1, 2, 3, 4]
+requires_id = false
+skill_reqs = {}
+min_shifts_for_promotion = 10
+next_job_id = "line_cook"
+trains_skill = "cooking"
+skill_xp_per_shift = 4.0
+blurb = "Mel pays cash, asks nothing. The grease becomes part of you."

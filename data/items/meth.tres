@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "meth"
+display_name = "Crystal"
+description = "The Need, answered. For a while. At interest."
+value_cents = 2000
+need_effects = {"craving": 100.0, "energy": 30.0}
+tags = ["consumable", "drug", "illegal"]

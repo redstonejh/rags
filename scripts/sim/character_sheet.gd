@@ -24,8 +24,20 @@ var xp: int = 0
 var perk_ids: Array = []
 var skills: Dictionary = {}
 
-var cash_cents: int = 0
+var cash_cents: int = 0          # clean cash in pocket
+var dirty_cents: int = 0         # crime money — banks and landlords won't touch it
+var bank_cents: int = 0
+var mickey_debt_cents: int = 0   # the loan shark's ledger
 var needs: Needs = Needs.new()
+
+var inventory: Array = []        # item ids (stackable duplicates allowed)
+var job_id: String = ""
+var shifts_worked: int = 0
+var housing_id: String = ""      # "" = homeless
+var rent_strikes: int = 0
+var weight_kg: float = 75.0
+var lives_lived: int = 1         # which life in this world this is
+var alive: bool = true
 
 
 func _init() -> void:
@@ -84,7 +96,62 @@ func rebuild_needs_multipliers() -> void:
 		if t:
 			for need_id in t.need_decay_multipliers:
 				mults[need_id] = float(mults.get(need_id, 1.0)) * float(t.need_decay_multipliers[need_id])
+	# Origin hooks: tags activate generic mechanics — never `if origin == x`.
+	if has_tag("champagne_taste"):
+		# Needs calibrated to a life you can no longer afford.
+		mults["fun"] = float(mults.get("fun", 1.0)) * 1.6
+		mults["social"] = float(mults.get("social", 1.0)) * 1.3
+	if has_tag("addiction_meth"):
+		needs.add_optional("craving")
 	needs.decay_multipliers = mults
+	# Papers: most people have ID; no_papers origins must earn one (Life Path).
+	if not flags.has("has_id"):
+		flags["has_id"] = not has_tag("no_papers")
+
+
+var flags: Dictionary = {}
+
+
+## Mood is the master stat: the average of needs, dragged by withdrawal,
+## debt stress, and homelessness. 0-100.
+func mood() -> float:
+	var total := 0.0
+	for id in needs.values:
+		total += needs.values[id]
+	var m := total / maxf(needs.values.size(), 1.0)
+	if needs.values.has("craving") and needs.values["craving"] < 30.0:
+		m -= 20.0 # withdrawal
+	if mickey_debt_cents > 0:
+		m -= 5.0
+	if housing_id == "":
+		m -= 10.0
+	return clampf(m, 0.0, 100.0)
+
+
+func job() -> JobDef:
+	return ContentDB.get_job(job_id) if job_id != "" else null
+
+
+func count_item(item_id: String) -> int:
+	return inventory.count(item_id)
+
+
+func add_skill_xp(skill: String, xp: float) -> void:
+	var fast := 1.3 if has_tag("fast_learner") else 1.0
+	var hard := 1.1 if has_tag("hardworking") else 1.0
+	skills[skill] = float(skills.get(skill, 0.0)) + xp * fast * hard
+
+
+func skill_level(skill: String) -> int:
+	# Levels at 10, 30, 60, 100, 150... xp (triangular-ish curve).
+	var xp := float(skills.get(skill, 0.0))
+	var level := 0
+	var threshold := 10.0
+	while xp >= threshold and level < 10:
+		xp -= threshold
+		level += 1
+		threshold += 10.0
+	return level
 
 
 func add_cash(delta_cents: int) -> void:
@@ -116,6 +183,18 @@ func to_dict() -> Dictionary:
 		"perk_ids": perk_ids.duplicate(),
 		"skills": skills.duplicate(),
 		"cash_cents": cash_cents,
+		"dirty_cents": dirty_cents,
+		"bank_cents": bank_cents,
+		"mickey_debt_cents": mickey_debt_cents,
+		"inventory": inventory.duplicate(),
+		"job_id": job_id,
+		"shifts_worked": shifts_worked,
+		"housing_id": housing_id,
+		"rent_strikes": rent_strikes,
+		"weight_kg": weight_kg,
+		"lives_lived": lives_lived,
+		"alive": alive,
+		"flags": flags.duplicate(true),
 		"needs": needs.to_dict(),
 	}
 
@@ -135,5 +214,17 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 	sheet.perk_ids = d.get("perk_ids", []).duplicate()
 	sheet.skills = d.get("skills", {}).duplicate()
 	sheet.cash_cents = int(d.get("cash_cents", 0))
+	sheet.dirty_cents = int(d.get("dirty_cents", 0))
+	sheet.bank_cents = int(d.get("bank_cents", 0))
+	sheet.mickey_debt_cents = int(d.get("mickey_debt_cents", 0))
+	sheet.inventory = d.get("inventory", []).duplicate()
+	sheet.job_id = d.get("job_id", "")
+	sheet.shifts_worked = int(d.get("shifts_worked", 0))
+	sheet.housing_id = d.get("housing_id", "")
+	sheet.rent_strikes = int(d.get("rent_strikes", 0))
+	sheet.weight_kg = float(d.get("weight_kg", 75.0))
+	sheet.lives_lived = int(d.get("lives_lived", 1))
+	sheet.alive = d.get("alive", true)
+	sheet.flags = d.get("flags", {}).duplicate(true)
 	sheet.needs = Needs.from_dict(d.get("needs", {}))
 	return sheet

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "deli_sandwich"
+display_name = "Deli Sandwich"
+description = "Real ingredients. You can taste the tax bracket."
+value_cents = 900
+need_effects = {"hunger": 55.0, "fun": 5.0}
+tags = ["consumable"]

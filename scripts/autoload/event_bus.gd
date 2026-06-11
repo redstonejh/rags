@@ -18,3 +18,12 @@ signal interact_target_changed(prompt: String) # "" when nothing in range
 signal player_interacted(target: Node)
 signal travel_requested(location_id: String)
 signal player_location_changed(location_id: String)
+
+# -- Economy & life --
+signal toast(message: String)                       # one-line narrator text
+signal shift_started(job: JobDef, late_minutes: int)
+signal shift_finished(job: JobDef, late_minutes: int)
+signal shop_opened(stock: Array)
+signal path_updated                                 # life-path step changed
+signal player_died(cause: String)
+signal player_job_changed(job_id: String)

@@ -13,6 +13,15 @@ signal changed(need_id: String, value: float)
 const BASE_DECAY := {
 	"hunger": 0.12,
 	"energy": 0.085,
+	"hygiene": 0.055,
+	"fun": 0.07,
+	"social": 0.05,
+}
+
+## Extra need bars only some characters have (origin tags add them),
+## e.g. "craving" for addiction origins. id -> decay per minute.
+const OPTIONAL_DECAY := {
+	"craving": 0.07,
 }
 
 var values: Dictionary = {}
@@ -24,10 +33,16 @@ func _init() -> void:
 		values[id] = 100.0
 
 
+func add_optional(need_id: String) -> void:
+	if not values.has(need_id) and OPTIONAL_DECAY.has(need_id):
+		values[need_id] = 100.0
+
+
 ## Called once per game-minute tick by whoever owns this bundle.
 func apply_minute() -> void:
-	for id in BASE_DECAY:
-		var rate: float = BASE_DECAY[id] * float(decay_multipliers.get(id, 1.0))
+	for id in values:
+		var base: float = BASE_DECAY.get(id, OPTIONAL_DECAY.get(id, 0.0))
+		var rate: float = base * float(decay_multipliers.get(id, 1.0))
 		change(id, -rate)
 
 

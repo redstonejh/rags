@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="JobDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/job_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "day_laborer"
+display_name = "Day Laborer"
+ladder_id = "labor"
+rung = 1
+workplace_id = "loc_site"
+wage_cents_per_shift = 6000
+shift_start_hour = 6
+shift_len_hours = 6
+work_days = [0, 1, 2, 3, 4, 5]
+requires_id = false
+skill_reqs = {}
+min_shifts_for_promotion = 10
+next_job_id = "warehouse_hand"
+trains_skill = "fitness"
+skill_xp_per_shift = 4.0
+blurb = "Be at Site 9 by 6 AM. Cash at sundown. No names, no forms."
