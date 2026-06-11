@@ -1,0 +1,14 @@
+# Godot 4 generated/cache files
+.godot/
+*.translation
+
+# Imported asset cache
+.import/
+
+# Mono/C# (unused, but harmless)
+.mono/
+data_*/
+
+# OS junk
+Thumbs.db
+desktop.ini
