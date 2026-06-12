@@ -25,7 +25,6 @@ var _embody_timer := 0.0
 
 
 func _ready() -> void:
-	_rng.randomize()
 	EventBus.minute_passed.connect(_on_minute_passed)
 	EventBus.player_location_changed.connect(func(_loc: String) -> void: _despawn_all())
 
@@ -84,11 +83,13 @@ func _start_travel(npc: NPCRecord, dest_id: String, now: int) -> void:
 	var to_pos: Vector2
 	if dest_id == "exterior":
 		# Wandering/patrolling: pick a street anchor to stand around.
+		_load_rng_state()
 		var host := spawn_host
 		if host != null and host.has_method("random_exterior_point"):
 			to_pos = host.random_exterior_point(_rng)
 		else:
 			to_pos = Locations.door_pos("exterior") + Vector2(_rng.randf_range(-300, 300), _rng.randf_range(-200, 200))
+		_store_rng_state()
 		npc.flags["anchor"] = [to_pos.x, to_pos.y]
 	else:
 		to_pos = Locations.door_pos(dest_id)
@@ -178,3 +179,14 @@ func _despawn(npc: NPCRecord) -> void:
 func _despawn_all() -> void:
 	for npc in WorldState.npcs.values():
 		_despawn(npc)
+
+
+func _load_rng_state() -> void:
+	if WorldState.sim_rng_state == 0:
+		WorldState.reset_sim_rng()
+	_rng.seed = WorldState.sim_rng_seed
+	_rng.state = WorldState.sim_rng_state
+
+
+func _store_rng_state() -> void:
+	WorldState.sim_rng_state = _rng.state

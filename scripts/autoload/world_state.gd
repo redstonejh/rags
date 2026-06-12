@@ -9,6 +9,8 @@ extends Node
 var player_sheet: CharacterSheet = null
 var player_location_id: String = "exterior"
 var world_seed: int = 0
+var sim_rng_seed: int = 0
+var sim_rng_state: int = 0
 var npcs: Dictionary = {} # id -> NPCRecord
 ## True once a town has been generated; survives the player's death.
 var world_exists: bool = false
@@ -84,6 +86,7 @@ func new_world(sheet: CharacterSheet) -> void:
 	_set_origin_start_marker(sheet)
 	player_location_id = "exterior"
 	world_seed = randi()
+	reset_sim_rng()
 	npcs = WorldGen.generate(world_seed)
 	crime_cases = {}
 	_case_serial = 0
@@ -125,6 +128,13 @@ func new_game(sheet: CharacterSheet) -> void:
 	new_world(sheet)
 
 
+func reset_sim_rng() -> void:
+	sim_rng_seed = int(world_seed) + 1000003
+	var rng := RandomNumberGenerator.new()
+	rng.seed = sim_rng_seed
+	sim_rng_state = rng.state
+
+
 ## Lets Main.tscn run standalone from the editor (F5 on the scene) without
 ## going through the menu — creates a debug drifter in a generated town.
 func ensure_player_sheet() -> void:
@@ -148,6 +158,8 @@ func to_dict() -> Dictionary:
 		"player": player_sheet.to_dict() if player_sheet else {},
 		"player_location_id": player_location_id,
 		"world_seed": world_seed,
+		"sim_rng_seed": str(sim_rng_seed),
+		"sim_rng_state": str(sim_rng_state),
 		"world_exists": world_exists,
 		"npcs": npc_dicts,
 		"crime_cases": case_dicts,
@@ -165,6 +177,13 @@ func load_dict(d: Dictionary) -> void:
 		player_sheet.rebuild_needs_multipliers()
 	player_location_id = d.get("player_location_id", "exterior")
 	world_seed = int(d.get("world_seed", 0))
+	sim_rng_seed = _saved_int(d.get("sim_rng_seed", int(world_seed) + 1000003),
+			int(world_seed) + 1000003)
+	sim_rng_state = _saved_int(d.get("sim_rng_state", 0), 0)
+	if sim_rng_state == 0:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = sim_rng_seed
+		sim_rng_state = rng.state
 	npcs.clear()
 	var npc_dicts: Dictionary = d.get("npcs", {})
 	for id in npc_dicts:
@@ -178,3 +197,15 @@ func load_dict(d: Dictionary) -> void:
 	obituaries = d.get("obituaries", []).duplicate()
 	gazette = d.get("gazette", []).duplicate(true)
 	town_fear = float(d.get("town_fear", 0.0))
+
+
+func _saved_int(value, fallback: int) -> int:
+	match typeof(value):
+		TYPE_INT:
+			return value
+		TYPE_FLOAT:
+			return int(value)
+		TYPE_STRING:
+			return int(value)
+		_:
+			return fallback

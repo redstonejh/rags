@@ -19,6 +19,7 @@ func _ready() -> void:
 	_test_world_gen()
 	_test_schedule_day()
 	_test_save_roundtrip()
+	_test_sim_rng_save_roundtrip()
 	_test_embodiment_sets()
 	SaveManager.set_in_game(false)
 	_save_guard.restore()
@@ -172,6 +173,42 @@ func _test_save_roundtrip() -> void:
 	_check(p != null and p.current_location_id == probe_loc and p.stats == probe_stats,
 			"spot-checked NPC record identical after round trip")
 	SaveManager.set_in_game(false)
+
+
+func _test_sim_rng_save_roundtrip() -> void:
+	print("[Save round trip with sim RNG]")
+	_new_world()
+	SimEngine.spawn_host = _town
+	GameClock.total_minutes = GameClock.MINUTES_PER_DAY + 9 * 60
+	var npc: NPCRecord = WorldState.npcs.values()[0]
+	npc.current_location_id = "loc_diner"
+	npc.traveling = false
+	var first_expected := _next_exterior_anchor(WorldState.sim_rng_state)
+	SimEngine.call("_start_travel", npc, "exterior", GameClock.total_minutes)
+	_check(npc.travel_to_pos.distance_to(first_expected) < 0.01,
+			"first exterior travel uses saved sim RNG state")
+	var state_after_first := WorldState.sim_rng_state
+	var expected_after_reload := _next_exterior_anchor(state_after_first)
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with sim RNG state")
+	WorldState.npcs.clear()
+	WorldState.player_sheet = null
+	WorldState.sim_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores sim RNG state")
+	var loaded_npc: NPCRecord = WorldState.npcs.values()[1]
+	loaded_npc.current_location_id = "loc_diner"
+	loaded_npc.traveling = false
+	SimEngine.call("_start_travel", loaded_npc, "exterior", GameClock.total_minutes)
+	_check(loaded_npc.travel_to_pos.distance_to(expected_after_reload) < 0.01,
+			"loaded sim RNG continues the exterior travel sequence")
+	SaveManager.set_in_game(false)
+
+
+func _next_exterior_anchor(state: int) -> Vector2:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = WorldState.sim_rng_seed
+	rng.state = state
+	return _town.random_exterior_point(rng)
 
 
 func _test_embodiment_sets() -> void:
