@@ -152,6 +152,8 @@ func _enter_diner() -> void:
 	_check(_current_world_named_count("DecorSprite") >= 8,
 			"diner decorative sprites spawned")
 	_move_player_to_current_world_cell(Vector2i(7, 4))
+	_clear_hud_toasts()
+	_clear_hud_prompt()
 	await get_tree().physics_frame
 
 
