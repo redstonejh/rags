@@ -40,7 +40,7 @@ func _ready() -> void:
 
 
 func _setup_world() -> void:
-	DirAccess.make_dir_recursive_absolute(OUT_DIR)
+	_prepare_output_dir()
 	var sheet := CharacterSheet.new()
 	sheet.char_name = "Harness Walker"
 	sheet.origin_id = "off_the_bus"
@@ -50,6 +50,23 @@ func _setup_world() -> void:
 	_seed_people_app_state()
 	GameClock.clear_pause_locks()
 	GameClock.set_manual_paused(false)
+
+
+func _prepare_output_dir() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
+	var dir := DirAccess.open(OUT_DIR)
+	if dir == null:
+		_check(false, "playtest output directory opens")
+		return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.get_extension().to_lower() == "png":
+			var err := dir.remove(file_name)
+			if err != OK:
+				_check(false, "removed stale playtest screenshot %s" % file_name)
+		file_name = dir.get_next()
+	dir.list_dir_end()
 
 
 func _seed_people_app_state() -> void:
@@ -530,7 +547,28 @@ func _check(ok: bool, what: String) -> void:
 
 
 func _report() -> void:
+	_verify_output_dir_matches_run()
 	print("[Playtest screenshots]")
 	for shot in _shots:
 		print("  %s" % shot)
 	print("Playtest driver: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
+
+
+func _verify_output_dir_matches_run() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var expected := {}
+	for shot in _shots:
+		expected[str(shot).get_file()] = true
+	var dir := DirAccess.open(OUT_DIR)
+	if dir == null:
+		_check(false, "playtest output directory opens for review")
+		return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.get_extension().to_lower() == "png" \
+				and not expected.has(file_name):
+			_check(false, "playtest output has no stale screenshot %s" % file_name)
+		file_name = dir.get_next()
+	dir.list_dir_end()
