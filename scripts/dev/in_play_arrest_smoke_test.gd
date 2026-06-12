@@ -84,6 +84,8 @@ func _test_embodied_cop_starts_arrest() -> void:
 	await get_tree().process_frame
 	_check(GameClock.day == day_before + 1, "comply serves the warrant sentence")
 	_check(CrimeSystem.wanted_stars() == 0, "serving clears wanted stars")
+	_check(_descendant_text_contains(confrontation, "Jail days:"),
+			"resolved arrest shows jail day summary")
 	var leave := _find_button_containing(confrontation, "Walk away")
 	_check(leave != null, "resolved arrest offers a way back to play")
 	if leave != null:

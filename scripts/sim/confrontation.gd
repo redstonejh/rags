@@ -135,7 +135,7 @@ static func _resolve_arrest(choice: String, sheet: CharacterSheet,
 	match choice:
 		"comply":
 			var days := CrimeSystem.serve_sentence()
-			return {"text": "You serve %d days. The yard weights were, honestly, not bad." % days,
+			return {"text": _sentence_text(sheet, "You serve %d days." % days),
 					"done": true, "follow_up": {}, "success": true}
 		"bail":
 			if CrimeSystem.pay_bail():
@@ -151,7 +151,8 @@ static func _resolve_arrest(choice: String, sheet: CharacterSheet,
 						"done": true, "follow_up": {}, "success": true}
 			_bump_warrant_evidence(10.0)
 			var days := CrimeSystem.serve_sentence()
-			return {"text": "Tackled in twenty meters. Resisting added paperwork. %d days." % days,
+			return {"text": _sentence_text(sheet,
+					"Tackled in twenty meters. Resisting added paperwork. %d days." % days),
 					"done": true, "follow_up": {}, "success": false}
 		"bribe":
 			var price := _bribe_cents(sheet)
@@ -165,9 +166,17 @@ static func _resolve_arrest(choice: String, sheet: CharacterSheet,
 						"done": true, "follow_up": {}, "success": true}
 			CrimeSystem.commit("bribery", WorldState.player_location_id, cop)
 			var days := CrimeSystem.serve_sentence()
-			return {"text": "Wrong cop. The bribe becomes a charge, the charge becomes %d days." % days,
+			return {"text": _sentence_text(sheet,
+					"Wrong cop. The bribe becomes a charge, the charge becomes %d days." % days),
 					"done": true, "follow_up": {}, "success": false}
 	return {"text": "...", "done": true, "follow_up": {}, "success": false}
+
+
+static func _sentence_text(sheet: CharacterSheet, lead: String) -> String:
+	var event_text := CrimeSystem.jail_event_summary(sheet.flags.get("last_jail_events", []))
+	if event_text == "":
+		return lead
+	return "%s Jail days: %s." % [lead, event_text]
 
 
 static func _bump_warrant_evidence(amount: float) -> void:

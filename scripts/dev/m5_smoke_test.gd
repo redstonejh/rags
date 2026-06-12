@@ -365,6 +365,8 @@ func _test_arrest_paths() -> void:
 	_check(result.success and GameClock.day == day_before + 1, "served 1 day for shoplifting")
 	_check(CrimeSystem.wanted_stars() == 0, "warrants cleared by serving")
 	_check(float(sheet.skills.get("fitness", 0.0)) > 0.0, "yard weights: fitness XP in jail")
+	_check(str(result.get("text", "")).contains("Jail days:"),
+			"arrest result summarizes jail days")
 	var jail_events: Array = sheet.flags.get("last_jail_events", [])
 	_check(jail_events.size() == 1, "serving records a daily jail event")
 	if not jail_events.is_empty():

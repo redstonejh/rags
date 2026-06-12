@@ -362,7 +362,7 @@ static func serve_sentence() -> int:
 	sheet.flags["jail_days_served_total"] = int(sheet.flags.get("jail_days_served_total", 0)) + days
 	sheet.flags.erase("jailed")
 	_close_warrants()
-	var event_text := _jail_event_summary(events)
+	var event_text := jail_event_summary(events)
 	var detail := " Jail days: %s." % event_text if event_text != "" else ""
 	EventBus.toast.emit("%d day%s gone.%s The gate opens onto the same town, minus some rent money." % [
 			days, "" if days == 1 else "s", detail])
@@ -393,7 +393,7 @@ static func _apply_jail_day_event(sheet: CharacterSheet, day_number: int) -> Dic
 	}
 
 
-static func _jail_event_summary(events: Array) -> String:
+static func jail_event_summary(events: Array) -> String:
 	if events.is_empty():
 		return ""
 	var labels: Array = []
