@@ -4,14 +4,18 @@ extends Node
 ##   godot --headless --path <repo> res://scenes/dev/UIStackSmokeTest.tscn
 
 const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
+const SETTINGS_PATH := "user://settings.cfg"
+const SETTINGS_BACKUP_PATH := "user://settings.cfg.ui_stack_smoke_backup"
 
 var failures: int = 0
 var _main: Node = null
 var _player: Node = null
 var _travel_requested_location := ""
+var _had_settings_file := false
 
 
 func _ready() -> void:
+	_backup_settings_file()
 	_setup_world()
 	await _instantiate_main()
 	_test_pause_locks()
@@ -23,6 +27,7 @@ func _ready() -> void:
 	_test_empty_carjack_removes_car()
 	_test_click_move_interacts()
 	_test_pause_menu_walk_away()
+	_restore_settings_file()
 	print("UIStack smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -264,6 +269,34 @@ func _find_named_descendant(node: Node, node_name: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+func _backup_settings_file() -> void:
+	_had_settings_file = FileAccess.file_exists(SETTINGS_PATH)
+	_remove_if_exists(SETTINGS_BACKUP_PATH)
+	if _had_settings_file:
+		var err := DirAccess.copy_absolute(SETTINGS_PATH, SETTINGS_BACKUP_PATH)
+		if err != OK:
+			_check(false, "backed up local settings file")
+
+
+func _restore_settings_file() -> void:
+	_remove_if_exists(SETTINGS_PATH)
+	if _had_settings_file:
+		if FileAccess.file_exists(SETTINGS_BACKUP_PATH):
+			var err := DirAccess.copy_absolute(SETTINGS_BACKUP_PATH, SETTINGS_PATH)
+			_check(err == OK, "restored local settings file")
+		else:
+			_check(false, "settings backup still exists")
+	else:
+		_check(not FileAccess.file_exists(SETTINGS_PATH),
+				"settings smoke leaves no new settings file")
+	_remove_if_exists(SETTINGS_BACKUP_PATH)
+
+
+func _remove_if_exists(path: String) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
 
 
 func _on_test_travel_requested(location_id: String) -> void:

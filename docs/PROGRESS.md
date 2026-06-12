@@ -13,7 +13,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 ## Phase 0 progress
 
 - **UIStack foundation started (2026-06-12):** `Main.tscn` now owns a `UIStack` node that centralizes modal open/close and named clock pause locks. Esc opens an in-game pause menu (Resume / Save / Walk Away / Settings / Quit to Menu) instead of immediately returning to the title screen.
-- **Pause settings started:** the pause menu Settings button now opens a real nested modal with a generated command icon plus persisted master-volume and mute controls. Esc closes Settings before the underlying pause menu, and UIStack smoke coverage verifies the pause-lock stack and AudioServer updates.
+- **Pause settings started:** the pause menu Settings button now opens a real nested modal with a generated command icon plus persisted master-volume and mute controls. Esc closes Settings before the underlying pause menu, and UIStack smoke coverage verifies the pause-lock stack and AudioServer updates without leaving the developer's local settings file changed.
 - **Modal pause safety:** phone, inventory, shop, dialogue, dilemma, confrontation, and death screen flows now use composable pause locks, so closing one modal cannot accidentally resume time while another modal or manual pause is still active.
 - **Walk Away UI coverage:** the pause-menu Walk Away button now runs through the UIStack smoke suite, asserting that the controlled life ends and the former player becomes a persistent NPC before the character-creation transition.
 - **Legacy handoff UI coverage:** `LegacyHandoffSmokeTest.tscn` now exercises Walk Away into the real character creation UI and verifies the next life keeps the existing town, life count, and former-player NPC.
