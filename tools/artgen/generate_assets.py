@@ -20,6 +20,9 @@ TERRAIN_PATH = TILES_DIR / "terrain_atlas.png"
 BODY_PATH = CHARS_DIR / "body_base.png"
 PLAYER_OUTFIT_PATH = CHARS_DIR / "outfit_player.png"
 NPC_OUTFIT_PATH = CHARS_DIR / "outfit_npc.png"
+BODY_WALK_PATH = CHARS_DIR / "body_base_walk.png"
+PLAYER_OUTFIT_WALK_PATH = CHARS_DIR / "outfit_player_walk.png"
+NPC_OUTFIT_WALK_PATH = CHARS_DIR / "outfit_npc_walk.png"
 DOOR_PATH = PROPS_DIR / "door.png"
 SHOP_COUNTER_PATH = PROPS_DIR / "shop_counter.png"
 PARKED_CAR_PATH = PROPS_DIR / "parked_car.png"
@@ -172,48 +175,105 @@ def generate_terrain(rng: random.Random) -> None:
     print(f"wrote {TERRAIN_PATH.relative_to(ROOT)}")
 
 
+def draw_body_frame(draw: ImageDraw.ImageDraw, ox: int, oy: int, direction: int, frame: int) -> None:
+    skin = (194, 143, 102, 255)
+    skin_shadow = (139, 93, 68, 255)
+    hair = (54, 38, 31, 255)
+    foot_shift = [-1, 0, 1, 0][frame]
+    bob = 1 if frame in [1, 3] else 0
+    # Legs and hands.
+    draw.rectangle((ox + 11 - foot_shift, oy + 31, ox + 14 - foot_shift, oy + 42), fill=skin_shadow)
+    draw.rectangle((ox + 18 + foot_shift, oy + 31, ox + 21 + foot_shift, oy + 42), fill=skin_shadow)
+    draw.rectangle((ox + 7 + foot_shift, oy + 24, ox + 10 + foot_shift, oy + 30), fill=skin)
+    draw.rectangle((ox + 22 - foot_shift, oy + 24, ox + 25 - foot_shift, oy + 30), fill=skin)
+    # Neck and head.
+    draw.rectangle((ox + 14, oy + 14 + bob, ox + 18, oy + 20 + bob), fill=skin_shadow)
+    draw.rectangle((ox + 10, oy + 4 + bob, ox + 22, oy + 16 + bob), fill=skin)
+    if direction == 2:  # up/back
+        draw.rectangle((ox + 9, oy + 4 + bob, ox + 23, oy + 16 + bob), fill=hair)
+        draw.rectangle((ox + 11, oy + 15 + bob, ox + 21, oy + 18 + bob), fill=hair)
+    elif direction == 1:  # right
+        draw.rectangle((ox + 10, oy + 3 + bob, ox + 22, oy + 8 + bob), fill=hair)
+        draw.rectangle((ox + 9, oy + 7 + bob, ox + 13, oy + 14 + bob), fill=hair)
+        draw.point((ox + 20, oy + 10 + bob), fill=(30, 24, 22, 255))
+        draw.line((ox + 17, oy + 14 + bob, ox + 21, oy + 14 + bob), fill=(116, 65, 61, 255))
+    elif direction == 3:  # left
+        draw.rectangle((ox + 10, oy + 3 + bob, ox + 22, oy + 8 + bob), fill=hair)
+        draw.rectangle((ox + 19, oy + 7 + bob, ox + 23, oy + 14 + bob), fill=hair)
+        draw.point((ox + 12, oy + 10 + bob), fill=(30, 24, 22, 255))
+        draw.line((ox + 11, oy + 14 + bob, ox + 15, oy + 14 + bob), fill=(116, 65, 61, 255))
+    else:
+        draw.rectangle((ox + 11, oy + 3 + bob, ox + 21, oy + 7 + bob), fill=hair)
+        draw.rectangle((ox + 9, oy + 7 + bob, ox + 12, oy + 13 + bob), fill=hair)
+        draw.rectangle((ox + 20, oy + 7 + bob, ox + 23, oy + 13 + bob), fill=hair)
+        draw.point((ox + 13, oy + 10 + bob), fill=(30, 24, 22, 255))
+        draw.point((ox + 19, oy + 10 + bob), fill=(30, 24, 22, 255))
+        draw.line((ox + 14, oy + 14 + bob, ox + 18, oy + 14 + bob), fill=(116, 65, 61, 255))
+
+
 def draw_body_base() -> None:
     CHARS_DIR.mkdir(parents=True, exist_ok=True)
     img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    skin = (194, 143, 102, 255)
-    skin_shadow = (139, 93, 68, 255)
-    hair = (54, 38, 31, 255)
-    # Legs and hands.
-    draw.rectangle((11, 31, 14, 42), fill=skin_shadow)
-    draw.rectangle((18, 31, 21, 42), fill=skin_shadow)
-    draw.rectangle((7, 24, 10, 30), fill=skin)
-    draw.rectangle((22, 24, 25, 30), fill=skin)
-    # Neck and face.
-    draw.rectangle((14, 14, 18, 20), fill=skin_shadow)
-    draw.rectangle((10, 4, 22, 16), fill=skin)
-    draw.rectangle((11, 3, 21, 7), fill=hair)
-    draw.rectangle((9, 7, 12, 13), fill=hair)
-    draw.rectangle((20, 7, 23, 13), fill=hair)
-    draw.point((13, 10), fill=(30, 24, 22, 255))
-    draw.point((19, 10), fill=(30, 24, 22, 255))
-    draw.line((14, 14, 18, 14), fill=(116, 65, 61, 255))
+    draw_body_frame(draw, 0, 0, 0, 1)
     img.save(BODY_PATH)
     print(f"wrote {BODY_PATH.relative_to(ROOT)}")
+
+
+def draw_outfit_frame(draw: ImageDraw.ImageDraw, ox: int, oy: int, direction: int, frame: int,
+                      color: tuple[int, int, int], trim: tuple[int, int, int]) -> None:
+    main = (*color, 255)
+    dark = (*tuple(max(0, c - 38) for c in color), 255)
+    trim_rgba = (*trim, 255)
+    foot_shift = [-1, 0, 1, 0][frame]
+    bob = 1 if frame in [1, 3] else 0
+    # Shirt/jacket.
+    draw.rectangle((ox + 9, oy + 18 + bob, ox + 23, oy + 31 + bob), fill=main)
+    draw.rectangle((ox + 8 + foot_shift, oy + 20 + bob, ox + 11 + foot_shift, oy + 27 + bob), fill=dark)
+    draw.rectangle((ox + 21 - foot_shift, oy + 20 + bob, ox + 24 - foot_shift, oy + 27 + bob), fill=dark)
+    if direction == 2:
+        draw.rectangle((ox + 11, oy + 19 + bob, ox + 21, oy + 21 + bob), fill=dark)
+    elif direction == 1:
+        draw.line((ox + 20, oy + 18 + bob, ox + 20, oy + 31 + bob), fill=trim_rgba)
+        draw.rectangle((ox + 15, oy + 19 + bob, ox + 22, oy + 21 + bob), fill=trim_rgba)
+    elif direction == 3:
+        draw.line((ox + 12, oy + 18 + bob, ox + 12, oy + 31 + bob), fill=trim_rgba)
+        draw.rectangle((ox + 10, oy + 19 + bob, ox + 17, oy + 21 + bob), fill=trim_rgba)
+    else:
+        draw.line((ox + 16, oy + 18 + bob, ox + 16, oy + 31 + bob), fill=trim_rgba)
+        draw.rectangle((ox + 12, oy + 19 + bob, ox + 20, oy + 21 + bob), fill=trim_rgba)
+    # Pants and shoes.
+    draw.rectangle((ox + 10 - foot_shift, oy + 31, ox + 15 - foot_shift, oy + 42), fill=(45, 47, 54, 255))
+    draw.rectangle((ox + 17 + foot_shift, oy + 31, ox + 22 + foot_shift, oy + 42), fill=(45, 47, 54, 255))
+    draw.rectangle((ox + 9 - foot_shift, oy + 42, ox + 15 - foot_shift, oy + 44), fill=(28, 25, 24, 255))
+    draw.rectangle((ox + 17 + foot_shift, oy + 42, ox + 23 + foot_shift, oy + 44), fill=(28, 25, 24, 255))
 
 
 def draw_outfit(path: Path, color: tuple[int, int, int], trim: tuple[int, int, int]) -> None:
     img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    main = (*color, 255)
-    dark = (*tuple(max(0, c - 38) for c in color), 255)
-    trim_rgba = (*trim, 255)
-    # Shirt/jacket.
-    draw.rectangle((9, 18, 23, 31), fill=main)
-    draw.rectangle((8, 20, 11, 27), fill=dark)
-    draw.rectangle((21, 20, 24, 27), fill=dark)
-    draw.line((16, 18, 16, 31), fill=trim_rgba)
-    draw.rectangle((12, 19, 20, 21), fill=trim_rgba)
-    # Pants and shoes.
-    draw.rectangle((10, 31, 15, 42), fill=(45, 47, 54, 255))
-    draw.rectangle((17, 31, 22, 42), fill=(45, 47, 54, 255))
-    draw.rectangle((9, 42, 15, 44), fill=(28, 25, 24, 255))
-    draw.rectangle((17, 42, 23, 44), fill=(28, 25, 24, 255))
+    draw_outfit_frame(draw, 0, 0, 0, 1, color, trim)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path)
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def draw_body_walk_sheet() -> None:
+    img = Image.new("RGBA", (32 * 4, 48 * 4), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    for direction in range(4):
+        for frame in range(4):
+            draw_body_frame(draw, frame * 32, direction * 48, direction, frame)
+    img.save(BODY_WALK_PATH)
+    print(f"wrote {BODY_WALK_PATH.relative_to(ROOT)}")
+
+
+def draw_outfit_walk_sheet(path: Path, color: tuple[int, int, int], trim: tuple[int, int, int]) -> None:
+    img = Image.new("RGBA", (32 * 4, 48 * 4), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    for direction in range(4):
+        for frame in range(4):
+            draw_outfit_frame(draw, frame * 32, direction * 48, direction, frame, color, trim)
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
     print(f"wrote {path.relative_to(ROOT)}")
@@ -223,6 +283,9 @@ def generate_characters() -> None:
     draw_body_base()
     draw_outfit(PLAYER_OUTFIT_PATH, (64, 98, 178), (211, 218, 235))
     draw_outfit(NPC_OUTFIT_PATH, (210, 210, 210), (250, 250, 250))
+    draw_body_walk_sheet()
+    draw_outfit_walk_sheet(PLAYER_OUTFIT_WALK_PATH, (64, 98, 178), (211, 218, 235))
+    draw_outfit_walk_sheet(NPC_OUTFIT_WALK_PATH, (210, 210, 210), (250, 250, 250))
 
 
 def draw_door() -> None:

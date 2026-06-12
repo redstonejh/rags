@@ -7,6 +7,12 @@ const WALK_SPEED := 150.0
 const LOW_NEED_THRESHOLD := 18.0
 const LOW_NEED_SPEED_MULT := 0.55
 const CLICK_INTERACT_DISTANCE := 34.0
+const ANIM_FPS := 8.0
+const FRAME_IDLE := 1
+const DIR_DOWN := 0
+const DIR_RIGHT := 1
+const DIR_UP := 2
+const DIR_LEFT := 3
 
 ## Owned by the CharacterSheet in WorldState — the player node is a view.
 var needs: Needs
@@ -14,9 +20,13 @@ var needs: Needs
 var _interact_target: Interactable = null
 var _click_move_active := false
 var _click_interact_target: Interactable = null
+var _anim_time := 0.0
+var _facing_dir := DIR_DOWN
 
 @onready var interact_area: Area2D = $InteractArea
 @onready var nav_agent: NavigationAgent2D = $NavigationAgent2D
+@onready var body_sprite: Sprite2D = $BodySprite
+@onready var outfit_sprite: Sprite2D = $OutfitSprite
 
 
 func _ready() -> void:
@@ -29,7 +39,7 @@ func _ready() -> void:
 	_emit_all_needs.call_deferred()
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var speed := _current_speed()
 	if input.length_squared() > 0.0:
@@ -40,6 +50,7 @@ func _physics_process(_delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
+	_update_sprite_animation(velocity, delta)
 	_update_interact_target()
 	_try_click_interaction()
 
@@ -91,6 +102,25 @@ func _current_speed() -> float:
 			and WorldState.player_sheet.flags.get("has_car", false):
 		speed *= 1.8
 	return speed
+
+
+func _update_sprite_animation(move_velocity: Vector2, delta: float) -> void:
+	var moving := move_velocity.length_squared() > 1.0
+	if moving:
+		_facing_dir = _direction_from_velocity(move_velocity)
+		_anim_time += delta
+	else:
+		_anim_time = 0.0
+	var frame := int(floor(_anim_time * ANIM_FPS)) % 4 if moving else FRAME_IDLE
+	var coords := Vector2i(frame, _facing_dir)
+	body_sprite.frame_coords = coords
+	outfit_sprite.frame_coords = coords
+
+
+func _direction_from_velocity(move_velocity: Vector2) -> int:
+	if absf(move_velocity.x) > absf(move_velocity.y):
+		return DIR_RIGHT if move_velocity.x > 0.0 else DIR_LEFT
+	return DIR_DOWN if move_velocity.y > 0.0 else DIR_UP
 
 
 func _click_move_velocity(speed: float) -> Vector2:

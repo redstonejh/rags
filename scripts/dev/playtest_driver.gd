@@ -57,6 +57,7 @@ func _instantiate_main() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 	_player = _main.get_node("Player")
+	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
 	_check(_exterior_street_prop_count() > 0, "exterior street props spawned")
 
@@ -71,6 +72,8 @@ func _walk_toward_diner() -> void:
 	await _physics_frames(24)
 	var current: Vector2 = _player.get("global_position")
 	_check(current.distance_to(start) > 16.0, "scripted player movement advanced")
+	var body: Sprite2D = _player.get_node("BodySprite")
+	_check(body.frame_coords != Vector2i(1, 0), "player walk animation responds to movement")
 
 
 func _enter_diner() -> void:
@@ -187,6 +190,13 @@ func _find_exterior_door(location_id: String) -> Node:
 		if child.get("target_location_id") == location_id:
 			return child
 	return null
+
+
+func _player_has_walk_sheets() -> bool:
+	var body: Sprite2D = _player.get_node("BodySprite")
+	var outfit: Sprite2D = _player.get_node("OutfitSprite")
+	return body.hframes == 4 and body.vframes == 4 \
+			and outfit.hframes == 4 and outfit.vframes == 4
 
 
 func _exterior_facade_count() -> int:

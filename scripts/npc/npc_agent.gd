@@ -6,11 +6,20 @@ extends CharacterBody2D
 ## arrived, the puppet despawns regardless.
 
 const WALK_SPEED := 120.0
+const ANIM_FPS := 8.0
+const FRAME_IDLE := 1
+const DIR_DOWN := 0
+const DIR_RIGHT := 1
+const DIR_UP := 2
+const DIR_LEFT := 3
 
 var record: NPCRecord
 var _wander_target: Vector2 = Vector2.ZERO
 var _wander_wait := 0.0
+var _anim_time := 0.0
+var _facing_dir := DIR_DOWN
 
+@onready var body_sprite: Sprite2D = $BodySprite
 @onready var outfit_sprite: Sprite2D = $OutfitSprite
 @onready var name_label: Label = $NameLabel
 @onready var nav: NavigationAgent2D = $NavigationAgent2D
@@ -43,10 +52,12 @@ func _walk_toward(target: Vector2, _delta: float) -> void:
 		nav.target_position = target
 	if nav.is_navigation_finished():
 		velocity = Vector2.ZERO
+		_update_sprite_animation(velocity, _delta)
 		return
 	var next := nav.get_next_path_position()
 	velocity = global_position.direction_to(next) * WALK_SPEED
 	move_and_slide()
+	_update_sprite_animation(velocity, _delta)
 
 
 func _idle_wander(delta: float) -> void:
@@ -61,3 +72,23 @@ func _idle_wander(delta: float) -> void:
 		move_and_slide()
 	else:
 		velocity = Vector2.ZERO
+	_update_sprite_animation(velocity, delta)
+
+
+func _update_sprite_animation(move_velocity: Vector2, delta: float) -> void:
+	var moving := move_velocity.length_squared() > 1.0
+	if moving:
+		_facing_dir = _direction_from_velocity(move_velocity)
+		_anim_time += delta
+	else:
+		_anim_time = 0.0
+	var frame := int(floor(_anim_time * ANIM_FPS)) % 4 if moving else FRAME_IDLE
+	var coords := Vector2i(frame, _facing_dir)
+	body_sprite.frame_coords = coords
+	outfit_sprite.frame_coords = coords
+
+
+func _direction_from_velocity(move_velocity: Vector2) -> int:
+	if absf(move_velocity.x) > absf(move_velocity.y):
+		return DIR_RIGHT if move_velocity.x > 0.0 else DIR_LEFT
+	return DIR_DOWN if move_velocity.y > 0.0 else DIR_UP
