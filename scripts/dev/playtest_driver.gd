@@ -55,6 +55,7 @@ func _instantiate_main() -> void:
 	await get_tree().physics_frame
 	_player = _main.get_node("Player")
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
+	_check(_exterior_street_prop_count() > 0, "exterior street props spawned")
 
 
 func _walk_toward_diner() -> void:
@@ -180,6 +181,14 @@ func _exterior_facade_count() -> int:
 	if world_root.get_child_count() == 0:
 		return 0
 	var layer := world_root.get_child(0).get_node_or_null("FacadeLayer")
+	return layer.get_child_count() if layer != null else 0
+
+
+func _exterior_street_prop_count() -> int:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return 0
+	var layer := world_root.get_child(0).get_node_or_null("StreetPropLayer")
 	return layer.get_child_count() if layer != null else 0
 
 

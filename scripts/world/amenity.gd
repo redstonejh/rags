@@ -10,6 +10,7 @@ const AMENITY_TEXTURES := {
 	"bed": "res://assets/props/bed.png",
 	"shower": "res://assets/props/shower.png",
 	"tv": "res://assets/props/tv.png",
+	"bench": "res://assets/props/bench.png",
 }
 
 

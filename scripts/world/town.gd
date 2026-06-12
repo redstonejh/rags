@@ -28,9 +28,14 @@ const AWNING_TEXTURES := {
 	"loc_store": AWNING_GREEN_TEXTURE_PATH,
 	"loc_bar": AWNING_RED_TEXTURE_PATH,
 }
+const STREET_LAMP_TEXTURE_PATH := "res://assets/props/street_lamp.png"
+const TRASH_CAN_TEXTURE_PATH := "res://assets/props/trash_can.png"
+const DUMPSTER_TEXTURE_PATH := "res://assets/props/dumpster.png"
+const NEWS_BOX_TEXTURE_PATH := "res://assets/props/news_box.png"
 
 var player_spawn: Vector2
 var facade_layer: Node2D = null
+var street_prop_layer: Node2D = null
 
 ## Buildings: rect (in cells), door cell, location id, label.
 const BUILDINGS := [
@@ -60,6 +65,9 @@ func _ready() -> void:
 	facade_layer = Node2D.new()
 	facade_layer.name = "FacadeLayer"
 	add_child(facade_layer)
+	street_prop_layer = Node2D.new()
+	street_prop_layer.name = "StreetPropLayer"
+	add_child(street_prop_layer)
 	# Buildings.
 	for b in BUILDINGS:
 		_stamp_building(b.rect, b.door, b.id, b.label)
@@ -69,6 +77,7 @@ func _ready() -> void:
 		var car := ParkedCar.new()
 		car.position = cell_to_world(cell)
 		add_child(car)
+	_place_street_props()
 	player_spawn = cell_to_world(Vector2i(22, 13))
 	Locations.register_door("exterior", player_spawn)
 
@@ -123,6 +132,44 @@ func _add_facade_sprite(texture_path: String, cell: Vector2i, offset: Vector2) -
 	sprite.texture_filter = 1
 	sprite.position = cell_to_world(cell) + offset
 	facade_layer.add_child(sprite)
+
+
+func _place_street_props() -> void:
+	var props := [
+		{"path": STREET_LAMP_TEXTURE_PATH, "cell": Vector2i(18, 10), "offset": Vector2(0, -18)},
+		{"path": STREET_LAMP_TEXTURE_PATH, "cell": Vector2i(23, 13), "offset": Vector2(0, -18)},
+		{"path": STREET_LAMP_TEXTURE_PATH, "cell": Vector2i(43, 10), "offset": Vector2(0, -18)},
+		{"path": STREET_LAMP_TEXTURE_PATH, "cell": Vector2i(22, 25), "offset": Vector2(0, -18)},
+		{"path": STREET_LAMP_TEXTURE_PATH, "cell": Vector2i(43, 25), "offset": Vector2(0, -18)},
+		{"path": TRASH_CAN_TEXTURE_PATH, "cell": Vector2i(17, 10), "offset": Vector2.ZERO},
+		{"path": TRASH_CAN_TEXTURE_PATH, "cell": Vector2i(36, 9), "offset": Vector2.ZERO},
+		{"path": TRASH_CAN_TEXTURE_PATH, "cell": Vector2i(46, 23), "offset": Vector2.ZERO},
+		{"path": DUMPSTER_TEXTURE_PATH, "cell": Vector2i(55, 24), "offset": Vector2(8, -2)},
+		{"path": DUMPSTER_TEXTURE_PATH, "cell": Vector2i(5, 24), "offset": Vector2(8, -2)},
+		{"path": NEWS_BOX_TEXTURE_PATH, "cell": Vector2i(13, 10), "offset": Vector2.ZERO},
+		{"path": NEWS_BOX_TEXTURE_PATH, "cell": Vector2i(25, 14), "offset": Vector2.ZERO},
+	]
+	for prop in props:
+		_add_street_prop(prop.path, prop.cell, prop.offset)
+	for cell in [Vector2i(15, 13), Vector2i(33, 13), Vector2i(25, 25), Vector2i(52, 28)]:
+		var bench := Amenity.new()
+		bench.configure("bench", 1.0, "the bench", "Sleep on", Color(0.45, 0.3, 0.2))
+		bench.position = cell_to_world(cell)
+		add_child(bench)
+
+
+func _add_street_prop(texture_path: String, cell: Vector2i, offset: Vector2) -> void:
+	if street_prop_layer == null:
+		return
+	var texture: Texture2D = load(texture_path)
+	if texture == null:
+		return
+	var sprite := Sprite2D.new()
+	sprite.name = "StreetProp"
+	sprite.texture = texture
+	sprite.texture_filter = 1
+	sprite.position = cell_to_world(cell) + offset
+	street_prop_layer.add_child(sprite)
 
 
 ## A random spot on the road network — wander anchors for exterior NPCs.

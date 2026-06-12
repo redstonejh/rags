@@ -27,6 +27,11 @@ FRIDGE_PATH = PROPS_DIR / "fridge.png"
 BED_PATH = PROPS_DIR / "bed.png"
 SHOWER_PATH = PROPS_DIR / "shower.png"
 TV_PATH = PROPS_DIR / "tv.png"
+BENCH_PATH = PROPS_DIR / "bench.png"
+STREET_LAMP_PATH = PROPS_DIR / "street_lamp.png"
+TRASH_CAN_PATH = PROPS_DIR / "trash_can.png"
+DUMPSTER_PATH = PROPS_DIR / "dumpster.png"
+NEWS_BOX_PATH = PROPS_DIR / "news_box.png"
 BAR_COUNTER_PATH = PROPS_DIR / "bar_counter.png"
 RECORDS_DESK_PATH = PROPS_DIR / "records_desk.png"
 WORK_SPOT_PATH = PROPS_DIR / "work_spot.png"
@@ -316,6 +321,66 @@ def draw_tv() -> None:
     print(f"wrote {TV_PATH.relative_to(ROOT)}")
 
 
+def draw_bench() -> None:
+    img = Image.new("RGBA", (48, 28), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    for y in [8, 14, 20]:
+        draw.rectangle((5, y, 43, y + 3), fill=(112, 69, 42, 255))
+        draw.line((5, y + 3, 43, y + 3), fill=(65, 43, 34, 255))
+    for x in [10, 36]:
+        draw.rectangle((x, 6, x + 3, 25), fill=(48, 48, 52, 255))
+    img.save(BENCH_PATH)
+    print(f"wrote {BENCH_PATH.relative_to(ROOT)}")
+
+
+def draw_street_lamp() -> None:
+    img = Image.new("RGBA", (32, 64), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((15, 19, 17, 57), fill=(52, 53, 56, 255))
+    draw.rectangle((11, 55, 21, 60), fill=(38, 38, 42, 255))
+    draw.rectangle((10, 11, 22, 20), fill=(58, 49, 42, 255))
+    draw.rectangle((12, 13, 20, 18), fill=(230, 199, 106, 255))
+    draw.rectangle((13, 9, 19, 12), fill=(43, 43, 47, 255))
+    img.save(STREET_LAMP_PATH)
+    print(f"wrote {STREET_LAMP_PATH.relative_to(ROOT)}")
+
+
+def draw_trash_can() -> None:
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((10, 9, 22, 27), fill=(75, 89, 82, 255))
+    draw.rectangle((9, 7, 23, 10), fill=(111, 126, 115, 255))
+    draw.rectangle((11, 27, 21, 29), fill=(47, 58, 54, 255))
+    for x in [13, 17, 21]:
+        draw.line((x, 11, x - 1, 26), fill=(49, 62, 58, 255))
+    img.save(TRASH_CAN_PATH)
+    print(f"wrote {TRASH_CAN_PATH.relative_to(ROOT)}")
+
+
+def draw_dumpster() -> None:
+    img = Image.new("RGBA", (64, 36), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((6, 10, 58, 29), fill=(49, 93, 72, 255))
+    draw.rectangle((8, 7, 56, 13), fill=(65, 119, 88, 255))
+    draw.rectangle((12, 15, 25, 26), fill=(35, 73, 57, 255))
+    draw.rectangle((39, 15, 52, 26), fill=(35, 73, 57, 255))
+    draw.rectangle((10, 29, 18, 32), fill=(31, 32, 34, 255))
+    draw.rectangle((46, 29, 54, 32), fill=(31, 32, 34, 255))
+    img.save(DUMPSTER_PATH)
+    print(f"wrote {DUMPSTER_PATH.relative_to(ROOT)}")
+
+
+def draw_news_box() -> None:
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((8, 8, 24, 27), fill=(158, 49, 44, 255))
+    draw.rectangle((10, 10, 22, 16), fill=(238, 230, 196, 255))
+    draw.rectangle((10, 18, 22, 24), fill=(95, 33, 34, 255))
+    draw.rectangle((13, 27, 19, 30), fill=(78, 36, 35, 255))
+    img.save(NEWS_BOX_PATH)
+    print(f"wrote {NEWS_BOX_PATH.relative_to(ROOT)}")
+
+
 def draw_bar_counter() -> None:
     img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -389,6 +454,11 @@ def generate_props() -> None:
     draw_bed()
     draw_shower()
     draw_tv()
+    draw_bench()
+    draw_street_lamp()
+    draw_trash_can()
+    draw_dumpster()
+    draw_news_box()
     draw_bar_counter()
     draw_records_desk()
     draw_work_spot()

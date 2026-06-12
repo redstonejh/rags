@@ -22,6 +22,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Generated prop sprites started:** doors, shop counters, and parked cars now use generated sprites from `assets/props/` with their existing collision and interaction behavior intact.
 - **Generated building facades started:** `assets/buildings/` now contains generated roof tiles, wall/window facades, shop awnings, and per-location signs. `Town.gd` renders them through a non-colliding `FacadeLayer` over the existing building shells, preserving door registration, nav, and collision behavior.
 - **Interior prop sprites started:** generated sprites now cover the fridge, bed, shower, TV, bar counter, records desk, work spot, dealer, and fence. Existing interactable behavior and collision stay intact through sprite-first/fallback rendering, and the scripted playtest now asserts that interior prop sprites spawn after entering the diner.
+- **Street furniture started:** generated bench, street lamp, trash can, dumpster, and news-box sprites now populate the exterior. Benches use the existing `Amenity` rest behavior, while the other props render through a non-colliding `StreetPropLayer`; the scripted playtest asserts that street props spawn.
 - **UI shell theme started:** generated pause-menu command icons now live in `assets/ui/`, and `UIStack` applies a consistent dark panel/button/label theme to gameplay UI controls as they are created.
 
 ## Systems implemented (headless-tested only — see status note above)
