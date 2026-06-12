@@ -84,6 +84,7 @@ func _seed_people_app_state() -> void:
 	rival.relationships[date.id] = -45.0
 	rival.add_memory("witnessed", "player", "were seen arguing outside Mel's", -0.4, 5.0, true)
 	rival.memories.back()["source_id"] = date.id
+	rival.add_memory("favor", "player", "helped at the clinic after midnight", 0.4, 4.0)
 	if people.size() >= 6:
 		var spouse: NPCRecord = people[5]
 		spouse.relationships["player"] = 82.0
@@ -157,6 +158,11 @@ func _open_phone() -> void:
 	_check(_descendant_text_contains(people_content, " via "),
 			"People tab shows gossip source chains")
 	_check(_descendant_text_contains(people_content, "Gossip:"), "People tab shows gossip")
+	_check(_descendant_text_contains(people_content, "Stories:") \
+			and _descendant_text_contains(people_content, "clinic after midnight"),
+			"People tab shows a compact story history")
+	_check(not _descendant_text_contains(people_content, "misjudged you in public"),
+			"People tab phrases player memories from the player's view")
 
 
 func _verify_date_scene_ui() -> void:

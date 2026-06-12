@@ -392,6 +392,9 @@ func _refresh_people() -> void:
 		if family != "":
 			detail_lines.append(family)
 		detail_lines.append(_people_gossip_text(npc))
+		var history := _people_story_history_text(npc)
+		if history != "":
+			detail_lines.append(history)
 		details.text = "\n".join(detail_lines)
 		row.add_child(details)
 
@@ -504,18 +507,16 @@ func _people_gossip_text(npc: NPCRecord) -> String:
 	var story := npc.top_gossip(3.0)
 	if story.is_empty():
 		return "Gossip: nothing useful yet."
-	var subject := _npc_name(str(story.get("subject", "")))
+	var phrase := _people_memory_phrase(npc, story)
 	if story.get("secondhand", false):
-		return "Gossip: %s heard from %s that %s %s - D%d" % [
+		return "Gossip: %s heard from %s that %s - D%d" % [
 			npc.display_name.get_slice(" ", 0),
 			_people_gossip_source_chain(story),
-			subject,
-			str(story.get("text", "did something")),
+			phrase,
 			int(story.get("day", 0))]
-	return "Gossip: %s remembers %s %s - D%d" % [
+	return "Gossip: %s remembers %s - D%d" % [
 		npc.display_name.get_slice(" ", 0),
-		subject,
-		str(story.get("text", "did something")),
+		phrase,
 		int(story.get("day", 0))]
 
 
@@ -525,6 +526,48 @@ func _people_gossip_source_chain(story: Dictionary) -> String:
 	if previous_id != "" and previous_id != source_id:
 		return "%s via %s" % [_npc_name(source_id), _npc_name(previous_id)]
 	return _npc_name(source_id)
+
+
+func _people_story_history_text(npc: NPCRecord) -> String:
+	var stories: Array[Dictionary] = []
+	for memory in npc.memories:
+		if float(memory.get("salience", 0.0)) < 3.0:
+			continue
+		if str(memory.get("subject", "")) != "player" \
+				and str(memory.get("source_id", "")) != "player":
+			continue
+		stories.append(memory)
+	if stories.is_empty():
+		return ""
+	stories.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var salience_a := float(a.get("salience", 0.0))
+		var salience_b := float(b.get("salience", 0.0))
+		if not is_equal_approx(salience_a, salience_b):
+			return salience_a > salience_b
+		return int(a.get("day", 0)) > int(b.get("day", 0)))
+	if stories.size() > 3:
+		stories.resize(3)
+	var lines: Array[String] = []
+	for story in stories:
+		var source := ""
+		if story.get("secondhand", false):
+			source = " via %s" % _people_gossip_source_chain(story)
+		lines.append("D%d %s%s" % [
+			int(story.get("day", 0)),
+			_people_memory_phrase(npc, story),
+			source])
+	return "Stories: %s" % "; ".join(lines)
+
+
+func _people_memory_phrase(npc: NPCRecord, story: Dictionary) -> String:
+	var subject_id := str(story.get("subject", ""))
+	var text := str(story.get("text", "did something"))
+	if subject_id == "player":
+		var npc_first := npc.display_name.get_slice(" ", 0)
+		text = text.replace("misjudged you", "misjudged %s" % npc_first)
+		text = text.replace("you put them right", "%s put you right" % npc_first)
+		return "you %s" % text
+	return "%s %s" % [_npc_name(subject_id), text]
 
 
 func _npc_name(npc_id: String) -> String:
