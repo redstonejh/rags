@@ -71,6 +71,7 @@ BUILDING_SIGNS = {
     "loc_offices": "VANTAGE",
     "loc_bar": "ANCHOR",
     "loc_bricks": "BRICKS",
+    "loc_jail": "JAIL",
     "loc_site": "SITE 9",
     "loc_rowhouse_a": "ROW EAST",
     "loc_rowhouse_b": "ROW WEST",

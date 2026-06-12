@@ -18,6 +18,7 @@ static var defs := {
 	"loc_store": {"display_name": "QuikStop Corner Store", "kind": "interior"},
 	"loc_bricks": {"display_name": "The Bricks (lobby)", "kind": "interior"},
 	"loc_offices": {"display_name": "Vantage Plaza", "kind": "interior"},
+	"loc_jail": {"display_name": "Rust Harbor County Jail", "kind": "interior"},
 	"loc_rowhouse_a": {"display_name": "Rowhouses (east)", "kind": "abstract"},
 	"loc_rowhouse_b": {"display_name": "Rowhouses (west)", "kind": "abstract"},
 	"loc_bar": {"display_name": "The Rusty Anchor", "kind": "interior"},

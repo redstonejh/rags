@@ -19,6 +19,7 @@ const SIGN_TEXTURES := {
 	"loc_offices": BUILDING_ASSET_DIR + "sign_loc_offices.png",
 	"loc_bar": BUILDING_ASSET_DIR + "sign_loc_bar.png",
 	"loc_bricks": BUILDING_ASSET_DIR + "sign_loc_bricks.png",
+	"loc_jail": BUILDING_ASSET_DIR + "sign_loc_jail.png",
 	"loc_site": BUILDING_ASSET_DIR + "sign_loc_site.png",
 	"loc_rowhouse_a": BUILDING_ASSET_DIR + "sign_loc_rowhouse_a.png",
 	"loc_rowhouse_b": BUILDING_ASSET_DIR + "sign_loc_rowhouse_b.png",
@@ -53,6 +54,7 @@ const BUILDINGS := [
 	{"rect": Rect2i(3, 15, 12, 6), "door": Vector2i(8, 15), "id": "loc_bar", "label": "The Rusty Anchor"},
 	{"rect": Rect2i(24, 15, 16, 10), "door": Vector2i(31, 15), "id": "loc_bricks", "label": "The Bricks"},
 	{"rect": Rect2i(44, 15, 14, 7), "door": Vector2i(50, 15), "id": "loc_site", "label": "Site 9 (keep out)"},
+	{"rect": Rect2i(48, 28, 12, 5), "door": Vector2i(53, 28), "id": "loc_jail", "label": "County Jail"},
 	{"rect": Rect2i(3, 29, 16, 4), "door": Vector2i(10, 29), "id": "loc_rowhouse_a", "label": "Rowhouses East"},
 	{"rect": Rect2i(30, 29, 16, 4), "door": Vector2i(37, 29), "id": "loc_rowhouse_b", "label": "Rowhouses West"},
 ]
@@ -179,7 +181,9 @@ func _add_facade(rect: Rect2i, door_cell: Vector2i, loc_id: String) -> void:
 	if AWNING_TEXTURES.has(loc_id):
 		_add_facade_sprite(AWNING_TEXTURES[loc_id], door_cell, Vector2(0, -16))
 	if SIGN_TEXTURES.has(loc_id):
-		_add_facade_sprite(SIGN_TEXTURES[loc_id], door_cell, Vector2(0, -42))
+		var sign := _add_facade_sprite(SIGN_TEXTURES[loc_id], door_cell, Vector2(0, -42))
+		if sign != null:
+			sign.name = "SignSprite_%s" % loc_id
 
 
 func _add_facade_sprite(texture_path: String, cell: Vector2i, offset: Vector2) -> Sprite2D:

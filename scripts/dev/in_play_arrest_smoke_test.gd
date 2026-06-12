@@ -56,6 +56,10 @@ func _instantiate_main() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().physics_frame
+	_check(Locations.door_pos("loc_jail") != Vector2.ZERO,
+			"county jail has a real exterior door")
+	_check(_current_world_has_node("SignSprite_loc_jail"),
+			"county jail has visible exterior signage")
 	await get_tree().create_timer(0.6).timeout
 
 
@@ -84,6 +88,14 @@ func _test_embodied_cop_starts_arrest() -> void:
 	await get_tree().process_frame
 	_check(GameClock.day == day_before + 1, "comply serves the warrant sentence")
 	_check(CrimeSystem.wanted_stars() == 0, "serving clears wanted stars")
+	var current_world = _main.get("current_world")
+	_check(WorldState.player_location_id == "loc_jail" \
+			and current_world is Interior \
+			and current_world.location_id == "loc_jail",
+			"serving moves the player into the jail interior")
+	var bunk := _find_amenity("bed")
+	_check(bunk != null and "jail bunk" in bunk.display_name,
+			"jail interior has a visible cell bunk")
 	_check(_descendant_text_contains(confrontation, "Jail days:"),
 			"resolved arrest shows jail day summary")
 	var leave := _find_button_containing(confrontation, "Walk away")
@@ -154,6 +166,40 @@ func _descendant_text_contains(node: Node, text: String) -> bool:
 		if _descendant_text_contains(child, text):
 			return true
 	return false
+
+
+func _find_amenity(kind: String) -> Amenity:
+	return _find_amenity_in(_main.get("current_world"), kind)
+
+
+func _find_amenity_in(node: Node, kind: String) -> Amenity:
+	if node == null:
+		return null
+	if node is Amenity and str(node.kind) == kind:
+		return node
+	for child in node.get_children():
+		var found := _find_amenity_in(child, kind)
+		if found != null:
+			return found
+	return null
+
+
+func _current_world_has_node(node_name: String) -> bool:
+	if _main == null:
+		return false
+	return _find_named_descendant(_main.get("current_world"), node_name) != null
+
+
+func _find_named_descendant(node: Node, node_name: String) -> Node:
+	if node == null:
+		return null
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named_descendant(child, node_name)
+		if found != null:
+			return found
+	return null
 
 
 func _check(ok: bool, what: String) -> void:

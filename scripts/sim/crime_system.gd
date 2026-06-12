@@ -535,7 +535,10 @@ static func serve_sentence() -> int:
 	var events: Array = []
 	EventBus.arrest_made.emit(days)
 	sheet.flags["jailed"] = true
+	sheet.flags["last_jail_origin_location_id"] = WorldState.player_location_id
 	sheet.flags["last_jail_events"] = []
+	if WorldState.player_location_id != "loc_jail":
+		EventBus.travel_requested.emit("loc_jail")
 	for _d in days:
 		# Jail feeds you. Not well, but on schedule.
 		sheet.flags["calories_today"] = maxi(int(sheet.flags.get("calories_today", 0)), 1700)
@@ -553,6 +556,7 @@ static func serve_sentence() -> int:
 	var consequences := _apply_jail_absence_consequences(sheet, days)
 	sheet.flags["last_jail_consequences"] = consequences
 	sheet.flags.erase("jailed")
+	sheet.flags["released_from_jail_day"] = GameClock.day
 	_close_warrants()
 	var event_text := jail_event_summary(events)
 	var detail := " Jail days: %s." % event_text if event_text != "" else ""
@@ -562,7 +566,7 @@ static func serve_sentence() -> int:
 	var consequence_text := jail_consequence_summary(consequences)
 	if consequence_text != "":
 		detail += " Outside: %s." % consequence_text
-	EventBus.toast.emit("%d day%s gone.%s The gate opens onto the same town, minus some rent money." % [
+	EventBus.toast.emit("%d day%s gone.%s The cell door opens onto the same town, minus some rent money." % [
 			days, "" if days == 1 else "s", detail])
 	EventBus.wanted_changed.emit(0)
 	return days

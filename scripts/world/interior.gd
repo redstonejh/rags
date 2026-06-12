@@ -66,6 +66,14 @@ const MAPS := {
 		"wfsfffffffTw",
 		"wwwwwXwwwwww",
 	],
+	"loc_jail": [
+		"wwwwwwwwwwwwwwww",
+		"wbfwbfwfsffffffw",
+		"wffwffwfCCCCfffw",
+		"wffwffwfffffffsw",
+		"wffwffwffffffffw",
+		"wwwXwwwwwwwwwwww",
+	],
 }
 
 const HOME_MAPS := {
@@ -187,6 +195,11 @@ const DECOR_BY_LOCATION := {
 		{"kind": "chair", "cell": Vector2i(7, 4)},
 		{"kind": "plant", "cell": Vector2i(1, 4)},
 	],
+	"loc_jail": [
+		{"kind": "table", "cell": Vector2i(10, 3)},
+		{"kind": "chair", "cell": Vector2i(11, 3)},
+		{"kind": "chair", "cell": Vector2i(13, 3)},
+	],
 }
 
 const HOME_DECOR_BY_HOUSING := {
@@ -281,7 +294,9 @@ func _ready() -> void:
 					if sheet != null:
 						var home := ContentDB.get_housing(sheet.housing_id)
 						bed_q = (home.quality if home else 1.0) * Housing.furniture_quality(sheet, "bed")
-					bed.configure("bed", bed_q, "your bed", "Sleep in", Color(0.5, 0.55, 0.75))
+					var bed_name := "the jail bunk" if location_id == "loc_jail" else "your bed"
+					var bed_verb := "Sit on" if location_id == "loc_jail" else "Sleep in"
+					bed.configure("bed", bed_q, bed_name, bed_verb, Color(0.5, 0.55, 0.75))
 					bed.position = cell_to_world(cell)
 					add_child(bed)
 				"h":
