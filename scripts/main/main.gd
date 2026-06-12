@@ -3,7 +3,7 @@ extends Node2D
 ## swaps it on door travel, and wires the SimEngine's embodiment hooks.
 
 const TOWN_SCENE := preload("res://scenes/world/Town.tscn")
-const REALITY_STING := preload("res://assets/audio/reality_check.wav")
+const REALITY_STING_PATH := "res://assets/audio/reality_check.wav"
 const REALITY_CAMERA_ZOOM_MULT := 1.12
 const REALITY_CAMERA_OFFSET_MAX := 36.0
 const REALITY_CAMERA_IN_TIME := 0.08
@@ -32,6 +32,9 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	if _reality_sting_player != null:
+		_reality_sting_player.stop()
+		_reality_sting_player.stream = null
 	SimEngine.spawn_host = null
 	SimEngine.player_node = null
 
@@ -181,7 +184,7 @@ func _reality_camera_focus_offset(npc_id: String) -> Vector2:
 func _setup_reality_check_audio() -> void:
 	_reality_sting_player = AudioStreamPlayer.new()
 	_reality_sting_player.name = "RealityCheckSting"
-	_reality_sting_player.stream = REALITY_STING
+	_reality_sting_player.stream = load(REALITY_STING_PATH)
 	_reality_sting_player.volume_db = -8.0
 	add_child(_reality_sting_player)
 

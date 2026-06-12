@@ -38,6 +38,7 @@ func _ready() -> void:
 	await _checkpoint("08_pause_menu")
 	await _close_pause_menu()
 	await _verify_social_playthrough()
+	await _stop_runtime_audio()
 	_report()
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -328,6 +329,15 @@ func _checkpoint(id: String) -> void:
 	_check(err == OK, "saved screenshot %s" % id)
 	_check(_image_has_content(img), "screenshot %s is nonblank" % id)
 	_shots.append(ProjectSettings.globalize_path(path))
+
+
+func _stop_runtime_audio() -> void:
+	var sting := _main.get_node_or_null("RealityCheckSting") as AudioStreamPlayer
+	if sting != null:
+		sting.stop()
+		sting.stream = null
+		sting.queue_free()
+	await get_tree().process_frame
 
 
 func _image_has_content(img: Image) -> bool:
