@@ -27,20 +27,17 @@ Dev smoke tests: `godot --headless res://scenes/dev/M1SmokeTest.tscn`
 
 WASD move · E interact · **Tab phone** (jobs, housing, bank, Mickey, health, paths, the Gazette) · **I inventory** · Space pause · 1/2/3 speed · F3 debug overlay · Esc menu
 
-## Status — all milestones shipped
+## Status — systems prototype, not yet a playable game
 
-| Milestone | State |
+The simulation layer for all of M0–M8 exists and passes ~250 **headless, function-level** checks (`godot --headless res://scenes/dev/M8SmokeTest.tscn`, suites M1–M8). That proves the math — paychecks, rent, evidence, saves — not the game. It has **never been play-tested interactively**, the graphics are placeholder rectangles, and several design-doc features are stubs (jail/hospital/marriage/elections are a button and a toast) or missing entirely (minigames, factions, radio DJ, build mode, 6 of 12 origins, the unique origin mechanics).
+
+| Layer | State |
 |---|---|
-| M0 walking skeleton | ✅ |
-| M1 character creation + data pipeline ("Deal Me a Life") | ✅ |
-| M2 living NPCs (190 simulated, schedules, embodiment LOD) | ✅ |
-| M3 survival economy (jobs, rent, Mickey, body sim, death → next life) | ✅ |
-| M4 social + perception (Reality Check, gossip, memories, dating) | ✅ |
-| M5 crime + police (witnesses, warrants, confrontations, jail, the fence) | ✅ |
-| M6 housing + status (T0–T5, credit, furniture, clothing & disguise) | ✅ |
-| M7 body/substances/family/aging (8 drugs, wounds, marriage → heirs, Walk Away) | ✅ |
-| M8 the living town (Gazette, town fear, elections, laundering, perks, 6 origins) | ✅ |
+| Architecture (data-driven defs, record/view split, EventBus, ironman saves) | ✅ solid, tested |
+| Simulation systems M0–M8 (economy, social/Reality Check, crime, housing, body, family, town) | ✅ implemented, headless-tested only |
+| Interactive play (UI flows, modal layering, pacing, balance-by-feel) | ❌ never exercised |
+| Art / audio / onboarding / game feel | ❌ placeholders |
 
-Each milestone has a headless smoke suite: `godot --headless res://scenes/dev/M8SmokeTest.tscn` (M1–M8, ~250 checks total).
+**The path to a functional game is [`docs/REBUILD_PLAN.md`](docs/REBUILD_PLAN.md):** 3/4 angled perspective (Stardew-style), generated 32px pixel art (paper-doll characters, building facades, portraits), WASD + click-to-move, a UI/pause overhaul, a scripted-input playtest harness — then each system taken to interactively-verified 100%, starting with Social + Reality Check.
 
-Design bible: `docs/DESIGN.md` · Build log: `docs/PROGRESS.md`
+Design bible: `docs/DESIGN.md` · Build log: `docs/PROGRESS.md` · Rebuild roadmap: `docs/REBUILD_PLAN.md`

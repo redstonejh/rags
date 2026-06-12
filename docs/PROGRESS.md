@@ -1,8 +1,16 @@
 # RAGS — Build Progress
 
-*Last updated: 2026-06-11 — **ALL MILESTONES (M0–M8) COMPLETE.** Repo: https://github.com/redstonejh/rags*
+*Last updated: 2026-06-11. Repo: https://github.com/redstonejh/rags*
 
-## Done & verified
+## Honest status: systems prototype — NOT yet a playable game
+
+M0–M8 below are **simulation systems verified by headless, function-level tests only**. The game has never been play-tested interactively: every check calls functions directly with forced dice; no test (and no human) has driven the real input → UI → world loop. The visuals are placeholder rectangles. Jail/hospital/marriage/elections are button-plus-toast stubs; driving is a speed multiplier; minigames, factions, the radio DJ, build mode, 6 of 12 origins, and the per-origin unique mechanics don't exist yet. Known-risk untested areas: six modal CanvasLayers with independent input blockers and clock pause/restore that have never run together; Esc hard-exits to the menu from anywhere; the heir, Walk Away, and in-play arrest flows have never executed through the UI.
+
+What IS solid: the architecture (data-driven defs, record/view separation, EventBus, ironman saves that round-trip everything) and the design's signature mechanics implemented at the math layer.
+
+**The path from here to a functional game is `docs/REBUILD_PLAN.md`** — 3/4 angled perspective, generated pixel art, WASD + click-to-move, and one system at a time taken to interactively-verified 100%.
+
+## Systems implemented (headless-tested only — see status note above)
 
 | Milestone | State |
 |---|---|
@@ -29,6 +37,6 @@ IMPORTANT (headless): run `godot --headless --path <abs> --import` after adding 
 - **UI:** HUD (dynamic bars, toasts, wanted stars), phone (Jobs/Home/Bank/Mickey/Health/Paths/Town), shop, inventory, dialogue, dilemma, confrontation, death screen (obituary + heir), character creation (Life #N).
 - **Saves:** versioned JSON, ironman; everything round-trips (sheet incl. substances/wounds/children/fame, NPCs incl. memories/age/alive, crime cases, gazette, town fear).
 
-## Future polish ideas (beyond the design doc's roadmap)
+## Next: the rebuild
 
-Real art/audio (radio DJ), driving physics, factions as systems, more interiors (courthouse/casino/hospital), Dialogic conversations, remaining 6 origins (Widow, Prepper, Athlete, Cult Escapee, Amnesiac, Trust-Fund), build/furnish grid mode, stocks-lite. The architecture (records + data-driven defs + EventBus) is ready for all of it.
+See `docs/REBUILD_PLAN.md` (adopted 2026-06-11): Phase 0 foundation (generated 3/4 pixel art pipeline, organic town re-layout, paper-doll characters, click-to-move, UIStack/pause-menu fix, scripted-input playtest harness), then phases each taken to interactively-verified 100% — Social/Reality Check first, then survival loop, crime/police, housing, body/substances, family/legacy, living-town endgame. Per-phase status will be tracked here with an explicit "interactively verified: yes/no".
