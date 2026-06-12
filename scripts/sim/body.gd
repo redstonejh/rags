@@ -55,13 +55,13 @@ static func use_substance(sheet: CharacterSheet, id: String) -> String:
 		sheet.flags["drunk_minutes"] = maxi(int(sheet.flags.get("drunk_minutes", 0)), def.duration_minutes)
 	if id == "lsd":
 		sheet.flags["lsd_minutes"] = def.duration_minutes
-	if def.tooth_risk > 0.0 and randf() < def.tooth_risk:
+	if def.tooth_risk > 0.0 and _randf() < def.tooth_risk:
 		sheet.flags["teeth"] = maxi(int(sheet.flags.get("teeth", TEETH_FULL)) - 1, 0)
 	# Overdose: scaled by addiction; xanax + alcohol is the famous mistake.
 	var od := def.overdose_chance * (1.0 + float(state.addiction) * 2.0)
 	if def.deadly_with_alcohol and int(sheet.flags.get("drunk_minutes", 0)) > 0:
 		od += 0.25
-	if od > 0.0 and randf() < od:
+	if od > 0.0 and _randf() < od:
 		return _overdose(sheet)
 	return "The %s lands. %s" % [def.display_name.to_lower(),
 			"Tolerance is winning, though." if potency < 0.7 else "For a while, everything is negotiable."]
@@ -151,7 +151,7 @@ static func daily_tick(sheet: CharacterSheet) -> void:
 	sheet.age_years += 1.0 / DAYS_PER_YEAR
 	if sheet.age_years >= ELDER_AGE and sheet.alive:
 		var risk := 0.01 + (sheet.age_years - ELDER_AGE) * 0.004
-		if randf() < risk:
+		if _randf() < risk:
 			EventBus.player_died.emit("old age")
 			return
 	# Going Straight: stay warrant-free long enough and The Record seals.
@@ -171,7 +171,7 @@ static func daily_tick(sheet: CharacterSheet) -> void:
 	# Pregnancy and the baby gauntlet.
 	if sheet.flags.has("pregnant_due_day") and GameClock.day >= int(sheet.flags.pregnant_due_day):
 		sheet.flags.erase("pregnant_due_day")
-		var kid_name: String = Coherence.FIRST_NAMES[randi() % Coherence.FIRST_NAMES.size()]
+		var kid_name: String = Coherence.FIRST_NAMES[_randi_index(Coherence.FIRST_NAMES.size())]
 		sheet.children.append({"name": kid_name, "born_day": GameClock.day, "traits": []})
 		EventBus.toast.emit("%s arrives at 4 AM, furious about everything. Congratulations." % kid_name)
 	for kid in sheet.children:
@@ -198,7 +198,7 @@ static func age_npcs() -> void:
 		if not npc.alive:
 			continue
 		npc.age_years += 1.0 / DAYS_PER_YEAR
-		if npc.age_years >= ELDER_AGE and randf() < 0.006 + (npc.age_years - ELDER_AGE) * 0.002:
+		if npc.age_years >= ELDER_AGE and _randf() < 0.006 + (npc.age_years - ELDER_AGE) * 0.002:
 			Confrontation.kill_npc(npc, "old age")
 
 
@@ -225,3 +225,27 @@ static func obituary(sheet: CharacterSheet, cause: String) -> String:
 		("Wanted on %d charge%s at time of death." % [warrants, "" if warrants == 1 else "s"]) if warrants > 0 else "No outstanding warrants, for once.",
 		("%d child%s" % [sheet.children.size(), "" if sheet.children.size() == 1 else "ren"]) if not sheet.children.is_empty() else "nobody in particular"]
 	return lines
+
+
+static func _randf() -> float:
+	var rng := RandomNumberGenerator.new()
+	if WorldState.body_rng_state == 0:
+		WorldState.reset_body_rng()
+	rng.seed = WorldState.body_rng_seed
+	rng.state = WorldState.body_rng_state
+	var value := rng.randf()
+	WorldState.body_rng_state = rng.state
+	return value
+
+
+static func _randi_index(size: int) -> int:
+	if size <= 0:
+		return 0
+	var rng := RandomNumberGenerator.new()
+	if WorldState.body_rng_state == 0:
+		WorldState.reset_body_rng()
+	rng.seed = WorldState.body_rng_seed
+	rng.state = WorldState.body_rng_state
+	var value := rng.randi() % size
+	WorldState.body_rng_state = rng.state
+	return value

@@ -34,6 +34,7 @@ func _ready() -> void:
 	_test_lsd()
 	_test_education()
 	_test_family()
+	_test_body_rng_save_roundtrip()
 	_test_aging_and_death()
 	_test_walk_away()
 	_test_save_roundtrip()
@@ -238,6 +239,46 @@ func _test_family() -> void:
 	_check(Body.heir_candidates(sheet).size() == 1, "grown kid is heir-eligible")
 	var obit := Body.obituary(sheet, "testing")
 	_check("Test Subject" in obit and "child" in obit, "the obituary tells the story")
+
+
+func _test_body_rng_save_roundtrip() -> void:
+	print("[Save round trip: body RNG]")
+	var sheet := _fresh_sheet()
+	WorldState.world_seed = 888123
+	WorldState.reset_body_rng()
+	sheet.flags["pregnant_due_day"] = GameClock.day
+	var before_state := WorldState.body_rng_state
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with body RNG state")
+	Body.daily_tick(sheet)
+	var expected := _body_signature(sheet)
+	_check(WorldState.body_rng_state != before_state,
+			"birth advances saved body RNG state")
+	WorldState.player_sheet = null
+	WorldState.body_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores body RNG state")
+	var loaded := WorldState.player_sheet
+	Body.daily_tick(loaded)
+	_check(_body_signature(loaded) == expected,
+			"loaded body RNG repeats the same birth result")
+	SaveManager.set_in_game(false)
+
+
+func _body_signature(sheet: CharacterSheet) -> String:
+	var children := []
+	for kid in sheet.children:
+		children.append([
+			str(kid.get("name", "")),
+			int(kid.get("born_day", 0)),
+			kid.get("traits", []),
+		])
+	return JSON.stringify({
+		"children": children,
+		"flags": {
+			"pregnant_due_day": int(sheet.flags.get("pregnant_due_day", -1)),
+		},
+		"body_rng_state": str(WorldState.body_rng_state),
+	})
 
 
 func _test_aging_and_death() -> void:
