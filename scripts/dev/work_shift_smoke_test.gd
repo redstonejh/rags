@@ -95,6 +95,22 @@ func _resolve_optional_dilemma() -> void:
 	_check(choice != null, "post-shift dilemma has an enabled choice")
 	if choice == null:
 		return
+	var old_choice_text := str(choice.text)
+	EventBus.shift_dilemma.emit({
+		"text": "A second shift problem barges in before you answer.",
+		"choices": [
+			{"label": "Synthetic fresh choice", "cash": 0, "needs": {},
+				"result": "Fresh choice resolved."},
+		],
+	})
+	await get_tree().process_frame
+	_check(_node_tree_has_button_text(dilemma, "Synthetic fresh choice"),
+			"dilemma refresh shows the new choice")
+	_check(not _node_tree_has_button_text(dilemma, old_choice_text),
+			"dilemma refresh removes stale choices synchronously")
+	choice = _find_enabled_button(dilemma)
+	if choice == null:
+		return
 	choice.pressed.emit()
 	await get_tree().process_frame
 	_check(not dilemma.visible and not GameClock.paused,
@@ -148,6 +164,15 @@ func _node_tree_has_label_text(node: Node, needle: String) -> bool:
 		return true
 	for child in node.get_children():
 		if _node_tree_has_label_text(child, needle):
+			return true
+	return false
+
+
+func _node_tree_has_button_text(node: Node, needle: String) -> bool:
+	if node is Button and str(node.text).contains(needle):
+		return true
+	for child in node.get_children():
+		if _node_tree_has_button_text(child, needle):
 			return true
 	return false
 

@@ -50,8 +50,7 @@ func _build_ui() -> void:
 
 func _show_dilemma(dilemma: Dictionary) -> void:
 	_text_label.text = str(dilemma.get("text", ""))
-	for child in _choices_box.get_children():
-		child.queue_free()
+	_clear_choices()
 	var sheet: CharacterSheet = WorldState.player_sheet
 	for choice in dilemma.get("choices", []):
 		var btn := Button.new()
@@ -71,6 +70,12 @@ func _show_dilemma(dilemma: Dictionary) -> void:
 	else:
 		visible = true
 		GameClock.push_pause_lock(MODAL_ID)
+
+
+func _clear_choices() -> void:
+	for child in _choices_box.get_children():
+		_choices_box.remove_child(child)
+		child.queue_free()
 
 
 func _choose(choice: Dictionary) -> void:
