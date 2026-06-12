@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="3"]
@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://scripts/ui/shop.gd" id="10"]
 [ext_resource type="Script" path="res://scripts/ui/inventory.gd" id="11"]
 [ext_resource type="Script" path="res://scripts/ui/dilemma.gd" id="12"]
+[ext_resource type="Script" path="res://scripts/sim/gossip_system.gd" id="13"]
+[ext_resource type="Script" path="res://scripts/ui/dialogue.gd" id="14"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -28,6 +30,9 @@ script = ExtResource("7")
 [node name="EconomySystem" type="Node" parent="."]
 script = ExtResource("8")
 
+[node name="GossipSystem" type="Node" parent="."]
+script = ExtResource("13")
+
 [node name="HUD" parent="." instance=ExtResource("5")]
 
 [node name="Phone" parent="." instance=ExtResource("9")]
@@ -40,5 +45,8 @@ script = ExtResource("11")
 
 [node name="Dilemma" type="CanvasLayer" parent="."]
 script = ExtResource("12")
+
+[node name="Dialogue" type="CanvasLayer" parent="."]
+script = ExtResource("14")
 
 [node name="DebugOverlay" parent="." instance=ExtResource("6")]

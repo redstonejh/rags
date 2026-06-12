@@ -26,6 +26,7 @@ func _ready() -> void:
 		body.color = arch.color
 	name_label.text = record.display_name.get_slice(" ", 0)
 	_wander_target = global_position
+	add_child(NPCInteractable.new(record))
 
 
 func _physics_process(delta: float) -> void:

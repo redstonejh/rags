@@ -28,3 +28,8 @@ signal shop_opened(stock: Array)
 signal path_updated                                 # life-path step changed
 signal player_died(cause: String)
 signal player_job_changed(job_id: String)
+
+# -- Social & perception (M4) --
+signal dialogue_requested(npc_id: String)           # player wants to talk
+signal relationship_changed(npc_id: String, value: float)
+signal reality_check(perceived: float, actual: float, npc_id: String)

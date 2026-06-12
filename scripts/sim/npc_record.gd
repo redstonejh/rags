@@ -43,8 +43,55 @@ var flags: Dictionary = {}
 var agent: Node = null
 
 
+const MEMORY_CAP := 24
+
 func archetype() -> ArchetypeDef:
 	return ContentDB.archetypes.get(archetype_id)
+
+
+func rel(other_id: String) -> float:
+	return float(relationships.get(other_id, 0.0))
+
+
+func change_rel(other_id: String, delta: float) -> void:
+	var value := clampf(rel(other_id) + delta, -100.0, 100.0)
+	relationships[other_id] = value
+	if other_id == "player":
+		EventBus.relationship_changed.emit(id, value)
+
+
+## Memories are plain dicts (JSON-friendly): kind, subject ("player" or an
+## npc id), text, tone (-1..1), salience (gossip-worthiness, decays daily),
+## day, secondhand. Capped at MEMORY_CAP, lowest salience evicted first.
+func add_memory(kind: String, subject: String, text: String, tone: float, salience: float,
+		secondhand := false) -> void:
+	memories.append({
+		"kind": kind, "subject": subject, "text": text,
+		"tone": tone, "salience": salience,
+		"day": GameClock.day, "secondhand": secondhand,
+	})
+	if memories.size() > MEMORY_CAP:
+		memories.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return float(a.get("salience", 0)) > float(b.get("salience", 0)))
+		memories.resize(MEMORY_CAP)
+
+
+func knows_memory(subject: String, text: String) -> bool:
+	for m in memories:
+		if m.get("subject", "") == subject and m.get("text", "") == text:
+			return true
+	return false
+
+
+## The juiciest thing this person knows — what they'd share at the bar.
+func top_gossip(min_salience: float = 4.0) -> Dictionary:
+	var best: Dictionary = {}
+	var best_salience := min_salience
+	for m in memories:
+		if float(m.get("salience", 0.0)) >= best_salience:
+			best_salience = float(m.salience)
+			best = m
+	return best
 
 
 ## Where this NPC's schedule says they should be at `minute_of_day`.

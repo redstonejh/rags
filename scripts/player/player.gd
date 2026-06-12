@@ -42,7 +42,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_minute_passed(_total: int) -> void:
-	needs.apply_minute()
+	WorldState.player_sheet.tick_minute()
 
 
 func _on_need_changed(need_id: String, value: float) -> void:

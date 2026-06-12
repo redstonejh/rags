@@ -150,8 +150,19 @@ func consume_item(item_id: String) -> bool:
 	var hunger_restored := float(item.need_effects.get("hunger", 0.0))
 	if hunger_restored > 0.0:
 		flags["calories_today"] = int(flags.get("calories_today", 0)) + int(hunger_restored * 25)
+	if "booze" in item.tags:
+		# Drunk = confident. Confident = the perceived odds lie harder.
+		flags["drunk_minutes"] = mini(int(flags.get("drunk_minutes", 0)) + 90, 240)
 	inventory.erase(item_id)
 	return true
+
+
+## Per-game-minute upkeep beyond needs decay (the Player node drives this).
+func tick_minute() -> void:
+	needs.apply_minute()
+	var drunk := int(flags.get("drunk_minutes", 0))
+	if drunk > 0:
+		flags["drunk_minutes"] = drunk - 1
 
 
 func add_skill_xp(skill: String, xp: float) -> void:

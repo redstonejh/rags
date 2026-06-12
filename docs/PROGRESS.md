@@ -1,6 +1,6 @@
 # RAGS — Build Progress
 
-*Last updated: 2026-06-11 (M3 complete). Repo: https://github.com/redstonejh/rags*
+*Last updated: 2026-06-11 (M4 complete). Repo: https://github.com/redstonejh/rags*
 
 ## Done & verified
 
@@ -10,6 +10,7 @@
 | M1 character creation | ✅ ContentDB, 3 origins, 18 traits, stat point-buy, trait budget, Deal Me a Life (Coherence Engine), ironman saves, 16/16 smoke tests |
 | M2 living NPCs | ✅ 190 NPCs with schedules/personalities, SimEngine abstract tick + embodiment, 6 enterable-or-abstract buildings + door travel, F3 overlay, 15/15 smoke tests |
 | M3 survival economy | ✅ jobs/shifts/paychecks + dilemmas, Monday rent + eviction, Big Mickey, body sim v1 (weight/calories/starvation death), phone (Jobs/Bank/Mickey/Paths), shop + inventory UI, toasts, HUD v2, death → next life in the persistent town, ID-quest Life Path. 49/49 smoke tests |
+| M4 social + perception | ✅ Perception (perceived vs true stats via the Coherence table, drunk confidence inflation, streetwise reads), Social action resolver w/ visible odds + Reality Check moments, dialogue UI on every embodied NPC, memories w/ salience + decay + cap, GossipSystem (hourly propagation + familiarity drift), dating v1. 31/31 smoke tests |
 
 Run tests: `godot --headless res://scenes/dev/M1SmokeTest.tscn` (and M2/M3SmokeTest).
 Godot exe: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_*\Godot_v4.6.3-stable_win64.exe`
@@ -23,15 +24,13 @@ Godot exe: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_*\G
 - Death: `EventBus.player_died` → WorldState writes `alive=false` + saves (ironman) → main.gd shows death screen → character creation header says "Life #N" → `GameFlow.start_new_game` routes to `WorldState.start_life()` (town persists) vs `new_world()` (first life). `GameFlow.continue_game()` routes dead saves back to creation.
 - Origins now carry `starting_housing_id` + `starting_flags` (exec: decent_apartment + 4 prepaid weeks).
 
-## NEXT: M4 — social + perception (design: docs/DESIGN.md Part 3.5)
+## M4 system map (for whoever builds M5)
 
-Build order suggestion:
-1. Relationship values + Memory records on NPCRecord (salience, decay) — extend to_dict/from_dict.
-2. Dialogue UI (menu-driven: chat/compliment/insult/ask out/threaten/gift) on embodied NPCAgent interact.
-3. Reality Check v1: perceived-vs-true stat reads (Coherence table already drives both NPC gen and guesses — `scripts/sim/coherence.gd`), visible odds on stat-gated options, embarrassment events on hard misses.
-4. Streetwise internal-monologue reads; gossip propagation on co-located sim ticks; NPC↔NPC relationship drift; dating loop v1.
-5. M4 smoke test + commit + push.
+- `scripts/sim/perception.gd` — perceived vs true stats; `scripts/sim/social.gd` — action resolver (all static, forced_roll param for tests); `scripts/sim/gossip_system.gd` — Node in Main, hourly propagation + daily memory decay.
+- NPCRecord grew `rel/change_rel/add_memory/knows_memory/top_gossip`; memories are plain dicts (kind/subject/text/tone/salience/day/secondhand), cap 24.
+- Embodied NPCs carry an `NPCInteractable` (E to talk) → `EventBus.dialogue_requested` → `scripts/ui/dialogue.gd`.
+- IMPORTANT (headless): run `godot --headless --path . --import` after adding new class_name scripts, or tests hang on parse errors with no output.
 
-**Standing instruction:** build ALL milestones (M4→M8 per docs/DESIGN.md roadmap), test headless each, commit+push each, infer answers from the design doc, don't stop. Don't add autoloads beyond the existing 7.
+**Standing instruction:** build ALL milestones (M5→M8 per docs/DESIGN.md roadmap), test headless each, commit+push each, infer answers from the design doc, don't stop. Don't add autoloads beyond the existing 7.
 
 ## After M4: M5 confrontation/crime → M6 housing → M7 body/family/aging → M8 living town (see docs/DESIGN.md Part 5 roadmap and Parts 6–7 for economy/crime numbers).
