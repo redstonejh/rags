@@ -138,7 +138,7 @@ func _buy(item: ItemDef) -> void:
 func _shoplift(item: ItemDef) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	var catch_chance := clampf(0.20 - 0.025 * sheet.skill_level("stealth"), 0.05, 1.0)
-	if randf() < catch_chance:
+	if CrimeSystem.roll_chance(catch_chance):
 		CrimeSystem.commit("shoplift", WorldState.player_location_id)
 		EventBus.toast.emit("\"HEY!\" The whole store turns. The %s stays." % item.display_name)
 	else:
@@ -151,7 +151,7 @@ func _shoplift(item: ItemDef) -> void:
 ## Always witnesses. ALWAYS. That's what the 'armed' part buys you.
 func _rob_register() -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
-	var loot := randi_range(20000, 60000)
+	var loot := CrimeSystem.random_int(20000, 60000)
 	sheet.add_dirty_cash(loot)
 	CrimeSystem.commit("armed_robbery", WorldState.player_location_id)
 	EventBus.toast.emit("$%.2f in a paper bag. Everyone in the store memorized your face." % (loot / 100.0))

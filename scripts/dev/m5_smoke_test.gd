@@ -32,6 +32,7 @@ func _ready() -> void:
 	_test_gossip_to_cop()
 	_test_carjack_fight()
 	_test_crime_rng_save_roundtrip()
+	_test_crime_rng_public_rolls_roundtrip()
 	_test_arrest_paths()
 	_test_pickpocket()
 	_test_fence()
@@ -227,6 +228,32 @@ func _test_crime_rng_save_roundtrip() -> void:
 	CrimeSystem._bodies_and_detectives()
 	_check(_crime_signature() == expected,
 			"loaded crime RNG repeats the same body-discovery result")
+	SaveManager.set_in_game(false)
+	WorldState.player_sheet = sheet
+
+
+func _test_crime_rng_public_rolls_roundtrip() -> void:
+	print("[Save round trip: public crime rolls]")
+	var sheet := _fresh_sheet()
+	WorldState.world_seed = 612024
+	WorldState.reset_crime_rng()
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with public crime RNG state")
+	var expected := [
+		CrimeSystem.roll_chance(0.20),
+		CrimeSystem.random_int(20000, 60000),
+		CrimeSystem.roll_chance(0.05),
+		str(WorldState.crime_rng_state),
+	]
+	WorldState.crime_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores public crime RNG state")
+	var actual := [
+		CrimeSystem.roll_chance(0.20),
+		CrimeSystem.random_int(20000, 60000),
+		CrimeSystem.roll_chance(0.05),
+		str(WorldState.crime_rng_state),
+	]
+	_check(actual == expected, "loaded public crime rolls repeat shop outcomes")
 	SaveManager.set_in_game(false)
 	WorldState.player_sheet = sheet
 

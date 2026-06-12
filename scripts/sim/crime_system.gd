@@ -151,6 +151,17 @@ static func wanted_stars() -> int:
 	return mini(stars, MAX_STARS)
 
 
+static func roll_chance(chance: float) -> bool:
+	return _randf() < clampf(chance, 0.0, 1.0)
+
+
+static func random_int(min_value: int, max_value: int) -> int:
+	var rng := _crime_rng()
+	var value := rng.randi_range(min_value, max_value)
+	_store_crime_rng(rng)
+	return value
+
+
 # ------------------------------------------------------------ the law's day
 
 func _on_day_passed(_day: int) -> void:
@@ -326,11 +337,20 @@ static func _close_warrants() -> void:
 
 
 static func _randf() -> float:
+	var rng := _crime_rng()
+	var value := rng.randf()
+	_store_crime_rng(rng)
+	return value
+
+
+static func _crime_rng() -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
 	if WorldState.crime_rng_state == 0:
 		WorldState.reset_crime_rng()
 	rng.seed = WorldState.crime_rng_seed
 	rng.state = WorldState.crime_rng_state
-	var value := rng.randf()
+	return rng
+
+
+static func _store_crime_rng(rng: RandomNumberGenerator) -> void:
 	WorldState.crime_rng_state = rng.state
-	return value
