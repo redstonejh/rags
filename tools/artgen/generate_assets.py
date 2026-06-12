@@ -49,6 +49,7 @@ STREET_LAMP_PATH = PROPS_DIR / "street_lamp.png"
 TRASH_CAN_PATH = PROPS_DIR / "trash_can.png"
 DUMPSTER_PATH = PROPS_DIR / "dumpster.png"
 NEWS_BOX_PATH = PROPS_DIR / "news_box.png"
+BUS_STOP_PATH = PROPS_DIR / "bus_stop.png"
 BAR_COUNTER_PATH = PROPS_DIR / "bar_counter.png"
 RECORDS_DESK_PATH = PROPS_DIR / "records_desk.png"
 WORK_SPOT_PATH = PROPS_DIR / "work_spot.png"
@@ -579,6 +580,31 @@ def draw_news_box() -> None:
     print(f"wrote {NEWS_BOX_PATH.relative_to(ROOT)}")
 
 
+def draw_bus_stop() -> None:
+    img = Image.new("RGBA", (56, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    # Back wall and roof.
+    draw.rectangle((8, 12, 48, 38), fill=(55, 59, 66, 220))
+    draw.rectangle((10, 14, 46, 35), fill=(82, 92, 101, 190))
+    draw.rectangle((5, 8, 51, 14), fill=(38, 39, 44, 255))
+    draw.rectangle((7, 6, 49, 9), fill=(118, 50, 45, 255))
+    # Glass panels.
+    for x in [13, 27, 41]:
+        draw.rectangle((x, 16, x + 8, 33), fill=(92, 129, 138, 160))
+        draw.line((x + 1, 17, x + 7, 31), fill=(178, 202, 198, 130))
+    # Bench and sign.
+    draw.rectangle((15, 34, 41, 37), fill=(129, 82, 48, 255))
+    draw.rectangle((18, 37, 21, 43), fill=(48, 48, 52, 255))
+    draw.rectangle((35, 37, 38, 43), fill=(48, 48, 52, 255))
+    draw.rectangle((44, 0, 53, 8), fill=(238, 230, 196, 255))
+    draw.rectangle((45, 1, 52, 7), fill=(76, 105, 164, 255))
+    draw.text((47, 0), "B", font=ImageFont.load_default(), fill=(238, 230, 196, 255))
+    draw.rectangle((48, 8, 50, 42), fill=(42, 43, 47, 255))
+    draw.rectangle((6, 40, 52, 44), fill=(38, 38, 42, 255))
+    img.save(BUS_STOP_PATH)
+    print(f"wrote {BUS_STOP_PATH.relative_to(ROOT)}")
+
+
 def draw_bar_counter() -> None:
     img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -660,6 +686,7 @@ def generate_props() -> None:
     draw_trash_can()
     draw_dumpster()
     draw_news_box()
+    draw_bus_stop()
     draw_bar_counter()
     draw_records_desk()
     draw_work_spot()

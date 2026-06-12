@@ -126,6 +126,8 @@ func _instantiate_main() -> void:
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
 	await _verify_exterior_roof_fade()
 	_check(_exterior_street_prop_count() > 0, "exterior street props spawned")
+	_check(_exterior_has_named_node("BusStopSprite"),
+			"bus stop prop spawned at the opening marker")
 
 
 func _walk_toward_diner() -> void:
@@ -664,6 +666,13 @@ func _exterior_street_prop_count() -> int:
 		return 0
 	var layer := world_root.get_child(0).get_node_or_null("StreetPropLayer")
 	return layer.get_child_count() if layer != null else 0
+
+
+func _exterior_has_named_node(node_name: String) -> bool:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return false
+	return _find_named_descendant(world_root.get_child(0), node_name) != null
 
 
 func _exterior_ground_tile_count(tile: Vector2i) -> int:

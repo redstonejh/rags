@@ -32,6 +32,7 @@ const STREET_LAMP_TEXTURE_PATH := "res://assets/props/street_lamp.png"
 const TRASH_CAN_TEXTURE_PATH := "res://assets/props/trash_can.png"
 const DUMPSTER_TEXTURE_PATH := "res://assets/props/dumpster.png"
 const NEWS_BOX_TEXTURE_PATH := "res://assets/props/news_box.png"
+const BUS_STOP_TEXTURE_PATH := "res://assets/props/bus_stop.png"
 const ROOF_FADE_ALPHA := 0.38
 const ROOF_FADE_SPEED := 10.0
 
@@ -225,9 +226,10 @@ func _place_street_props() -> void:
 		{"path": DUMPSTER_TEXTURE_PATH, "cell": Vector2i(5, 24), "offset": Vector2(8, -2)},
 		{"path": NEWS_BOX_TEXTURE_PATH, "cell": Vector2i(13, 10), "offset": Vector2.ZERO},
 		{"path": NEWS_BOX_TEXTURE_PATH, "cell": Vector2i(25, 14), "offset": Vector2.ZERO},
+		{"path": BUS_STOP_TEXTURE_PATH, "cell": Vector2i(11, 10), "offset": Vector2(0, -7), "name": "BusStopSprite"},
 	]
 	for prop in props:
-		_add_street_prop(prop.path, prop.cell, prop.offset)
+		_add_street_prop(prop.path, prop.cell, prop.offset, prop.get("name", "StreetProp"))
 	for cell in [Vector2i(15, 13), Vector2i(33, 13), Vector2i(25, 25), Vector2i(52, 28)]:
 		var bench := Amenity.new()
 		bench.configure("bench", 1.0, "the bench", "Sleep on", Color(0.45, 0.3, 0.2))
@@ -235,14 +237,15 @@ func _place_street_props() -> void:
 		add_child(bench)
 
 
-func _add_street_prop(texture_path: String, cell: Vector2i, offset: Vector2) -> void:
+func _add_street_prop(texture_path: String, cell: Vector2i, offset: Vector2,
+		node_name: String = "StreetProp") -> void:
 	if street_prop_layer == null:
 		return
 	var texture: Texture2D = load(texture_path)
 	if texture == null:
 		return
 	var sprite := Sprite2D.new()
-	sprite.name = "StreetProp"
+	sprite.name = node_name
 	sprite.texture = texture
 	sprite.texture_filter = 1
 	sprite.position = cell_to_world(cell) + offset
