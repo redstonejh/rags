@@ -65,6 +65,7 @@ func _seed_people_app_state() -> void:
 	rival.relationships["player"] = -38.0
 	rival.relationships[date.id] = -45.0
 	rival.add_memory("witnessed", "player", "were seen arguing outside Mel's", -0.4, 5.0, true)
+	rival.memories.back()["source_id"] = date.id
 
 
 func _instantiate_main() -> void:

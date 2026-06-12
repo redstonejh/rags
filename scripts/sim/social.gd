@@ -206,13 +206,35 @@ static func _chat(sheet: CharacterSheet, npc: NPCRecord) -> String:
 	for m in npc.memories:
 		if m.get("subject", "") == "player" and m.get("secondhand", false) \
 				and float(m.get("salience", 0.0)) >= 3.0:
-			return "\"So... I heard you %s. Small town.\"" % str(m.get("text", "did something"))
+			return "\"So... %s said you %s. %s\"" % [
+				_gossip_source_name(str(m.get("source_id", ""))),
+				str(m.get("text", "did something")),
+				_gossip_source_flavor(npc, str(m.get("source_id", "")))]
 	var lines := [
 		"Weather, work, the price of everything. It helps anyway.",
 		"They complain about the diner coffee with real passion.",
 		"Five minutes about nothing. You both feel better.",
 	]
 	return lines[hash(npc.id + str(GameClock.total_minutes)) % lines.size()]
+
+
+static func _gossip_source_name(source_id: String) -> String:
+	var source: NPCRecord = WorldState.npcs.get(source_id)
+	return source.display_name if source != null else "someone"
+
+
+static func _gossip_source_flavor(listener: NPCRecord, source_id: String) -> String:
+	var source: NPCRecord = WorldState.npcs.get(source_id)
+	if source == null:
+		return "Small town."
+	var rel := listener.rel(source_id)
+	if source.is_cop():
+		return "Cops gossip like everybody else."
+	if rel >= 35.0:
+		return "I believe them, which is inconvenient for you."
+	if rel <= -35.0:
+		return "I hate that I believe them."
+	return "Small town."
 
 
 static func _apply(sheet: CharacterSheet, npc: NPCRecord, success: bool,

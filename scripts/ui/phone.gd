@@ -461,16 +461,24 @@ func _people_gossip_text(npc: NPCRecord) -> String:
 	var story := npc.top_gossip(3.0)
 	if story.is_empty():
 		return "Gossip: nothing useful yet."
-	var source := "heard" if story.get("secondhand", false) else "remembers"
 	var subject := _npc_name(str(story.get("subject", "")))
-	return "Gossip: %s %s %s (day %d)" % [
+	if story.get("secondhand", false):
+		return "Gossip: %s heard from %s that %s %s (day %d)" % [
+			npc.display_name.get_slice(" ", 0),
+			_npc_name(str(story.get("source_id", ""))),
+			subject,
+			str(story.get("text", "did something")),
+			int(story.get("day", 0))]
+	return "Gossip: %s remembers %s %s (day %d)" % [
 		npc.display_name.get_slice(" ", 0),
-		source,
-		"%s %s" % [subject, str(story.get("text", "did something"))],
+		subject,
+		str(story.get("text", "did something")),
 		int(story.get("day", 0))]
 
 
 func _npc_name(npc_id: String) -> String:
+	if npc_id == "":
+		return "someone"
 	if npc_id == "player":
 		return "you"
 	var npc: NPCRecord = WorldState.npcs.get(npc_id)

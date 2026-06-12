@@ -65,6 +65,9 @@ static func share(speaker: NPCRecord, listener: NPCRecord) -> bool:
 	listener.add_memory(str(story.get("kind", "gossip")), subject, text,
 			float(story.get("tone", 0.0)),
 			float(story.get("salience", 0.0)) * SECONDHAND_FACTOR, true)
+	listener.memories.back()["source_id"] = speaker.id
+	if story.has("source_id"):
+		listener.memories.back()["previous_source_id"] = story.source_id
 	if story.has("case_id"): # crime stories keep their case — cops act on hearsay
 		listener.memories.back()["case_id"] = story.case_id
 	if subject != listener.id: # hearing about yourself works differently

@@ -65,6 +65,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Started 2026-06-12: dialogue now renders a dedicated Reality Check callout with perceived-to-actual odds collapse text and aftermath flavor, and the scripted playtest forces/captures the moment through the real dialogue UI. Button-level odds animation and visible witness reactions remain.
 - Gossip made visible: NPCs reference what they heard with source flavor; the phone gets a People app (relationships, hearts/daggers, who's dating whom).
   - Started 2026-06-12: the phone now has a People tab backed by `NPCRecord` relationships, dating flags, top gossip memories, and NPC-to-NPC bonds/feuds. Player-knowledge gating and richer couple/family records remain.
+  - Continued 2026-06-12: secondhand gossip now records the NPC source, and both chat lines and the phone People tab name who passed the story along with relationship-flavored skepticism/trust. Longer source chains and player-knowledge gating remain.
 - Dating becomes activities (a drink at the Anchor, a meal at Mel's — short scenes with choices), not a button.
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
 - **DoD:** scripted playthrough covering chat → flirt → reality check → hearing about it from a stranger later.

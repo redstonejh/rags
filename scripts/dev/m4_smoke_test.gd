@@ -146,6 +146,7 @@ func _test_gossip() -> void:
 		if m.get("secondhand", false) and m.get("subject", "") == "player":
 			heard = m
 	_check(not heard.is_empty(), "stranger now holds a secondhand memory about the player")
+	_check(str(heard.get("source_id", "")) == witness.id, "secondhand gossip records who said it")
 	_check(float(heard.get("salience", 0)) < 10.0, "gossip arrives degraded")
 	_check(stranger.rel("player") < 0.0, "stranger's opinion moved by a story alone")
 	# Two days pass; the story survives decay and comes up in conversation.
@@ -153,7 +154,7 @@ func _test_gossip() -> void:
 	GossipSystem.decay_memories(stranger)
 	var viewer := _fresh_viewer()
 	var chat: Dictionary = Social.interact(viewer, stranger, "chat")
-	_check("heard" in str(chat.text), "the stranger brings it up to your face")
+	_check(witness.display_name in str(chat.text), "the stranger names who told them")
 	# Hourly propagation also works end-to-end (random speakers, many ticks).
 	var quiet := _mk_npc("npc_qt", "loc_test_room2", ["plain"], 8, 50, 95)
 	quiet.add_memory("witnessed", "player", "saw something unrepeatable", -0.5, 12.0)
