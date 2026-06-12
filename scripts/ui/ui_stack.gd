@@ -11,6 +11,7 @@ const ICONS := {
 	"resume": "res://assets/ui/icon_resume.png",
 	"save": "res://assets/ui/icon_save.png",
 	"walk": "res://assets/ui/icon_walk.png",
+	"settings": "res://assets/ui/icon_settings.png",
 	"quit": "res://assets/ui/icon_quit.png",
 }
 
@@ -123,7 +124,7 @@ func _build_pause_menu() -> void:
 	_add_button(vbox, "Resume", _close_pause_menu, "resume")
 	_add_button(vbox, "Save", _save_game, "save")
 	_add_button(vbox, "Walk Away", _walk_away, "walk")
-	_add_button(vbox, "Settings", _open_settings_menu)
+	_add_button(vbox, "Settings", _open_settings_menu, "settings")
 
 	_add_button(vbox, "Quit to Menu", _quit_to_menu, "quit")
 

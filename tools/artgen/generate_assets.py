@@ -79,6 +79,7 @@ UI_ICON_PATHS = {
     "resume": UI_DIR / "icon_resume.png",
     "save": UI_DIR / "icon_save.png",
     "walk": UI_DIR / "icon_walk.png",
+    "settings": UI_DIR / "icon_settings.png",
     "quit": UI_DIR / "icon_quit.png",
 }
 REALITY_STING_PATH = AUDIO_DIR / "reality_check.wav"
@@ -869,6 +870,16 @@ def generate_ui() -> None:
         draw.line((7, 10, 4, 14), fill=ink, width=2)
         draw.line((7, 10, 12, 13), fill=ink, width=2)
 
+    def settings(draw: ImageDraw.ImageDraw) -> None:
+        draw.ellipse((3, 3, 13, 13), outline=shadow, width=3)
+        draw.ellipse((4, 4, 12, 12), outline=ink, width=2)
+        draw.rectangle((7, 1, 9, 4), fill=ink)
+        draw.rectangle((7, 12, 9, 15), fill=ink)
+        draw.rectangle((1, 7, 4, 9), fill=ink)
+        draw.rectangle((12, 7, 15, 9), fill=ink)
+        draw.ellipse((6, 6, 10, 10), fill=accent)
+        draw.point((8, 8), fill=ink)
+
     def quit_icon(draw: ImageDraw.ImageDraw) -> None:
         draw.rectangle((3, 3, 11, 13), outline=ink, width=2)
         draw.line((8, 8, 14, 8), fill=accent, width=2)
@@ -877,6 +888,7 @@ def generate_ui() -> None:
     _save_icon(UI_ICON_PATHS["resume"], resume)
     _save_icon(UI_ICON_PATHS["save"], save)
     _save_icon(UI_ICON_PATHS["walk"], walk)
+    _save_icon(UI_ICON_PATHS["settings"], settings)
     _save_icon(UI_ICON_PATHS["quit"], quit_icon)
 
 
