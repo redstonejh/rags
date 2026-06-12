@@ -64,4 +64,4 @@ func continue_as_heir(kid: Dictionary) -> void:
 
 func _enter_world() -> void:
 	SaveManager.set_in_game(true)
-	get_tree().change_scene_to_file(GAME)
+	get_tree().call_deferred("change_scene_to_file", GAME)
