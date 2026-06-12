@@ -1,7 +1,7 @@
 extends CanvasLayer
-## Dialogue UI: the stat-gated intent menu with VISIBLE (perceived) odds,
-## Fallout-style. The odds you see came out of your character's head, not
-## the simulation — see Perception. Clock pauses while you talk.
+## Dialogue UI: the stat-gated intent menu with visible perceived odds.
+## The odds come from the character's read, while outcomes resolve against
+## hidden truth in Social/Perception. Clock pauses while you talk.
 
 var _panel: PanelContainer
 var _name_label: Label
@@ -15,6 +15,7 @@ var _npc: NPCRecord = null
 var _revealed_action: String = ""
 var _revealed_perceived: float = -1.0
 var _revealed_actual: float = -1.0
+
 const MODAL_ID := "dialogue"
 const PORTRAIT_DIR := "res://assets/portraits/"
 
@@ -63,15 +64,18 @@ func _build_ui() -> void:
 
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
+
 	_name_label = Label.new()
 	_name_label.add_theme_font_size_override("font_size", 16)
 	_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_name_label)
+
 	_rel_label = Label.new()
 	_rel_label.add_theme_font_size_override("font_size", 12)
 	header.add_child(_rel_label)
+
 	var close := Button.new()
-	close.text = "✕"
+	close.text = "X"
 	close.pressed.connect(_close)
 	header.add_child(close)
 
@@ -136,27 +140,32 @@ func _ui_stack() -> Node:
 func _refresh() -> void:
 	if _npc == null:
 		return
-	_name_label.text = _npc.display_name + ("  ♥" if _npc.flags.get("dating_player", false) else "")
+	_name_label.text = _npc.display_name + ("  <3" if _npc.flags.get("dating_player", false) else "")
 	_rel_label.text = _rel_text(_npc.rel("player"))
 	for child in _actions_box.get_children():
 		child.queue_free()
+
 	var sheet: CharacterSheet = WorldState.player_sheet
 	for action_id in Social.available_actions(sheet, _npc):
-		var def: Dictionary = Social.ACTIONS.get(action_id, {"label": "Spend time together", "roll": false})
+		var def: Dictionary = Social.ACTIONS.get(action_id, {
+			"label": "Spend time together",
+			"roll": false,
+		})
 		var btn := Button.new()
 		btn.name = "Action_%s" % action_id
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.custom_minimum_size = Vector2(260, 0)
 		if def.get("roll", false):
 			var shown := Social.perceived_chance(sheet, _npc, action_id)
-			btn.text = "%s  —  %d%%" % [def.label, roundi(shown * 100)]
+			btn.text = "%s  -  %d%%" % [def.label, roundi(shown * 100)]
 		else:
 			btn.text = str(def.get("label", action_id))
 		if action_id == _revealed_action:
 			btn.text = "%s  -  %d%% -> %d%%" % [
 				def.get("label", action_id),
 				roundi(_revealed_perceived * 100),
-				roundi(_revealed_actual * 100)]
+				roundi(_revealed_actual * 100),
+			]
 			btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
 		btn.pressed.connect(_do_action.bind(action_id))
 		_actions_box.add_child(btn)
@@ -174,20 +183,6 @@ func _set_portrait(npc: NPCRecord) -> void:
 
 func _do_action(action_id: String) -> void:
 	_do_action_with_roll(action_id)
-	return
-	if _npc == null:
-		return
-	var result := Social.interact(WorldState.player_sheet, _npc, action_id)
-	if result.reality_check:
-		# The on-screen odds visibly collapse: what you believed, then the truth.
-		_result_label.text = "[ %d%% → %d%% ]  %s" % [
-			roundi(result.perceived * 100), roundi(result.actual * 100), result.text]
-		_result_label.add_theme_color_override("font_color", Color(0.9, 0.35, 0.3))
-	else:
-		_result_label.text = result.text
-		_result_label.add_theme_color_override("font_color",
-				Color(0.8, 0.9, 0.75) if result.success else Color(0.8, 0.7, 0.6))
-	_refresh()
 
 
 func _do_action_with_roll(action_id: String, forced_roll := -1.0) -> void:
@@ -199,7 +194,9 @@ func _do_action_with_roll(action_id: String, forced_roll := -1.0) -> void:
 		_revealed_perceived = float(result.perceived)
 		_revealed_actual = float(result.actual)
 		_reality_label.text = "REALITY CHECK: %d%% -> %d%%\nThe read collapses in public. Heads turn. This story can travel." % [
-			roundi(result.perceived * 100), roundi(result.actual * 100)]
+			roundi(result.perceived * 100),
+			roundi(result.actual * 100),
+		]
 		_reality_label.visible = true
 		_result_label.text = result.text
 		_result_label.add_theme_color_override("font_color", Color(0.9, 0.35, 0.3))
@@ -222,9 +219,14 @@ func _clear_reality_check() -> void:
 
 func _rel_text(value: float) -> String:
 	var word := "strangers"
-	if value >= 70.0: word = "close"
-	elif value >= 40.0: word = "friends"
-	elif value >= 15.0: word = "friendly"
-	elif value <= -40.0: word = "enemies"
-	elif value <= -15.0: word = "sour"
+	if value >= 70.0:
+		word = "close"
+	elif value >= 40.0:
+		word = "friends"
+	elif value >= 15.0:
+		word = "friendly"
+	elif value <= -40.0:
+		word = "enemies"
+	elif value <= -15.0:
+		word = "sour"
 	return "%s (%d)" % [word, roundi(value)]

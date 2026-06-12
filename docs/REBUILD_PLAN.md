@@ -68,6 +68,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: secondhand gossip now records the NPC source, and both chat lines and the phone People tab name who passed the story along with relationship-flavored skepticism/trust. Longer source chains and player-knowledge gating remain.
 - Dating becomes activities (a drink at the Anchor, a meal at Mel's — short scenes with choices), not a button.
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
+  - Started 2026-06-12: `Perception.read_line()` now gives People Reader a true-stat readout (`STR/DEX/CON/INT/WIS/CHA`) in dialogue, with M4 coverage for the visible text. Full social odds balance remains.
 - **DoD:** scripted playthrough covering chat → flirt → reality check → hearing about it from a stranger later.
 
 ### Phase 2 — Survival loop to 100%

@@ -95,6 +95,11 @@ func _test_streetwise_reads() -> void:
 	sharp.skills["streetwise"] = 160.0
 	var high_read := Perception.read_line(sharp, librarian)
 	_check("off" in high_read, "high streetwise smells the subversion")
+	var reader := _fresh_viewer()
+	reader.perk_ids.append("people_reader")
+	var reader_line := Perception.read_line(reader, librarian)
+	_check("People Reader:" in reader_line and "STR 15" in reader_line,
+			"People Reader exposes true stats in the read line")
 
 
 func _test_reality_check() -> void:

@@ -57,6 +57,8 @@ static func displayed_chance(sheet: CharacterSheet, perceived: float) -> float:
 
 ## The Streetwise internal monologue — one read line, quality by skill.
 static func read_line(sheet: CharacterSheet, npc: NPCRecord) -> String:
+	if sheet.has_perk("people_reader"):
+		return "People Reader: %s" % _true_stat_line(npc)
 	if int(sheet.flags.get("lsd_minutes", 0)) > 0:
 		return _LSD_READS[hash(npc.id) % _LSD_READS.size()]
 	var sw := sheet.skill_level("streetwise")
@@ -72,6 +74,13 @@ static func read_line(sheet: CharacterSheet, npc: NPCRecord) -> String:
 		return "Something's off. The %s look doesn't match how they hold their weight. Walk carefully." % first
 	return "What you see is what they are: %s. Trust the read." % \
 			Coherence.APPEARANCE_DESCRIPTORS.get(first, "ordinary")
+
+
+static func _true_stat_line(npc: NPCRecord) -> String:
+	var parts: Array[String] = []
+	for stat in CharacterSheet.STAT_IDS:
+		parts.append("%s %d" % [stat, int(npc.stats.get(stat, CharacterSheet.STAT_BASE))])
+	return "  ".join(parts)
 
 
 const _LOW_READS := [
