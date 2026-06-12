@@ -13,6 +13,7 @@ extends Node
 const REPORT_EVIDENCE_PER_CONFIDENCE := 50.0
 const ANONYMOUS_BASELINE_EVIDENCE := 10.0
 const GOSSIP_EVIDENCE_FACTOR := 25.0
+const WITNESS_SUPPRESSION_EVIDENCE_REDUCTION := 35.0
 const BAIL_CENTS_PER_DAY := 5000
 const MAX_STARS := 5
 const COP_CHECK_MINUTES := 5
@@ -268,6 +269,28 @@ static func commit_car_theft(location_id: String, world_pos := Vector2.INF,
 		_force_warrant(case)
 		WorldState.add_news("HOT PLATES. A stolen beater lights up half the county scanner.")
 	return case
+
+
+static func suppress_witness_report(witness: NPCRecord, case_id: String) -> bool:
+	var case: CrimeCase = WorldState.crime_cases.get(case_id)
+	if witness == null or case == null or case.status in [CrimeCase.CLOSED, CrimeCase.COLD]:
+		return false
+	if not witness.id in case.witness_ids:
+		return false
+	var before := case.evidence
+	case.evidence = maxf(case.evidence - WITNESS_SUPPRESSION_EVIDENCE_REDUCTION,
+			ANONYMOUS_BASELINE_EVIDENCE)
+	for memory in witness.memories:
+		if str(memory.get("case_id", "")) == case.id:
+			memory["suppressed_until_day"] = GameClock.day + 7
+			memory["suppressed_by_player"] = true
+	witness.flags["suppressed_case_id"] = case.id
+	witness.flags["scared_of_player_until_day"] = maxi(
+			int(witness.flags.get("scared_of_player_until_day", -1)), GameClock.day + 2)
+	if case.status == CrimeCase.WARRANT and case.evidence < CrimeCase.WARRANT_EVIDENCE:
+		case.status = CrimeCase.OPEN
+		EventBus.wanted_changed.emit(wanted_stars())
+	return case.evidence < before
 
 
 # ------------------------------------------------------------ the law's day

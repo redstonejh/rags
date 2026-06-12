@@ -26,6 +26,7 @@ func _ready() -> void:
 
 	_test_catalog()
 	_test_witness_pipeline()
+	_test_witness_intimidation()
 	_test_forgettable_face()
 	_test_cop_red_handed()
 	_test_evidence_decay()
@@ -119,6 +120,44 @@ func _test_witness_pipeline() -> void:
 	var victim := _mk_npc("w_victim", "loc_scene_c", 30)
 	var case_d := CrimeSystem.commit("pickpocket", "loc_scene_c", victim)
 	_check(case_d.status != CrimeCase.UNREPORTED, "the victim reports (civic 30 + victim 40)")
+	CrimeSystem._close_warrants()
+
+
+func _test_witness_intimidation() -> void:
+	print("[Witness intervention: intimidation]")
+	var sheet := _fresh_sheet()
+	sheet.base_stats["STR"] = 18
+	sheet.skills["streetwise"] = 100.0
+	WorldState.crime_cases.clear()
+	var witness := _mk_npc("w_intimidated", "loc_intimidate", 90, 6, 10)
+	_mk_npc("w_intimidated2", "loc_intimidate", 90, 6, 10)
+	var case := CrimeSystem.commit("shoplift", "loc_intimidate")
+	_check(case.is_active_warrant(), "two strong witnesses can create a warrant")
+	_check("intimidate_witness" in Social.available_actions(sheet, witness),
+			"crime witness exposes intimidation action")
+	var result := Social.interact(sheet, witness, "intimidate_witness", 0.0)
+	_check(result.success, "successful intimidation resolves")
+	_check(case.status == CrimeCase.OPEN and case.evidence < CrimeCase.WARRANT_EVIDENCE,
+			"intimidation can thin a warrant back to an open case")
+	_check(CrimeSystem.wanted_stars() == 0, "suppressed warrant clears wanted stars")
+	_check(int(witness.flags.get("scared_of_player_until_day", -1)) >= GameClock.day,
+			"suppressed witness is scared for later reporting")
+	_check(not ("intimidate_witness" in Social.available_actions(sheet, witness)),
+			"suppressed witness cannot be leaned on again immediately")
+
+	WorldState.crime_cases.clear()
+	var stubborn := _mk_npc("w_stubborn", "loc_intimidate_fail", 90, 14, 90)
+	CrimeSystem.commit("shoplift", "loc_intimidate_fail")
+	var before_count := WorldState.crime_cases.size()
+	var failed := Social.interact(sheet, stubborn, "intimidate_witness", 0.999)
+	_check(not failed.success, "failed intimidation resolves as failure")
+	_check(WorldState.crime_cases.size() == before_count + 1,
+			"failed intimidation creates a coverup case")
+	var found_coverup := false
+	for c in WorldState.crime_cases.values():
+		if c.crime_id == "witness_intimidation":
+			found_coverup = true
+	_check(found_coverup, "coverup case is witness intimidation")
 	CrimeSystem._close_warrants()
 
 

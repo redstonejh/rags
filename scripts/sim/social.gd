@@ -37,6 +37,8 @@ const ACTIONS := {
 	"insult": {"label": "Insult", "roll": false},
 	"threaten": {"label": "Threaten", "roll": true,
 		"atk_stat": "STR", "atk_skill": "streetwise", "def_stat": "STR", "def_bravery": true},
+	"intimidate_witness": {"label": "Lean on witness", "roll": true,
+		"atk_stat": "STR", "atk_skill": "streetwise", "def_stat": "STR", "def_bravery": true},
 	"pickpocket": {"label": "Pickpocket", "roll": true,
 		"atk_stat": "DEX", "atk_skill": "stealth", "def_stat": "WIS"},
 	"date_mels": {"label": "Date: meal at Mel's", "roll": false},
@@ -84,6 +86,8 @@ static func available_actions(sheet: CharacterSheet, npc: NPCRecord) -> Array:
 			continue # appended below, gated on the relationship stage
 		var a: Dictionary = ACTIONS[id]
 		if rel < float(a.get("min_rel", -1000.0)):
+			continue
+		if id == "intimidate_witness" and _witness_case_id(npc) == "":
 			continue
 		if id == "ask_out" and npc.flags.get("dating_player", false):
 			continue
@@ -299,6 +303,23 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 				npc.add_memory("threat_failed", "player", "tried to threaten you; it went badly for them", -0.5, 7.0)
 				result.text = "They look down at you — when did they get taller? — and shove you into next week."
 
+		"intimidate_witness":
+			var case_id := _witness_case_id(npc)
+			if success and case_id != "":
+				npc.change_rel("player", -25.0)
+				npc.add_memory("witness_intimidated", "player",
+						"leaned on you about what you saw", -0.95, 9.0)
+				var suppressed := CrimeSystem.suppress_witness_report(npc, case_id)
+				result.text = "They suddenly remember less. The case file gets thinner." \
+						if suppressed else "They nod too fast. Fear lands; the paperwork barely moves."
+			else:
+				npc.change_rel("player", -15.0)
+				npc.add_memory("witness_intimidation_failed", "player",
+						"tried to scare you out of talking", -0.8, 9.0)
+				CrimeSystem.commit("witness_intimidation", npc.current_location_id, npc,
+						npc.abstract_position(GameClock.total_minutes))
+				result.text = "Wrong witness. The coverup becomes its own charge."
+
 	# The Reality Check moment: confidence meets fact, fact wins.
 	if not success and perceived >= RC_PERCEIVED_FLOOR and actual <= RC_TRUE_CEILING:
 		result.reality_check = true
@@ -460,6 +481,25 @@ static func _date_personality_adjustment(npc: NPCRecord, date_style: String) -> 
 
 static func _personality(npc: NPCRecord, key: String) -> int:
 	return int(npc.personality.get(key, 50))
+
+
+static func _witness_case_id(npc: NPCRecord) -> String:
+	var best_day := -999999
+	var best_case_id := ""
+	for memory in npc.memories:
+		if memory.get("kind", "") != "crime" or memory.get("subject", "") != "player":
+			continue
+		if int(memory.get("suppressed_until_day", -1)) >= GameClock.day:
+			continue
+		var case_id := str(memory.get("case_id", ""))
+		var case: CrimeCase = WorldState.crime_cases.get(case_id)
+		if case == null or case.status in [CrimeCase.CLOSED, CrimeCase.COLD]:
+			continue
+		var memory_day := int(memory.get("day", -999999))
+		if memory_day >= best_day:
+			best_day = memory_day
+			best_case_id = case_id
+	return best_case_id
 
 
 ## Everyone else in the room remembers what they saw. Outside, only people
