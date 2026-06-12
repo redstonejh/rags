@@ -118,7 +118,7 @@ func _show_opening_beat() -> void:
 	var start_name := Locations.display_name(str(sheet.flags.get("start_location_id", "exterior")))
 	var opening_line := origin.opening_line if origin and origin.opening_line.strip_edges() != "" else \
 			"%s begins at %s." % [origin_name, start_name]
-	EventBus.toast.emit("%s Check the HUD objective; rent, food, and work do not wait." % opening_line)
+	EventBus.toast.emit("%s Check the HUD objective; the first week does not wait." % opening_line)
 
 
 func _unhandled_input(event: InputEvent) -> void:

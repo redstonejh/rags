@@ -39,17 +39,22 @@ func _ready() -> void:
 
 func _run_origin_start_case(origin: OriginDef, expected_prop_name: String) -> void:
 	await _teardown_main()
-	_setup_world(origin.id, "%s Tester" % origin.id.capitalize())
+	_setup_world(origin, "%s Tester" % origin.id.capitalize())
 	await _instantiate_main()
 	_test_origin_start_and_opening_beat(origin, expected_prop_name)
 
 
-func _setup_world(origin_id: String, char_name: String) -> void:
+func _setup_world(origin: OriginDef, char_name: String) -> void:
 	_toasts.clear()
 	var sheet := CharacterSheet.new()
 	sheet.char_name = char_name
-	sheet.origin_id = origin_id
-	sheet.flags["has_id"] = true
+	sheet.origin_id = origin.id
+	sheet.cash_cents = origin.starting_cash_cents
+	sheet.skills = origin.skill_seeds.duplicate()
+	sheet.inventory = origin.starting_items.duplicate()
+	sheet.housing_id = origin.starting_housing_id
+	for flag in origin.starting_flags:
+		sheet.flags[flag] = origin.starting_flags[flag]
 	WorldState.new_world(sheet)
 	GameClock.clear_pause_locks()
 	GameClock.set_manual_paused(false)
@@ -87,6 +92,17 @@ func _test_origin_start_and_opening_beat(origin: OriginDef, expected_prop_name: 
 			"%s opening beat names the origin and start place" % origin.id)
 	_check(_current_world_has_node(expected_prop_name),
 			"%s opening prop exists near the start marker" % origin.id)
+	_check(_hud_objective_matches_origin(origin),
+			"%s opening HUD objective matches origin constraints" % origin.id)
+
+
+func _hud_objective_matches_origin(origin: OriginDef) -> bool:
+	var objective := _main.get_node_or_null("HUD/TopLeft/VBox/ObjectiveLabel") as Label
+	if objective == null or not objective.visible:
+		return false
+	var expected_path := "Getting Off the Street" \
+			if origin.tags.has("no_papers") else "First Week"
+	return expected_path in objective.text
 
 
 func _current_world_has_node(node_name: String) -> bool:
