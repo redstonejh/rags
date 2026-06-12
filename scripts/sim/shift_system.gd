@@ -57,25 +57,38 @@ func _ready() -> void:
 	EventBus.shift_finished.connect(_on_shift_finished)
 
 
-func _on_shift_finished(job: JobDef, late_minutes: int) -> void:
-	var sheet: CharacterSheet = WorldState.player_sheet
-	if sheet == null or job == null:
-		return
+static func paycheck_result(sheet: CharacterSheet, job: JobDef, late_minutes: int) -> Dictionary:
+	if job == null:
+		return {"wage_cents": 0, "docked": false, "garnished": false}
 	var wage := job.wage_cents_per_shift
 	var docked := late_minutes > LATE_GRACE_MINUTES
 	if docked:
 		wage = int(wage * LATE_PENALTY_MULT)
-	var garnished := sheet.has_tag("garnished")
+	var garnished := sheet != null and sheet.has_tag("garnished")
 	if garnished:
-		wage = int(wage * 0.75) # the student loans survived the scandal
+		wage = int(wage * 0.75)
+	return {"wage_cents": wage, "docked": docked, "garnished": garnished}
+
+
+static func paycheck_summary(result: Dictionary) -> String:
+	return "$%.2f%s%s" % [
+		int(result.get("wage_cents", 0)) / 100.0,
+		" - docked 25%% for strolling in late" if result.get("docked", false) else "",
+		" (25%% garnished. Forever.)" if result.get("garnished", false) else ""]
+
+
+func _on_shift_finished(job: JobDef, late_minutes: int) -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet == null or job == null:
+		return
+	var paycheck := paycheck_result(sheet, job, late_minutes)
+	var wage := int(paycheck.get("wage_cents", 0))
 	sheet.add_cash(wage)
 	sheet.shifts_worked += 1
 	sheet.add_xp(10)
 	if job.trains_skill != "":
 		sheet.add_skill_xp(job.trains_skill, job.skill_xp_per_shift)
-	EventBus.toast.emit("Clocked out. $%.2f%s%s" % [
-		wage / 100.0, " — docked 25%% for strolling in late" if docked else "",
-		" (25%% garnished. Forever.)" if garnished else ""])
+	EventBus.toast.emit("Clocked out. %s" % paycheck_summary(paycheck))
 	_check_promotion(sheet, job)
 	if randf() < DILEMMA_CHANCE:
 		EventBus.shift_dilemma.emit(DILEMMAS.pick_random())

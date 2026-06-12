@@ -71,11 +71,11 @@ func interact(_actor: Node) -> void:
 		_time_label(end),
 		" Late by %s." % _duration_label(late_by) if late_by > 0 else ""])
 	EventBus.survival_feedback.emit("work", job.display_name,
-			"%s at %s. Clock-out: %s. Gross pay: $%.2f." % [
+			"%s at %s. Clock-out: %s. Expected pay: %s." % [
 				_duration_label(minutes_left),
 				Locations.display_name(job.workplace_id),
 				_time_label(end),
-				job.wage_cents_per_shift / 100.0])
+				ShiftSystem.paycheck_summary(ShiftSystem.paycheck_result(sheet, job, late_by))])
 	EventBus.shift_started.emit(job, late_by)
 	GameClock.skip_minutes(minutes_left)
 	EventBus.shift_finished.emit(job, late_by)

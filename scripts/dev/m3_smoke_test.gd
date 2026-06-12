@@ -87,6 +87,14 @@ func _test_shift_pay() -> void:
 			"cooking XP gained (4.0 * 1.1 hardworking)")
 	EventBus.shift_finished.emit(job, 40)
 	_check(sheet.cash_cents == cash0 + 5400 + 4050, "40 min late docks 25%% ($40.50)")
+	sheet.origin_id = "struck_off"
+	sheet.cash_cents = 0
+	EventBus.shift_finished.emit(job, 40)
+	_check(sheet.cash_cents == 3037, "late garnished paycheck stacks dock and garnishment")
+	_check(ShiftSystem.paycheck_summary(ShiftSystem.paycheck_result(sheet, job, 40)) \
+			== "$30.37 - docked 25%% for strolling in late (25%% garnished. Forever.)",
+			"paycheck summary reports dock and garnishment")
+	sheet.origin_id = "off_the_bus"
 
 
 func _test_work_spot() -> void:

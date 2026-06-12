@@ -72,7 +72,7 @@ func _test_diner_shift_interaction() -> void:
 			"work interaction shows a paycheck cue")
 	_check(_survival_feedback_kind() == "work",
 			"work interaction shows the survival feedback vignette")
-	_check(_survival_feedback_detail().contains("Gross pay: $54.00") \
+	_check(_survival_feedback_detail().contains("Expected pay: $54.00") \
 			and _survival_feedback_detail().contains("10:00 PM"),
 			"work vignette reports pay and clock-out")
 	_check(GameClock.day == day_before and GameClock.hour == 22 and GameClock.minute == 0,
