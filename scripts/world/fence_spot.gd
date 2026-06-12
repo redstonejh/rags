@@ -7,6 +7,7 @@ extends Interactable
 
 const RATE := 0.4
 const EXCLUDED_TAGS := ["clothing", "key", "storage"]
+const FENCE_SPOT_TEXTURE_PATH := "res://assets/props/fence_spot.png"
 
 
 func _init() -> void:
@@ -17,11 +18,25 @@ func _init() -> void:
 	rect.size = Vector2(34, 34)
 	shape.shape = rect
 	add_child(shape)
-	var visual := Polygon2D.new()
-	visual.polygon = PackedVector2Array([
-		Vector2(-9, -13), Vector2(9, -13), Vector2(9, 13), Vector2(-9, 13)])
-	visual.color = Color(0.3, 0.25, 0.32)
-	add_child(visual)
+	if not _add_prop_sprite():
+		var visual := Polygon2D.new()
+		visual.polygon = PackedVector2Array([
+			Vector2(-9, -13), Vector2(9, -13), Vector2(9, 13), Vector2(-9, 13)])
+		visual.color = Color(0.3, 0.25, 0.32)
+		add_child(visual)
+
+
+func _add_prop_sprite() -> bool:
+	var texture: Texture2D = load(FENCE_SPOT_TEXTURE_PATH)
+	if texture == null:
+		return false
+	var sprite := Sprite2D.new()
+	sprite.name = "PropSprite"
+	sprite.texture = texture
+	sprite.texture_filter = 1
+	sprite.position = Vector2(0, -8)
+	add_child(sprite)
+	return true
 
 
 func interact(_actor: Node) -> void:

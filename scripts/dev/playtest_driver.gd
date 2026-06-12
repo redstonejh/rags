@@ -76,6 +76,7 @@ func _enter_diner() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 	_check(WorldState.player_location_id == "loc_diner", "travel entered the diner")
+	_check(_current_world_named_count("PropSprite") > 0, "interior prop sprites spawned")
 
 
 func _open_phone() -> void:
@@ -190,6 +191,20 @@ func _find_current_world_node_with_property(property_name: String) -> Node:
 		if child.get(property_name) != null:
 			return child
 	return null
+
+
+func _current_world_named_count(node_name: String) -> int:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return 0
+	return _count_named_descendants(world_root.get_child(0), node_name)
+
+
+func _count_named_descendants(node: Node, node_name: String) -> int:
+	var count := 1 if node.name == node_name else 0
+	for child in node.get_children():
+		count += _count_named_descendants(child, node_name)
+	return count
 
 
 func _physics_frames(count: int) -> void:

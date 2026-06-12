@@ -6,6 +6,7 @@ extends Interactable
 
 const ID_FEE_CENTS := 4000
 const PROCESSING_DAYS := 2
+const RECORDS_DESK_TEXTURE_PATH := "res://assets/props/records_desk.png"
 
 
 func _init() -> void:
@@ -16,11 +17,25 @@ func _init() -> void:
 	rect.size = Vector2(34, 34)
 	shape.shape = rect
 	add_child(shape)
-	var visual := Polygon2D.new()
-	visual.polygon = PackedVector2Array([
-		Vector2(-14, -8), Vector2(14, -8), Vector2(14, 10), Vector2(-14, 10)])
-	visual.color = Color(0.5, 0.48, 0.4)
-	add_child(visual)
+	if not _add_prop_sprite():
+		var visual := Polygon2D.new()
+		visual.polygon = PackedVector2Array([
+			Vector2(-14, -8), Vector2(14, -8), Vector2(14, 10), Vector2(-14, 10)])
+		visual.color = Color(0.5, 0.48, 0.4)
+		add_child(visual)
+
+
+func _add_prop_sprite() -> bool:
+	var texture: Texture2D = load(RECORDS_DESK_TEXTURE_PATH)
+	if texture == null:
+		return false
+	var sprite := Sprite2D.new()
+	sprite.name = "PropSprite"
+	sprite.texture = texture
+	sprite.texture_filter = 1
+	sprite.position = Vector2(0, -3)
+	add_child(sprite)
+	return true
 
 
 func interact(_actor: Node) -> void:

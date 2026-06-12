@@ -23,6 +23,15 @@ NPC_OUTFIT_PATH = CHARS_DIR / "outfit_npc.png"
 DOOR_PATH = PROPS_DIR / "door.png"
 SHOP_COUNTER_PATH = PROPS_DIR / "shop_counter.png"
 PARKED_CAR_PATH = PROPS_DIR / "parked_car.png"
+FRIDGE_PATH = PROPS_DIR / "fridge.png"
+BED_PATH = PROPS_DIR / "bed.png"
+SHOWER_PATH = PROPS_DIR / "shower.png"
+TV_PATH = PROPS_DIR / "tv.png"
+BAR_COUNTER_PATH = PROPS_DIR / "bar_counter.png"
+RECORDS_DESK_PATH = PROPS_DIR / "records_desk.png"
+WORK_SPOT_PATH = PROPS_DIR / "work_spot.png"
+DEALER_SPOT_PATH = PROPS_DIR / "dealer_spot.png"
+FENCE_SPOT_PATH = PROPS_DIR / "fence_spot.png"
 BUILDING_ASSET_PATHS = {
     "roof_tile": BUILDINGS_DIR / "roof_tile.png",
     "facade_plain": BUILDINGS_DIR / "facade_plain.png",
@@ -255,10 +264,136 @@ def draw_parked_car() -> None:
     print(f"wrote {PARKED_CAR_PATH.relative_to(ROOT)}")
 
 
+def draw_fridge() -> None:
+    img = Image.new("RGBA", (32, 44), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((7, 3, 25, 40), fill=(210, 218, 220, 255))
+    draw.rectangle((9, 5, 23, 38), fill=(235, 240, 239, 255))
+    draw.line((9, 17, 23, 17), fill=(116, 127, 132, 255))
+    draw.rectangle((11, 8, 13, 15), fill=(89, 102, 108, 255))
+    draw.rectangle((11, 23, 13, 34), fill=(89, 102, 108, 255))
+    draw.rectangle((8, 39, 24, 41), fill=(112, 118, 120, 255))
+    FRIDGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    img.save(FRIDGE_PATH)
+    print(f"wrote {FRIDGE_PATH.relative_to(ROOT)}")
+
+
+def draw_bed() -> None:
+    img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((5, 10, 43, 27), fill=(87, 58, 42, 255))
+    draw.rectangle((8, 7, 40, 23), fill=(86, 105, 155, 255))
+    draw.rectangle((10, 8, 22, 16), fill=(215, 220, 223, 255))
+    draw.rectangle((24, 8, 38, 16), fill=(190, 198, 214, 255))
+    draw.rectangle((8, 19, 40, 24), fill=(54, 69, 112, 255))
+    img.save(BED_PATH)
+    print(f"wrote {BED_PATH.relative_to(ROOT)}")
+
+
+def draw_shower() -> None:
+    img = Image.new("RGBA", (32, 44), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((7, 11, 25, 39), fill=(105, 144, 155, 255))
+    draw.rectangle((9, 13, 23, 37), fill=(153, 194, 205, 255))
+    draw.arc((9, 2, 25, 20), 180, 270, fill=(185, 190, 184, 255), width=2)
+    draw.rectangle((21, 8, 27, 11), fill=(185, 190, 184, 255))
+    for x in [14, 17, 20, 23]:
+        draw.line((x, 13, x - 2, 20), fill=(105, 144, 155, 180))
+    img.save(SHOWER_PATH)
+    print(f"wrote {SHOWER_PATH.relative_to(ROOT)}")
+
+
+def draw_tv() -> None:
+    img = Image.new("RGBA", (40, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((6, 7, 34, 25), fill=(34, 35, 39, 255))
+    draw.rectangle((9, 10, 27, 21), fill=(52, 67, 80, 255))
+    draw.rectangle((29, 11, 32, 14), fill=(184, 64, 55, 255))
+    draw.rectangle((29, 17, 32, 20), fill=(92, 142, 151, 255))
+    draw.line((15, 25, 11, 30), fill=(34, 35, 39, 255), width=2)
+    draw.line((25, 25, 29, 30), fill=(34, 35, 39, 255), width=2)
+    img.save(TV_PATH)
+    print(f"wrote {TV_PATH.relative_to(ROOT)}")
+
+
+def draw_bar_counter() -> None:
+    img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((4, 12, 44, 26), fill=(75, 45, 32, 255))
+    draw.rectangle((4, 9, 44, 14), fill=(121, 72, 43, 255))
+    for x in [10, 20, 30, 39]:
+        draw.rectangle((x, 5, x + 3, 10), fill=(218, 185, 82, 255))
+    draw.rectangle((8, 17, 40, 23), fill=(55, 32, 28, 255))
+    img.save(BAR_COUNTER_PATH)
+    print(f"wrote {BAR_COUNTER_PATH.relative_to(ROOT)}")
+
+
+def draw_records_desk() -> None:
+    img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((5, 12, 43, 26), fill=(99, 94, 75, 255))
+    draw.rectangle((5, 9, 43, 14), fill=(146, 138, 104, 255))
+    draw.rectangle((10, 15, 21, 23), fill=(67, 63, 56, 255))
+    draw.rectangle((27, 6, 38, 10), fill=(230, 225, 199, 255))
+    draw.line((28, 8, 37, 8), fill=(84, 78, 68, 255))
+    img.save(RECORDS_DESK_PATH)
+    print(f"wrote {RECORDS_DESK_PATH.relative_to(ROOT)}")
+
+
+def draw_work_spot() -> None:
+    img = Image.new("RGBA", (44, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((5, 13, 39, 26), fill=(77, 66, 55, 255))
+    draw.rectangle((5, 10, 39, 15), fill=(118, 96, 72, 255))
+    draw.rectangle((12, 5, 27, 11), fill=(52, 62, 70, 255))
+    draw.rectangle((14, 6, 25, 9), fill=(95, 129, 138, 255))
+    draw.rectangle((29, 8, 35, 11), fill=(215, 210, 178, 255))
+    img.save(WORK_SPOT_PATH)
+    print(f"wrote {WORK_SPOT_PATH.relative_to(ROOT)}")
+
+
+def draw_dealer_spot() -> None:
+    img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((11, 16, 21, 34), fill=(50, 59, 48, 255))
+    draw.rectangle((10, 7, 22, 17), fill=(132, 94, 72, 255))
+    draw.rectangle((9, 6, 23, 10), fill=(32, 35, 31, 255))
+    draw.rectangle((8, 20, 11, 30), fill=(42, 48, 40, 255))
+    draw.rectangle((21, 20, 24, 30), fill=(42, 48, 40, 255))
+    draw.rectangle((11, 34, 15, 43), fill=(38, 40, 40, 255))
+    draw.rectangle((17, 34, 21, 43), fill=(38, 40, 40, 255))
+    img.save(DEALER_SPOT_PATH)
+    print(f"wrote {DEALER_SPOT_PATH.relative_to(ROOT)}")
+
+
+def draw_fence_spot() -> None:
+    img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((9, 18, 23, 35), fill=(61, 46, 69, 255))
+    draw.rectangle((10, 7, 22, 18), fill=(161, 114, 82, 255))
+    draw.rectangle((8, 4, 24, 9), fill=(44, 35, 47, 255))
+    draw.rectangle((7, 22, 10, 30), fill=(50, 38, 57, 255))
+    draw.rectangle((22, 22, 25, 30), fill=(50, 38, 57, 255))
+    draw.rectangle((11, 35, 15, 43), fill=(35, 31, 36, 255))
+    draw.rectangle((17, 35, 21, 43), fill=(35, 31, 36, 255))
+    draw.rectangle((20, 14, 24, 16), fill=(218, 185, 82, 255))
+    img.save(FENCE_SPOT_PATH)
+    print(f"wrote {FENCE_SPOT_PATH.relative_to(ROOT)}")
+
+
 def generate_props() -> None:
     draw_door()
     draw_shop_counter()
     draw_parked_car()
+    draw_fridge()
+    draw_bed()
+    draw_shower()
+    draw_tv()
+    draw_bar_counter()
+    draw_records_desk()
+    draw_work_spot()
+    draw_dealer_spot()
+    draw_fence_spot()
 
 
 def _draw_brick_pattern(draw: ImageDraw.ImageDraw, x0: int, y0: int, x1: int, y1: int,

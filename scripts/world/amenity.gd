@@ -6,6 +6,12 @@ extends Interactable
 @export var kind: String = "shower" # shower | tv | bed | bench
 @export var quality: float = 1.0
 
+const AMENITY_TEXTURES := {
+	"bed": "res://assets/props/bed.png",
+	"shower": "res://assets/props/shower.png",
+	"tv": "res://assets/props/tv.png",
+}
+
 
 func _init() -> void:
 	var shape := CollisionShape2D.new()
@@ -20,11 +26,28 @@ func configure(p_kind: String, p_quality: float, p_name: String, p_verb: String,
 	quality = p_quality
 	display_name = p_name
 	verb = p_verb
+	if _add_prop_sprite():
+		return
 	var visual := Polygon2D.new()
 	visual.polygon = PackedVector2Array([
 		Vector2(-13, -10), Vector2(13, -10), Vector2(13, 12), Vector2(-13, 12)])
 	visual.color = color
 	add_child(visual)
+
+
+func _add_prop_sprite() -> bool:
+	if not AMENITY_TEXTURES.has(kind):
+		return false
+	var texture: Texture2D = load(AMENITY_TEXTURES[kind])
+	if texture == null:
+		return false
+	var sprite := Sprite2D.new()
+	sprite.name = "PropSprite"
+	sprite.texture = texture
+	sprite.texture_filter = 1
+	sprite.position = Vector2(0, -4)
+	add_child(sprite)
+	return true
 
 
 func interact(actor: Node) -> void:
