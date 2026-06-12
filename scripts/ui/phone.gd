@@ -23,6 +23,9 @@ func _ready() -> void:
 	layer = 10
 	visible = false
 	_build_ui()
+	_tabs.tab_changed.connect(func(_tab: int) -> void:
+		if visible:
+			call_deferred("_refresh_current_tab"))
 	EventBus.path_updated.connect(func() -> void:
 		if visible:
 			_refresh_paths())
@@ -62,7 +65,10 @@ func open_tab(tab_name: String) -> bool:
 		return false
 	for i in _tabs.get_tab_count():
 		if _tabs.get_tab_title(i) == tab_name:
+			var already_selected := _tabs.current_tab == i
 			_tabs.current_tab = i
+			if visible and already_selected:
+				call_deferred("_refresh_current_tab")
 			return true
 	return false
 
@@ -137,8 +143,29 @@ func _refresh_all() -> void:
 	_refresh_town()
 
 
+func _refresh_current_tab() -> void:
+	match _tabs.get_tab_title(_tabs.current_tab):
+		"Jobs":
+			_refresh_jobs()
+		"Home":
+			_refresh_home()
+		"People":
+			_refresh_people()
+		"Bank":
+			_refresh_bank()
+		"Mickey":
+			_refresh_mickey()
+		"Health":
+			_refresh_health()
+		"Paths":
+			_refresh_paths()
+		"Town":
+			_refresh_town()
+
+
 func _clear(box: VBoxContainer) -> void:
 	for child in box.get_children():
+		box.remove_child(child)
 		child.queue_free()
 
 

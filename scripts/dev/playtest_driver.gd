@@ -186,7 +186,7 @@ func _open_phone() -> void:
 	_check(not _descendant_text_contains(people_content, "misjudged you in public"),
 			"People tab phrases player memories from the player's view")
 	_check(phone.call("open_tab", "Paths"), "phone Paths tab selectable")
-	await get_tree().process_frame
+	await _ui_frames(2)
 	var paths_content := _find_named_descendant(phone, "PathsContent")
 	var first_week_heading := _find_named_descendant(phone, "PathHeading_first_week")
 	var ged_button := _find_named_descendant(phone, "GedEnrollButton")
@@ -197,6 +197,31 @@ func _open_phone() -> void:
 			and _direct_child_index(paths_content, first_week_heading) \
 					< _direct_child_index(paths_content, ged_button),
 			"Paths tab lists active objectives before secondary actions")
+	await _verify_phone_tab_refresh(phone)
+
+
+func _verify_phone_tab_refresh(phone: CanvasLayer) -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	sheet.flags["has_id"] = true
+	sheet.housing_id = ""
+	sheet.cash_cents = 17000
+	sheet.bank_cents = 5000
+	phone.call("open_tab", "Home")
+	await _ui_frames(2)
+	var home_content := _find_named_descendant(phone, "HomeContent")
+	_check(home_content != null and _descendant_text_contains(home_content, "deposit $180"),
+			"Home tab initially reflects missing apartment deposit")
+	phone.call("open_tab", "Bank")
+	await _ui_frames(2)
+	var withdraw := _find_button_with_text(phone, "Withdraw $50")
+	_check(withdraw != null and not withdraw.disabled, "Bank tab exposes withdraw action")
+	if withdraw != null:
+		withdraw.pressed.emit()
+	await _ui_frames(2)
+	phone.call("open_tab", "Home")
+	await _ui_frames(2)
+	_check(home_content != null and _descendant_text_contains(home_content, "Move in"),
+			"Home tab refreshes affordability after bank withdrawal")
 
 
 func _verify_date_scene_ui() -> void:
@@ -809,6 +834,11 @@ func _count_name_prefix_descendants(node: Node, prefix: String) -> int:
 func _physics_frames(count: int) -> void:
 	for _i in count:
 		await get_tree().physics_frame
+
+
+func _ui_frames(count: int) -> void:
+	for _i in count:
+		await get_tree().process_frame
 
 
 func _action(name: String) -> InputEventAction:
