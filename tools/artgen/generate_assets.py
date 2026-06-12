@@ -14,6 +14,7 @@ TILE = 32
 TILES_DIR = ROOT / "assets" / "tiles"
 CHARS_DIR = ROOT / "assets" / "chars"
 PROPS_DIR = ROOT / "assets" / "props"
+UI_DIR = ROOT / "assets" / "ui"
 TERRAIN_PATH = TILES_DIR / "terrain_atlas.png"
 BODY_PATH = CHARS_DIR / "body_base.png"
 PLAYER_OUTFIT_PATH = CHARS_DIR / "outfit_player.png"
@@ -21,6 +22,12 @@ NPC_OUTFIT_PATH = CHARS_DIR / "outfit_npc.png"
 DOOR_PATH = PROPS_DIR / "door.png"
 SHOP_COUNTER_PATH = PROPS_DIR / "shop_counter.png"
 PARKED_CAR_PATH = PROPS_DIR / "parked_car.png"
+UI_ICON_PATHS = {
+    "resume": UI_DIR / "icon_resume.png",
+    "save": UI_DIR / "icon_save.png",
+    "walk": UI_DIR / "icon_walk.png",
+    "quit": UI_DIR / "icon_quit.png",
+}
 SEED = 741_2026
 
 
@@ -235,11 +242,58 @@ def generate_props() -> None:
     draw_parked_car()
 
 
+def _icon_base() -> Image:
+    return Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+
+
+def _save_icon(path: Path, draw_fn) -> None:
+    UI_DIR.mkdir(parents=True, exist_ok=True)
+    img = _icon_base()
+    draw = ImageDraw.Draw(img)
+    draw_fn(draw)
+    img.save(path)
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def generate_ui() -> None:
+    ink = (238, 230, 196, 255)
+    shadow = (58, 48, 42, 255)
+    accent = (178, 68, 53, 255)
+
+    def resume(draw: ImageDraw.ImageDraw) -> None:
+        draw.polygon([(5, 3), (12, 8), (5, 13)], fill=shadow)
+        draw.polygon([(6, 4), (11, 8), (6, 12)], fill=ink)
+
+    def save(draw: ImageDraw.ImageDraw) -> None:
+        draw.rectangle((3, 2, 13, 14), fill=shadow)
+        draw.rectangle((4, 3, 12, 13), fill=ink)
+        draw.rectangle((5, 4, 10, 7), fill=(76, 87, 98, 255))
+        draw.rectangle((6, 10, 11, 13), fill=shadow)
+
+    def walk(draw: ImageDraw.ImageDraw) -> None:
+        draw.ellipse((5, 1, 10, 6), fill=ink)
+        draw.line((8, 6, 7, 10), fill=ink, width=2)
+        draw.line((7, 8, 3, 9), fill=ink, width=2)
+        draw.line((7, 10, 4, 14), fill=ink, width=2)
+        draw.line((7, 10, 12, 13), fill=ink, width=2)
+
+    def quit_icon(draw: ImageDraw.ImageDraw) -> None:
+        draw.rectangle((3, 3, 11, 13), outline=ink, width=2)
+        draw.line((8, 8, 14, 8), fill=accent, width=2)
+        draw.polygon([(12, 5), (15, 8), (12, 11)], fill=accent)
+
+    _save_icon(UI_ICON_PATHS["resume"], resume)
+    _save_icon(UI_ICON_PATHS["save"], save)
+    _save_icon(UI_ICON_PATHS["walk"], walk)
+    _save_icon(UI_ICON_PATHS["quit"], quit_icon)
+
+
 def main() -> None:
     rng = random.Random(SEED)
     generate_terrain(rng)
     generate_characters()
     generate_props()
+    generate_ui()
 
 
 if __name__ == "__main__":

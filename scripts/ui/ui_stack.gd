@@ -4,6 +4,13 @@ extends CanvasLayer
 ## this node so one modal cannot accidentally unpause another.
 
 const PAUSE_MENU_ID := "pause_menu"
+const RAGS_UI_THEME := preload("res://scripts/ui/ui_theme.gd")
+const ICONS := {
+	"resume": "res://assets/ui/icon_resume.png",
+	"save": "res://assets/ui/icon_save.png",
+	"walk": "res://assets/ui/icon_walk.png",
+	"quit": "res://assets/ui/icon_quit.png",
+}
 
 var _modals := {}
 var _pause_panel: Control = null
@@ -14,6 +21,8 @@ func _ready() -> void:
 	layer = 60
 	_build_pause_menu()
 	_pause_panel.visible = false
+	RAGS_UI_THEME.apply_tree(get_parent())
+	get_tree().node_added.connect(_on_node_added)
 
 
 func open_modal(modal_id: String, modal: Node = null, pauses_clock: bool = true) -> void:
@@ -99,9 +108,9 @@ func _build_pause_menu() -> void:
 	title.add_theme_font_size_override("font_size", 26)
 	vbox.add_child(title)
 
-	_add_button(vbox, "Resume", _close_pause_menu)
-	_add_button(vbox, "Save", _save_game)
-	_add_button(vbox, "Walk Away", _walk_away)
+	_add_button(vbox, "Resume", _close_pause_menu, "resume")
+	_add_button(vbox, "Save", _save_game, "save")
+	_add_button(vbox, "Walk Away", _walk_away, "walk")
 
 	var settings := Button.new()
 	settings.text = "Settings"
@@ -109,7 +118,7 @@ func _build_pause_menu() -> void:
 	settings.tooltip_text = "Settings are part of the Phase 0 UI pass."
 	vbox.add_child(settings)
 
-	_add_button(vbox, "Quit to Menu", _quit_to_menu)
+	_add_button(vbox, "Quit to Menu", _quit_to_menu, "quit")
 
 	_toast = Label.new()
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -119,13 +128,18 @@ func _build_pause_menu() -> void:
 	vbox.add_child(_toast)
 
 
-func _add_button(parent: Node, text: String, action: Callable) -> void:
+func _add_button(parent: Node, text: String, action: Callable, icon_id := "") -> void:
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(240, 36)
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	if icon_id != "" and ICONS.has(icon_id):
+		var texture: Texture2D = load(ICONS[icon_id])
+		if texture:
+			button.icon = texture
 	button.pressed.connect(action)
 	parent.add_child(button)
+	RAGS_UI_THEME.apply_control(button)
 
 
 func _save_game() -> void:
@@ -151,3 +165,8 @@ func _quit_to_menu() -> void:
 func _set_pause_message(text: String) -> void:
 	if _toast != null:
 		_toast.text = text
+
+
+func _on_node_added(node: Node) -> void:
+	if node is Control:
+		RAGS_UI_THEME.apply_control(node)

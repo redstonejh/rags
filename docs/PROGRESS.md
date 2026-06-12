@@ -20,6 +20,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Generated art pipeline started:** `tools/artgen/generate_assets.py` deterministically writes `assets/tiles/terrain_atlas.png` (grass, road, floor, wall, solid floor). `TileWorld` loads that atlas while retaining the old procedural fallback.
 - **Generated character sprites started:** the same art pipeline now writes layered 32x48 character sprites (`body_base`, player outfit, NPC outfit). `Player.tscn` and `NPCAgent.tscn` render those sprites, and NPC archetype color now tints the outfit layer.
 - **Generated prop sprites started:** doors, shop counters, and parked cars now use generated sprites from `assets/props/` with their existing collision and interaction behavior intact.
+- **UI shell theme started:** generated pause-menu command icons now live in `assets/ui/`, and `UIStack` applies a consistent dark panel/button/label theme to gameplay UI controls as they are created.
 
 ## Systems implemented (headless-tested only — see status note above)
 
