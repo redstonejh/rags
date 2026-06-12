@@ -14,8 +14,8 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 
 - **UIStack foundation started (2026-06-12):** `Main.tscn` now owns a `UIStack` node that centralizes modal open/close and named clock pause locks. Esc opens an in-game pause menu (Resume / Save / Walk Away / Settings placeholder / Quit to Menu) instead of immediately returning to the title screen.
 - **Modal pause safety:** phone, inventory, shop, dialogue, dilemma, confrontation, and death screen flows now use composable pause locks, so closing one modal cannot accidentally resume time while another modal or manual pause is still active.
-- **Click-to-move foundation:** `Player.tscn` now has a `NavigationAgent2D`; clicking walkable ground sets a path, while WASD immediately cancels the click path and keeps direct control authoritative.
-- **Regression coverage:** added `UIStackSmokeTest.tscn`, which instantiates the real main scene, opens overlapping panels, verifies speed keys cannot break modal pause, checks Esc pause-menu toggling, and covers basic click movement plus WASD cancellation.
+- **Click-to-move foundation:** `Player.tscn` now has a `NavigationAgent2D`; clicking walkable ground sets a path, clicking an interactable arms a walk-then-interact target, and WASD immediately cancels the click path to keep direct control authoritative.
+- **Regression coverage:** added `UIStackSmokeTest.tscn`, which instantiates the real main scene, opens overlapping panels, verifies speed keys cannot break modal pause, checks Esc pause-menu toggling, and covers click movement, click-to-interact arrival, and WASD cancellation.
 
 ## Systems implemented (headless-tested only — see status note above)
 

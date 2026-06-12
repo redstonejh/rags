@@ -8,6 +8,7 @@ const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
 var failures: int = 0
 var _main: Node = null
 var _player: Node = null
+var _travel_requested_location := ""
 
 
 func _ready() -> void:
@@ -18,6 +19,7 @@ func _ready() -> void:
 	_test_escape_pause_menu()
 	await _test_click_move()
 	await _test_wasd_cancels_click_move()
+	_test_click_move_interacts()
 	print("UIStack smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -110,6 +112,39 @@ func _test_wasd_cancels_click_move() -> void:
 	await get_tree().physics_frame
 	Input.action_release("move_left")
 	_check(not _player.call("has_click_target"), "WASD cancels click path")
+
+
+func _test_click_move_interacts() -> void:
+	print("[Click-to-interact]")
+	GameClock.clear_pause_locks()
+	GameClock.set_manual_paused(false)
+	var diner_door := _find_exterior_door("loc_diner")
+	if diner_door == null:
+		_check(false, "diner door exists")
+		return
+	_travel_requested_location = ""
+	if not EventBus.travel_requested.is_connected(_on_test_travel_requested):
+		EventBus.travel_requested.connect(_on_test_travel_requested)
+	_player.set("global_position", diner_door.get("global_position") + Vector2(0, 10))
+	_player.call("set_move_target", diner_door.get("global_position"), diner_door)
+	_player.call("_physics_process", 0.0)
+	_check(_travel_requested_location == "loc_diner", "click target interacts after walking into range")
+	_check(not _player.call("has_click_target"), "click path clears after interaction")
+
+
+func _find_exterior_door(location_id: String) -> Node:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return null
+	var town: Node = world_root.get_child(0)
+	for child in town.get_children():
+		if child.get("target_location_id") == location_id:
+			return child
+	return null
+
+
+func _on_test_travel_requested(location_id: String) -> void:
+	_travel_requested_location = location_id
 
 
 func _physics_frames(count: int) -> void:
