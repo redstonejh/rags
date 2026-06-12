@@ -34,6 +34,7 @@ const DUMPSTER_TEXTURE_PATH := "res://assets/props/dumpster.png"
 const NEWS_BOX_TEXTURE_PATH := "res://assets/props/news_box.png"
 const BUS_STOP_TEXTURE_PATH := "res://assets/props/bus_stop.png"
 const STREET_CAMP_TEXTURE_PATH := "res://assets/props/street_camp.png"
+const APARTMENT_SIGN_TEXTURE_PATH := "res://assets/props/apartment_sign.png"
 const ROOF_FADE_ALPHA := 0.38
 const ROOF_FADE_SPEED := 10.0
 
@@ -229,6 +230,7 @@ func _place_street_props() -> void:
 		{"path": NEWS_BOX_TEXTURE_PATH, "cell": Vector2i(25, 14), "offset": Vector2.ZERO},
 		{"path": BUS_STOP_TEXTURE_PATH, "cell": Vector2i(11, 10), "offset": Vector2(0, -7), "name": "BusStopSprite"},
 		{"path": STREET_CAMP_TEXTURE_PATH, "cell": Vector2i(8, 24), "offset": Vector2(0, -4), "name": "StreetCampSprite"},
+		{"path": APARTMENT_SIGN_TEXTURE_PATH, "cell": Vector2i(37, 28), "offset": Vector2(0, -10), "name": "ApartmentSignSprite"},
 	]
 	for prop in props:
 		_add_street_prop(prop.path, prop.cell, prop.offset, prop.get("name", "StreetProp"))

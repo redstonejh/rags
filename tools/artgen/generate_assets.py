@@ -51,6 +51,7 @@ DUMPSTER_PATH = PROPS_DIR / "dumpster.png"
 NEWS_BOX_PATH = PROPS_DIR / "news_box.png"
 BUS_STOP_PATH = PROPS_DIR / "bus_stop.png"
 STREET_CAMP_PATH = PROPS_DIR / "street_camp.png"
+APARTMENT_SIGN_PATH = PROPS_DIR / "apartment_sign.png"
 BAR_COUNTER_PATH = PROPS_DIR / "bar_counter.png"
 RECORDS_DESK_PATH = PROPS_DIR / "records_desk.png"
 WORK_SPOT_PATH = PROPS_DIR / "work_spot.png"
@@ -633,6 +634,22 @@ def draw_street_camp() -> None:
     print(f"wrote {STREET_CAMP_PATH.relative_to(ROOT)}")
 
 
+def draw_apartment_sign() -> None:
+    img = Image.new("RGBA", (48, 44), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((22, 16, 25, 39), fill=(45, 43, 42, 255))
+    draw.rectangle((16, 38, 31, 41), fill=(35, 34, 35, 255))
+    draw.rectangle((4, 4, 44, 20), fill=(42, 39, 43, 255))
+    draw.rectangle((6, 6, 42, 18), fill=(67, 82, 105, 255))
+    draw.rectangle((8, 8, 40, 16), outline=(238, 230, 196, 255))
+    draw.text((14, 6), "APT", font=ImageFont.load_default(), fill=(238, 230, 196, 255))
+    draw.rectangle((9, 21, 39, 30), fill=(91, 70, 54, 255))
+    draw.rectangle((11, 23, 37, 28), fill=(143, 104, 70, 255))
+    draw.text((15, 20), "VAC", font=ImageFont.load_default(), fill=(33, 29, 29, 255))
+    img.save(APARTMENT_SIGN_PATH)
+    print(f"wrote {APARTMENT_SIGN_PATH.relative_to(ROOT)}")
+
+
 def draw_bar_counter() -> None:
     img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -716,6 +733,7 @@ def generate_props() -> None:
     draw_news_box()
     draw_bus_stop()
     draw_street_camp()
+    draw_apartment_sign()
     draw_bar_counter()
     draw_records_desk()
     draw_work_spot()

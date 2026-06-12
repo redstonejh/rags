@@ -15,6 +15,8 @@ func _ready() -> void:
 			"loc_bus_stop", "Small-Town Transplant", "bus stop", "BusStopSprite")
 	await _run_origin_start_case("rock_bottom", "Alley Starter",
 			"loc_gas_station_rear", "Tweaker", "behind the gas station", "StreetCampSprite")
+	await _run_origin_start_case("fired_exec", "Corner Office Ghost",
+			"loc_decent_apartment", "Fired Corporate Exec", "decent apartments", "ApartmentSignSprite")
 	print("Opening beat smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
