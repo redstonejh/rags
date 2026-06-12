@@ -196,7 +196,7 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 		sheet.needs.change("fun", -12.0)
 		sheet.needs.change("social", -8.0)
 		_witness_event(sheet, npc,
-				"watched the player misjudge %s spectacularly" % npc.display_name, -0.3, 10.0)
+				"saw you misjudge %s" % npc.display_name, -0.3, 10.0)
 		npc.add_memory("embarrassment", "player",
 				"misjudged you in public; you put them right", -0.4, 9.0)
 		EventBus.reality_check.emit(perceived, actual, npc.id)
@@ -293,3 +293,6 @@ static func _witness_event(_sheet: CharacterSheet, target: NPCRecord,
 			continue
 		npc.add_memory("witnessed", "player", text, tone, salience)
 		npc.change_rel("player", tone * 3.0)
+		npc.flags["reacting_until_min"] = now + 20
+		npc.flags["reaction_target_id"] = target.id
+		npc.flags["reaction_kind"] = "witnessed"

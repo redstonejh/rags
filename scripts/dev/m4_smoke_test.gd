@@ -124,6 +124,9 @@ func _test_reality_check() -> void:
 			saw = true
 	_check(saw, "the witness will remember this forever")
 	_check(witness.rel("player") < 0.0, "the witness thinks less of you now")
+	_check(int(witness.flags.get("reacting_until_min", -1)) > GameClock.total_minutes \
+			and witness.flags.get("reaction_target_id", "") == mark.id,
+			"the witness visibly reacts to the Reality Check")
 
 
 func _test_relationship_deltas() -> void:

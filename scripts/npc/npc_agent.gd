@@ -12,12 +12,14 @@ const DIR_DOWN := 0
 const DIR_RIGHT := 1
 const DIR_UP := 2
 const DIR_LEFT := 3
+const REACTION_TEXT := "!"
 
 var record: NPCRecord
 var _wander_target: Vector2 = Vector2.ZERO
 var _wander_wait := 0.0
 var _anim_time := 0.0
 var _facing_dir := DIR_DOWN
+var _base_name := ""
 
 @onready var body_sprite: Sprite2D = $BodySprite
 @onready var outfit_sprite: Sprite2D = $OutfitSprite
@@ -33,7 +35,8 @@ func _ready() -> void:
 	var arch := record.archetype()
 	if arch:
 		outfit_sprite.modulate = arch.color
-	name_label.text = record.display_name.get_slice(" ", 0)
+	_base_name = record.display_name.get_slice(" ", 0)
+	name_label.text = _base_name
 	_wander_target = global_position
 	add_child(NPCInteractable.new(record))
 
@@ -41,10 +44,27 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if record == null:
 		return
+	if _update_reaction_cue():
+		velocity = Vector2.ZERO
+		_update_sprite_animation(velocity, delta)
+		return
 	if record.traveling:
 		_walk_toward(record.travel_to_pos, delta)
 	else:
 		_idle_wander(delta)
+
+
+func _update_reaction_cue() -> bool:
+	var until_min := int(record.flags.get("reacting_until_min", -1))
+	if until_min < GameClock.total_minutes:
+		if name_label.text == REACTION_TEXT:
+			name_label.text = _base_name
+		return false
+	name_label.text = REACTION_TEXT
+	var target: NPCRecord = WorldState.npcs.get(str(record.flags.get("reaction_target_id", "")))
+	if target != null and target.agent != null and is_instance_valid(target.agent):
+		_facing_dir = _direction_from_velocity(global_position.direction_to(target.agent.global_position))
+	return true
 
 
 func _walk_toward(target: Vector2, _delta: float) -> void:

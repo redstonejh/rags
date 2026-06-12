@@ -277,6 +277,9 @@ func _verify_social_playthrough() -> void:
 	_check(witness.memories.any(func(m: Dictionary) -> bool:
 		return m.get("subject", "") == "player" and "misjudge" in str(m.get("text", ""))),
 			"Reality Check witness records the public miss")
+	_check(int(witness.flags.get("reacting_until_min", -1)) > GameClock.total_minutes \
+			and witness.flags.get("reaction_target_id", "") == target.id,
+			"Reality Check witness reacts to the target")
 	_check(GossipSystem.share(witness, stranger), "witness can pass the Reality Check story")
 	EventBus.dialogue_requested.emit(stranger.id)
 	await get_tree().process_frame
