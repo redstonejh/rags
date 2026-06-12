@@ -40,6 +40,9 @@ func _add_prop_sprite() -> bool:
 
 func interact(_actor: Node) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet == null:
+		EventBus.toast.emit("There's no one on the schedule. Exist first, clock in later.")
+		return
 	var job := sheet.job()
 	if job == null:
 		EventBus.toast.emit("You don't work here. (Get hired via your phone.)")
@@ -61,7 +64,7 @@ func interact(_actor: Node) -> void:
 		EventBus.toast.emit("Shift's over. The %s forgives, once." % job.display_name)
 		return
 	var late_by := maxi(0, now_min - start)
-	var minutes_left := end - maxi(now_min, start)
+	var minutes_left := end - now_min
 	EventBus.shift_started.emit(job, late_by)
 	GameClock.skip_minutes(minutes_left)
 	EventBus.shift_finished.emit(job, late_by)
