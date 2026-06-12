@@ -4,7 +4,7 @@
 
 ## Honest starting point
 
-M0–M8 of `DESIGN.md` exist as **simulation systems verified by ~250 headless, function-level checks**. Phase 0/1 also has a scripted-input harness that exercises a narrow real input → UI → world loop and saves windowed screenshot checkpoints, but the game has still never had a human playtest pass. The visuals have moved from flat rectangles to generated programmer-art placeholders, not final art. Several flows (in-play arrest and long-session save/load) remain unproven in real play. Jail, hospitals, marriage, and elections are a button plus a toast string. Minigames, factions, the radio DJ, build mode, six of twelve origins, and every origin's unique mechanic do not exist.
+M0–M8 of `DESIGN.md` exist as **simulation systems verified by ~250 headless, function-level checks**. Phase 0/1 also has a scripted-input harness that exercises a narrow real input → UI → world loop and saves windowed screenshot checkpoints, but the game has still never had a human playtest pass. The visuals have moved from flat rectangles to generated programmer-art placeholders, not final art. Long-session save/load remains unproven in real play. Jail, hospitals, marriage, and elections are a button plus a toast string. Minigames, factions, the radio DJ, build mode, six of twelve origins, and every origin's unique mechanic do not exist.
 
 What IS real: the architecture (data-driven `.tres` defs, record/view separation, EventBus, ironman saves that round-trip everything) and the signature mechanics implemented at the math layer (Reality Check perceived-vs-true odds, persistent-world permadeath, the witness pipeline). This is an engine, not a game. The plan below turns it into one.
 
@@ -102,6 +102,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 ### Phase 3 — Crime + police to 100%
 - In-world verbs: pickpocket (proximity/behind), shoplifting under clerk sightlines, street carjacks; fence/dealer as scenes.
 - Cops visibly patrol; wanted = embodied pursuit (chase AI) → arrest confrontation; jail becomes a real interior with a daily event loop (yard / library / kitchen) instead of a toast.
+  - Started 2026-06-12: `InPlayArrestSmokeTest.tscn` now proves the real crime-to-warrant-to-embodied-cop arrest flow opens the production confrontation, serves time, clears wanted stars, and returns control to play. Chase AI and walkable jail remain.
 - **DoD:** rob the QuikStop with and without witnesses and feel the difference; get chased; serve time.
 
 ### Phase 4 — Housing + furnishing to 100%

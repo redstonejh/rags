@@ -1,0 +1,123 @@
+extends Node
+## Exercises an in-play warrant arrest through Main, CrimeSystem, an embodied cop,
+## and the real Confrontation UI.
+## Run headless:
+##   godot --headless --path <repo> res://scenes/dev/InPlayArrestSmokeTest.tscn
+
+const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
+
+var failures := 0
+var _main: Node = null
+var _cop: NPCRecord = null
+
+
+func _ready() -> void:
+	_setup_wanted_world()
+	if _cop == null:
+		_finish()
+		return
+	await _instantiate_main()
+	await _test_embodied_cop_starts_arrest()
+	_finish()
+
+
+func _finish() -> void:
+	print("In-play arrest smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
+	get_tree().quit(0 if failures == 0 else 1)
+
+
+func _setup_wanted_world() -> void:
+	var sheet := CharacterSheet.new()
+	sheet.char_name = "Wanted Driver"
+	sheet.origin_id = "off_the_bus"
+	sheet.cash_cents = 50000
+	sheet.flags["has_id"] = true
+	WorldState.new_world(sheet)
+	GameClock.clear_pause_locks()
+	GameClock.set_manual_paused(false)
+	GameClock.total_minutes = GameClock.MINUTES_PER_DAY + 10 * 60
+	_cop = _first_cop()
+	if _cop == null:
+		_check(false, "world generation created at least one cop")
+		return
+	_cop.current_location_id = "exterior"
+	_cop.current_activity = "patrol"
+	_cop.traveling = false
+	_cop.flags.erase("bribed_until_day")
+	var warrant := CrimeSystem.commit("shoplift", "exterior", null, Locations.door_pos("exterior"))
+	_check(warrant.is_active_warrant() and CrimeSystem.wanted_stars() > 0,
+			"nearby cop witness creates an active warrant")
+
+
+func _instantiate_main() -> void:
+	_main = MAIN_SCENE.instantiate()
+	add_child(_main)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	await get_tree().create_timer(0.6).timeout
+
+
+func _test_embodied_cop_starts_arrest() -> void:
+	print("[Embodied cop arrest]")
+	var cop_agent := _cop.agent
+	_check(cop_agent != null and is_instance_valid(cop_agent),
+			"wanted player has an embodied cop nearby")
+	EventBus.minute_passed.emit(GameClock.total_minutes)
+	await get_tree().process_frame
+	var confrontation: CanvasLayer = _main.get_node("Confrontation")
+	_check(confrontation.visible and GameClock.paused,
+			"cop patrol opens the arrest confrontation")
+	_check(_descendant_text_contains(confrontation, "Stop right there"),
+			"arrest confrontation names the stop")
+	var comply := _find_button_containing(confrontation, "Hands up")
+	_check(comply != null, "arrest confrontation offers comply")
+	if comply == null:
+		return
+	var day_before := GameClock.day
+	comply.pressed.emit()
+	await get_tree().process_frame
+	_check(GameClock.day == day_before + 1, "comply serves the warrant sentence")
+	_check(CrimeSystem.wanted_stars() == 0, "serving clears wanted stars")
+	var leave := _find_button_containing(confrontation, "Walk away")
+	_check(leave != null, "resolved arrest offers a way back to play")
+	if leave != null:
+		leave.pressed.emit()
+		await get_tree().process_frame
+		_check(not confrontation.visible and not GameClock.paused,
+				"leaving arrest returns control to play")
+
+
+func _first_cop() -> NPCRecord:
+	for npc in WorldState.npcs.values():
+		if npc.is_cop():
+			return npc
+	return null
+
+
+func _find_button_containing(node: Node, text: String) -> Button:
+	if node is Button and text in str(node.text):
+		return node
+	for child in node.get_children():
+		var found := _find_button_containing(child, text)
+		if found != null:
+			return found
+	return null
+
+
+func _descendant_text_contains(node: Node, text: String) -> bool:
+	var value = node.get("text")
+	if value != null and str(value).contains(text):
+		return true
+	for child in node.get_children():
+		if _descendant_text_contains(child, text):
+			return true
+	return false
+
+
+func _check(ok: bool, what: String) -> void:
+	if ok:
+		print("  PASS: %s" % what)
+	else:
+		failures += 1
+		printerr("  FAIL: %s" % what)
