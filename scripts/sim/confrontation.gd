@@ -173,10 +173,15 @@ static func _resolve_arrest(choice: String, sheet: CharacterSheet,
 
 
 static func _sentence_text(sheet: CharacterSheet, lead: String) -> String:
+	var parts := [lead]
 	var event_text := CrimeSystem.jail_event_summary(sheet.flags.get("last_jail_events", []))
-	if event_text == "":
-		return lead
-	return "%s Jail days: %s." % [lead, event_text]
+	if event_text != "":
+		parts.append("Jail days: %s." % event_text)
+	var consequence_text := CrimeSystem.jail_consequence_summary(
+			sheet.flags.get("last_jail_consequences", {}))
+	if consequence_text != "":
+		parts.append("Outside: %s." % consequence_text)
+	return " ".join(parts)
 
 
 static func _bump_warrant_evidence(amount: float) -> void:

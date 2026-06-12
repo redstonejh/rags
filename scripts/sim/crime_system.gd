@@ -47,6 +47,8 @@ const JAIL_EVENTS := [
 		"need_deltas": {"hunger": 5.0, "hygiene": -3.0},
 	},
 ]
+const JAIL_RELATIONSHIP_LOSS_PER_DAY := 3.0
+const JAIL_RELATIONSHIP_LOSS_CAP := 25.0
 
 var _arrest_cooldown_until := 0
 
@@ -360,10 +362,15 @@ static func serve_sentence() -> int:
 		events.append(_apply_jail_day_event(sheet, events.size() + 1))
 	sheet.flags["last_jail_events"] = events
 	sheet.flags["jail_days_served_total"] = int(sheet.flags.get("jail_days_served_total", 0)) + days
+	var consequences := _apply_jail_absence_consequences(sheet, days)
+	sheet.flags["last_jail_consequences"] = consequences
 	sheet.flags.erase("jailed")
 	_close_warrants()
 	var event_text := jail_event_summary(events)
 	var detail := " Jail days: %s." % event_text if event_text != "" else ""
+	var consequence_text := jail_consequence_summary(consequences)
+	if consequence_text != "":
+		detail += " Outside: %s." % consequence_text
 	EventBus.toast.emit("%d day%s gone.%s The gate opens onto the same town, minus some rent money." % [
 			days, "" if days == 1 else "s", detail])
 	EventBus.wanted_changed.emit(0)
@@ -406,6 +413,44 @@ static func jail_event_summary(events: Array) -> String:
 	if remaining > 0:
 		summary += "; +%d more" % remaining
 	return summary
+
+
+static func jail_consequence_summary(consequences: Dictionary) -> String:
+	var parts: Array = []
+	var strained := int(consequences.get("relationships_strained", 0))
+	if strained > 0:
+		parts.append("%d relationship%s strained" % [strained, "" if strained == 1 else "s"])
+	var child_days := int(consequences.get("child_services_days", 0))
+	if child_days > 0:
+		parts.append("Child Services file +%d" % child_days)
+	return "; ".join(parts)
+
+
+static func _apply_jail_absence_consequences(sheet: CharacterSheet, days: int) -> Dictionary:
+	var strained_names: Array = []
+	var rel_loss := minf(days * JAIL_RELATIONSHIP_LOSS_PER_DAY, JAIL_RELATIONSHIP_LOSS_CAP)
+	for npc in WorldState.npcs.values():
+		if not npc.alive:
+			continue
+		if not npc.flags.get("dating_player", false) and not npc.flags.get("married_to_player", false):
+			continue
+		npc.change_rel("player", -rel_loss)
+		npc.add_memory("jail_absence", "player",
+				"served time while you held life together outside", -0.45, 6.5)
+		strained_names.append(npc.display_name)
+	var child_days := days if not sheet.children.is_empty() else 0
+	if child_days > 0:
+		sheet.flags["child_services_file"] = int(sheet.flags.get("child_services_file", 0)) + child_days
+		if int(sheet.flags["child_services_file"]) >= 3:
+			sheet.flags["child_services_warning"] = true
+	return {
+		"relationships_strained": strained_names.size(),
+		"strained_names": strained_names,
+		"relationship_loss": rel_loss if not strained_names.is_empty() else 0.0,
+		"child_services_days": child_days,
+		"child_services_file": int(sheet.flags.get("child_services_file", 0)),
+		"child_services_warning": sheet.flags.get("child_services_warning", false),
+	}
 
 
 static func _close_warrants() -> void:

@@ -358,6 +358,10 @@ func _test_arrest_paths() -> void:
 	# Comply: serve shoplift's 1-day minimum; clock moves, warrants clear.
 	var sheet := _fresh_sheet()
 	_mk_npc("w_law1", "loc_scene_g", 100, 10, 80, "cop")
+	var partner := _mk_npc("w_partner", "loc_home", 50)
+	partner.relationships["player"] = 80.0
+	partner.flags["dating_player"] = true
+	sheet.children = [{"name": "Dot", "born_day": GameClock.day - 1, "traits": []}]
 	CrimeSystem.commit("shoplift", "loc_scene_g")
 	var cop: NPCRecord = WorldState.npcs["w_law1"]
 	var day_before := GameClock.day
@@ -367,6 +371,8 @@ func _test_arrest_paths() -> void:
 	_check(float(sheet.skills.get("fitness", 0.0)) > 0.0, "yard weights: fitness XP in jail")
 	_check(str(result.get("text", "")).contains("Jail days:"),
 			"arrest result summarizes jail days")
+	_check(str(result.get("text", "")).contains("Outside:"),
+			"arrest result summarizes outside consequences")
 	var jail_events: Array = sheet.flags.get("last_jail_events", [])
 	_check(jail_events.size() == 1, "serving records a daily jail event")
 	if not jail_events.is_empty():
@@ -375,12 +381,23 @@ func _test_arrest_paths() -> void:
 				"jail event kind is data-backed (%s)" % jail_event.get("kind", ""))
 		_check(str(jail_event.get("text", "")) != "",
 				"jail event includes player-facing text")
+	var jail_consequences: Dictionary = sheet.flags.get("last_jail_consequences", {})
+	_check(partner.rel("player") < 80.0, "jail strains outside relationships")
+	_check(int(jail_consequences.get("relationships_strained", 0)) == 1,
+			"serving records strained relationship count")
+	_check(int(sheet.flags.get("child_services_file", 0)) == 1,
+			"jail starts a Child Services file for parents")
 	SaveManager.set_in_game(true)
 	_check(SaveManager.save_game(), "save_game reports success with jail event history")
 	WorldState.player_sheet = null
 	_check(SaveManager.load_game(), "load_game restores jail event history")
 	_check(_same_jail_events(WorldState.player_sheet.flags.get("last_jail_events", []), jail_events),
 			"jail event history survives save/load")
+	var loaded_partner: NPCRecord = WorldState.npcs.get("w_partner")
+	_check(loaded_partner != null and loaded_partner.rel("player") < 80.0,
+			"jail relationship strain survives save/load")
+	_check(int(WorldState.player_sheet.flags.get("child_services_file", 0)) == 1,
+			"Child Services file survives save/load")
 	SaveManager.set_in_game(false)
 	sheet = WorldState.player_sheet
 	cop = WorldState.npcs["w_law1"]
