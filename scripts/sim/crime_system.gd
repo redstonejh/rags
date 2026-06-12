@@ -18,6 +18,35 @@ const MAX_STARS := 5
 const COP_CHECK_MINUTES := 5
 const ARREST_COOLDOWN_MINUTES := 90
 const EXTERIOR_WITNESS_RADIUS := 320.0
+const JAIL_EVENTS := [
+	{
+		"kind": "yard",
+		"label": "yard weights",
+		"text": "You spend yard time under rusted iron and worse advice.",
+		"skill": "fitness",
+		"skill_xp": 1.5,
+		"cash_cents": 0,
+		"need_deltas": {"energy": -4.0, "fun": 2.0},
+	},
+	{
+		"kind": "library",
+		"label": "library shift",
+		"text": "You hide in the library stacks and leave with a sharper edge.",
+		"skill": "education",
+		"skill_xp": 1.0,
+		"cash_cents": 0,
+		"need_deltas": {"fun": 3.0},
+	},
+	{
+		"kind": "kitchen",
+		"label": "kitchen duty",
+		"text": "Kitchen duty pays badly, but the coffee is hot and accounted for.",
+		"skill": "cooking",
+		"skill_xp": 1.0,
+		"cash_cents": 200,
+		"need_deltas": {"hunger": 5.0, "hygiene": -3.0},
+	},
+]
 
 var _arrest_cooldown_until := 0
 
@@ -315,8 +344,10 @@ static func pay_bail() -> bool:
 static func serve_sentence() -> int:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	var days := total_sentence_days()
+	var events: Array = []
 	EventBus.arrest_made.emit(days)
 	sheet.flags["jailed"] = true
+	sheet.flags["last_jail_events"] = []
 	for _d in days:
 		# Jail feeds you. Not well, but on schedule.
 		sheet.flags["calories_today"] = maxi(int(sheet.flags.get("calories_today", 0)), 1700)
@@ -325,13 +356,56 @@ static func serve_sentence() -> int:
 		sheet.needs.change("energy", 50.0)
 		sheet.needs.change("hygiene", 20.0)
 		sheet.needs.change("fun", -5.0)
-		sheet.add_skill_xp("fitness", 1.0) # yard weights: the prison-physique pipeline
+		sheet.add_skill_xp("fitness", 0.5) # base prison-physique pipeline
+		events.append(_apply_jail_day_event(sheet, events.size() + 1))
+	sheet.flags["last_jail_events"] = events
+	sheet.flags["jail_days_served_total"] = int(sheet.flags.get("jail_days_served_total", 0)) + days
 	sheet.flags.erase("jailed")
 	_close_warrants()
-	EventBus.toast.emit("%d day%s gone. The gate opens onto the same town, minus some rent money." % [
-			days, "" if days == 1 else "s"])
+	var event_text := _jail_event_summary(events)
+	var detail := " Jail days: %s." % event_text if event_text != "" else ""
+	EventBus.toast.emit("%d day%s gone.%s The gate opens onto the same town, minus some rent money." % [
+			days, "" if days == 1 else "s", detail])
 	EventBus.wanted_changed.emit(0)
 	return days
+
+
+static func _apply_jail_day_event(sheet: CharacterSheet, day_number: int) -> Dictionary:
+	var event_def: Dictionary = JAIL_EVENTS[random_int(0, JAIL_EVENTS.size() - 1)]
+	var skill := str(event_def.get("skill", ""))
+	var skill_xp := float(event_def.get("skill_xp", 0.0))
+	if skill != "" and skill_xp > 0.0:
+		sheet.add_skill_xp(skill, skill_xp)
+	var cash_cents := int(event_def.get("cash_cents", 0))
+	if cash_cents != 0:
+		sheet.add_cash(cash_cents)
+	var need_deltas: Dictionary = event_def.get("need_deltas", {})
+	for need_id in need_deltas:
+		sheet.needs.change(str(need_id), float(need_deltas[need_id]))
+	return {
+		"day": day_number,
+		"kind": str(event_def.get("kind", "")),
+		"label": str(event_def.get("label", "")),
+		"text": str(event_def.get("text", "")),
+		"skill": skill,
+		"skill_xp": skill_xp,
+		"cash_cents": cash_cents,
+	}
+
+
+static func _jail_event_summary(events: Array) -> String:
+	if events.is_empty():
+		return ""
+	var labels: Array = []
+	for event in events:
+		if labels.size() >= 3:
+			break
+		labels.append(str(event.get("label", "a long day")))
+	var summary := "; ".join(labels)
+	var remaining := events.size() - labels.size()
+	if remaining > 0:
+		summary += "; +%d more" % remaining
+	return summary
 
 
 static func _close_warrants() -> void:

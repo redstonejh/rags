@@ -365,6 +365,23 @@ func _test_arrest_paths() -> void:
 	_check(result.success and GameClock.day == day_before + 1, "served 1 day for shoplifting")
 	_check(CrimeSystem.wanted_stars() == 0, "warrants cleared by serving")
 	_check(float(sheet.skills.get("fitness", 0.0)) > 0.0, "yard weights: fitness XP in jail")
+	var jail_events: Array = sheet.flags.get("last_jail_events", [])
+	_check(jail_events.size() == 1, "serving records a daily jail event")
+	if not jail_events.is_empty():
+		var jail_event: Dictionary = jail_events[0]
+		_check(str(jail_event.get("kind", "")) in _jail_event_kinds(),
+				"jail event kind is data-backed (%s)" % jail_event.get("kind", ""))
+		_check(str(jail_event.get("text", "")) != "",
+				"jail event includes player-facing text")
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with jail event history")
+	WorldState.player_sheet = null
+	_check(SaveManager.load_game(), "load_game restores jail event history")
+	_check(_same_jail_events(WorldState.player_sheet.flags.get("last_jail_events", []), jail_events),
+			"jail event history survives save/load")
+	SaveManager.set_in_game(false)
+	sheet = WorldState.player_sheet
+	cop = WorldState.npcs["w_law1"]
 	# Bail: money makes it a paperwork problem.
 	CrimeSystem.commit("shoplift", "loc_scene_g")
 	sheet.cash_cents = 20000
@@ -386,6 +403,30 @@ func _test_arrest_paths() -> void:
 	_check(not refused.success and WorldState.crime_cases.size() == cases_before + 1,
 			"bribing the wrong cop is its own crime")
 	CrimeSystem._close_warrants()
+
+
+func _jail_event_kinds() -> Array:
+	var kinds: Array = []
+	for event_def in CrimeSystem.JAIL_EVENTS:
+		kinds.append(str(event_def.get("kind", "")))
+	return kinds
+
+
+func _same_jail_events(actual: Array, expected: Array) -> bool:
+	if actual.size() != expected.size():
+		return false
+	for i in actual.size():
+		var a: Dictionary = actual[i]
+		var e: Dictionary = expected[i]
+		for key in ["kind", "label", "text", "skill"]:
+			if str(a.get(key, "")) != str(e.get(key, "")):
+				return false
+		for key in ["day", "cash_cents"]:
+			if int(a.get(key, -999999)) != int(e.get(key, -999999)):
+				return false
+		if not is_equal_approx(float(a.get("skill_xp", 0.0)), float(e.get("skill_xp", 0.0))):
+			return false
+	return true
 
 
 func _test_pickpocket() -> void:
