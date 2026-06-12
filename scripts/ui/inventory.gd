@@ -130,6 +130,8 @@ func _use(item_id: String) -> void:
 	var calories_before := int(sheet.flags.get("calories_today", 0))
 	if sheet.consume_item(item_id):
 		var item := ContentDB.get_item(item_id)
+		EventBus.survival_feedback.emit("eat", "Eat",
+				item.display_name if item else item_id)
 		EventBus.toast.emit(_use_feedback(item, item_id, needs_before, calories_before))
 	_refresh()
 

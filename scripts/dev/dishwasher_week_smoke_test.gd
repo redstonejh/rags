@@ -151,7 +151,7 @@ func _resolve_optional_dilemma() -> void:
 	if not dilemma.visible:
 		_check(not GameClock.paused, "shift returns control without a dilemma")
 		return
-	var choice := _find_enabled_button(dilemma)
+	var choice := _find_lowest_cash_button(dilemma)
 	_check(choice != null, "post-shift dilemma has a choice")
 	if choice == null:
 		return
@@ -213,14 +213,49 @@ func _find_named_descendant(node: Node, node_name: String) -> Node:
 	return null
 
 
-func _find_enabled_button(node: Node) -> Button:
+func _find_lowest_cash_button(node: Node) -> Button:
+	var buttons: Array[Button] = []
+	_collect_enabled_buttons(node, buttons)
+	var best: Button = null
+	var best_cash := 100000000
+	var fallback: Button = null
+	var fallback_cash := -100000000
+	for button in buttons:
+		var cash := _cash_delta_from_button(button)
+		if cash >= 0 and cash < best_cash:
+			best_cash = cash
+			best = button
+		elif cash < 0 and cash > fallback_cash:
+			fallback_cash = cash
+			fallback = button
+	if best == null:
+		best = fallback
+	return best
+
+
+func _collect_enabled_buttons(node: Node, out: Array[Button]) -> void:
 	if node is Button and not node.disabled:
-		return node
+		out.append(node)
 	for child in node.get_children():
-		var found := _find_enabled_button(child)
-		if found != null:
-			return found
-	return null
+		_collect_enabled_buttons(child, out)
+
+
+func _cash_delta_from_button(button: Button) -> int:
+	var text := str(button.text)
+	var marker := "(+$"
+	var sign := 1
+	if "(-$" in text:
+		marker = "(-$"
+		sign = -1
+	var start := text.find(marker)
+	if start == -1:
+		return 0
+	start += marker.length()
+	var end := text.find(")", start)
+	if end == -1:
+		return 0
+	var amount_text := text.substr(start, end - start)
+	return sign * int(round(float(amount_text) * 100.0))
 
 
 func _find_amenity(kind: String) -> Amenity:

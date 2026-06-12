@@ -70,6 +70,11 @@ func interact(_actor: Node) -> void:
 		_duration_label(minutes_left),
 		_time_label(end),
 		" Late by %s." % _duration_label(late_by) if late_by > 0 else ""])
+	EventBus.survival_feedback.emit("work", job.display_name,
+			"%s at %s. Clock-out: %s." % [
+				_duration_label(minutes_left),
+				Locations.display_name(job.workplace_id),
+				_time_label(end)])
 	EventBus.shift_started.emit(job, late_by)
 	GameClock.skip_minutes(minutes_left)
 	EventBus.shift_finished.emit(job, late_by)

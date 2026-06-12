@@ -227,6 +227,8 @@ func _close_phone_open_inventory() -> void:
 			"inventory Use logs calories")
 	_check("instant_noodles" not in WorldState.player_sheet.inventory,
 			"inventory Use removes one consumed item")
+	_check(_survival_feedback_kind() == "eat",
+			"inventory Use shows the survival feedback vignette")
 
 
 func _enter_store_move_to_counter() -> void:
@@ -496,6 +498,11 @@ func _find_named_descendant(node: Node, node_name: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+func _survival_feedback_kind() -> String:
+	var feedback := _main.get_node_or_null("SurvivalFeedback")
+	return str(feedback.get_meta("last_survival_kind", "")) if feedback != null else ""
 
 
 func _find_button_with_text(node: Node, text: String) -> Button:

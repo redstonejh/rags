@@ -66,6 +66,8 @@ func _test_bed_sleep_interaction() -> void:
 			"bed sleep advances to 7 AM tomorrow")
 	_check(sheet.needs.get_value("energy") > energy_before,
 			"bed sleep restores energy")
+	_check(_survival_feedback_kind() == "sleep",
+			"bed sleep shows the survival feedback vignette")
 	_check(not GameClock.paused and GameClock.pause_lock_count() == 0,
 			"bed sleep returns control without pause locks")
 
@@ -85,6 +87,11 @@ func _find_amenity_in(node: Node, kind: String) -> Amenity:
 		if found != null:
 			return found
 	return null
+
+
+func _survival_feedback_kind() -> String:
+	var feedback := _main.get_node_or_null("SurvivalFeedback")
+	return str(feedback.get_meta("last_survival_kind", "")) if feedback != null else ""
 
 
 func _action(name: String) -> InputEventAction:

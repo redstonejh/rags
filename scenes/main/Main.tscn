@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="3"]
@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://scripts/ui/confrontation.gd" id="16"]
 [ext_resource type="Script" path="res://scripts/sim/town_life.gd" id="17"]
 [ext_resource type="Script" path="res://scripts/ui/ui_stack.gd" id="18"]
+[ext_resource type="Script" path="res://scripts/ui/survival_feedback.gd" id="19"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1")
@@ -45,6 +46,9 @@ script = ExtResource("17")
 
 [node name="UIStack" type="CanvasLayer" parent="."]
 script = ExtResource("18")
+
+[node name="SurvivalFeedback" type="CanvasLayer" parent="."]
+script = ExtResource("19")
 
 [node name="HUD" parent="." instance=ExtResource("5")]
 
