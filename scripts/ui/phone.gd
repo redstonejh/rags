@@ -813,7 +813,7 @@ func _refresh_health() -> void:
 			if 4000 - from_dirty > 0:
 				sheet.add_cash(-(4000 - from_dirty))
 			var n := Body.treat_wounds(sheet)
-			if randf() < 0.2:
+			if Body.roll_chance(0.2):
 				sheet.flags["scars"] = int(sheet.flags.get("scars", 0)) + 1
 				EventBus.toast.emit("He fixed %d wound%s. One of them will have a story." % [n, "" if n == 1 else "s"])
 			else:
@@ -834,7 +834,7 @@ func _refresh_health() -> void:
 		_health_button(row2, "Plastic surgery ($2,000)", sheet.cash_cents >= 200000,
 			func() -> void:
 				sheet.add_cash(-200000)
-				if randf() < 0.1:
+				if Body.roll_chance(0.1):
 					sheet.flags["cha_botched"] = true
 					EventBus.toast.emit("The surgeon said 'oops' in there. You both heard it.")
 				else:

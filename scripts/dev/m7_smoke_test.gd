@@ -251,7 +251,10 @@ func _test_body_rng_save_roundtrip() -> void:
 	SaveManager.set_in_game(true)
 	_check(SaveManager.save_game(), "save_game reports success with body RNG state")
 	Body.daily_tick(sheet)
-	var expected := _body_signature(sheet)
+	var expected := _body_signature(sheet, [
+		Body.roll_chance(0.2),
+		Body.roll_chance(0.1),
+	])
 	_check(WorldState.body_rng_state != before_state,
 			"birth advances saved body RNG state")
 	WorldState.player_sheet = null
@@ -259,12 +262,16 @@ func _test_body_rng_save_roundtrip() -> void:
 	_check(SaveManager.load_game(), "load_game restores body RNG state")
 	var loaded := WorldState.player_sheet
 	Body.daily_tick(loaded)
-	_check(_body_signature(loaded) == expected,
-			"loaded body RNG repeats the same birth result")
+	var actual := _body_signature(loaded, [
+		Body.roll_chance(0.2),
+		Body.roll_chance(0.1),
+	])
+	_check(actual == expected,
+			"loaded body RNG repeats the same birth and public roll results")
 	SaveManager.set_in_game(false)
 
 
-func _body_signature(sheet: CharacterSheet) -> String:
+func _body_signature(sheet: CharacterSheet, public_rolls: Array = []) -> String:
 	var children := []
 	for kid in sheet.children:
 		children.append([
@@ -277,6 +284,7 @@ func _body_signature(sheet: CharacterSheet) -> String:
 		"flags": {
 			"pregnant_due_day": int(sheet.flags.get("pregnant_due_day", -1)),
 		},
+		"public_rolls": public_rolls,
 		"body_rng_state": str(WorldState.body_rng_state),
 	})
 

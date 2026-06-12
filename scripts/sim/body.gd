@@ -20,6 +20,10 @@ const WOUNDS := {
 }
 
 
+static func roll_chance(chance: float) -> bool:
+	return _randf() < clampf(chance, 0.0, 1.0)
+
+
 # ------------------------------------------------------------- substances
 
 static func substance_state(sheet: CharacterSheet, id: String) -> Dictionary:
