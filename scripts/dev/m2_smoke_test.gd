@@ -61,6 +61,10 @@ func _test_world_gen() -> void:
 	_check(names.size() == n, "generated NPC display names are unique")
 	_check(subversions > 5 and subversions < n / 4,
 			"subversion rate sane (%d/%d)" % [subversions, n])
+	var seeded_a := WorldGen.generate(24680)
+	var seeded_b := WorldGen.generate(24680)
+	_check(_population_signature(seeded_a) == _population_signature(seeded_b),
+			"world generation is deterministic for a fixed seed")
 	var doors := Locations.door_positions.size()
 	_check(doors >= 9, "door registry populated (%d doors)" % doors)
 
@@ -107,6 +111,32 @@ func _census() -> Dictionary:
 		var loc: String = "@" + npc.current_location_id
 		c[loc] = c.get(loc, 0) + 1
 	return c
+
+
+func _population_signature(population: Dictionary) -> String:
+	var ids := population.keys()
+	ids.sort()
+	var rows := []
+	for id in ids:
+		var npc: NPCRecord = population[id]
+		rows.append([
+			npc.id,
+			npc.display_name,
+			npc.archetype_id,
+			npc.appearance_tags,
+			npc.is_subversion,
+			npc.stats,
+			npc.personality,
+			npc.flags,
+			npc.home_id,
+			npc.workplace_id,
+			npc.schedule_offset,
+			npc.money_cents,
+			npc.age_years,
+			npc.energy,
+			npc.hunger,
+		])
+	return JSON.stringify(rows)
 
 
 func _test_save_roundtrip() -> void:

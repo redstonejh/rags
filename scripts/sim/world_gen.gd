@@ -29,8 +29,7 @@ static func generate(seed_value: int) -> Dictionary:
 			if n.is_subversion:
 				# Looks one way, IS another: stats roll against a shuffled bias.
 				var fake_bias := {}
-				var stat_pool := CharacterSheet.STAT_IDS.duplicate()
-				stat_pool.shuffle()
+				var stat_pool := _shuffled_stats(rng)
 				for k in arch.stat_bias:
 					fake_bias[stat_pool.pop_back()] = arch.stat_bias[k]
 				n.stats = Coherence.allocate_stats(rng, fake_bias, [])
@@ -74,3 +73,13 @@ static func _unique_name(rng: RandomNumberGenerator, used_names: Dictionary, ser
 
 static func _roll_stat(rng: RandomNumberGenerator) -> int:
 	return clampi(int(rng.randfn(50.0, 18.0)), 5, 95)
+
+
+static func _shuffled_stats(rng: RandomNumberGenerator) -> Array:
+	var stats := CharacterSheet.STAT_IDS.duplicate()
+	for i in range(stats.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp = stats[i]
+		stats[i] = stats[j]
+		stats[j] = tmp
+	return stats
