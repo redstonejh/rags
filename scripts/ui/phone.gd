@@ -464,25 +464,35 @@ func _people_connections_text(npc: NPCRecord) -> String:
 	elif npc.flags.get("dating_player", false):
 		parts.append("dating you")
 
-	var best_id := ""
-	var best_rel := 35.0
-	var worst_id := ""
-	var worst_rel := -35.0
+	var close_links: Array[Dictionary] = []
+	var feud_links: Array[Dictionary] = []
 	for other_id in npc.relationships:
 		if str(other_id) == "player":
 			continue
 		var value := float(npc.relationships[other_id])
-		if value >= best_rel:
-			best_rel = value
-			best_id = str(other_id)
-		if value <= worst_rel:
-			worst_rel = value
-			worst_id = str(other_id)
-	if best_id != "":
-		parts.append("close to %s (%s)" % [_npc_name(best_id), _signed_int(best_rel)])
-	if worst_id != "":
-		parts.append("feuding with %s (%s)" % [_npc_name(worst_id), _signed_int(worst_rel)])
+		if value >= 35.0:
+			close_links.append({"id": str(other_id), "value": value})
+		elif value <= -35.0:
+			feud_links.append({"id": str(other_id), "value": value})
+	close_links.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a.get("value", 0.0)) > float(b.get("value", 0.0)))
+	feud_links.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a.get("value", 0.0)) < float(b.get("value", 0.0)))
+	if not close_links.is_empty():
+		parts.append("close to %s" % _people_relationship_list(close_links, 2))
+	if not feud_links.is_empty():
+		parts.append("feuding with %s" % _people_relationship_list(feud_links, 2))
 	return "Status: %s" % ("; ".join(parts) if not parts.is_empty() else "no public entanglements")
+
+
+func _people_relationship_list(links: Array[Dictionary], limit: int) -> String:
+	var names: Array[String] = []
+	for i in mini(links.size(), limit):
+		var link := links[i]
+		names.append("%s (%s)" % [
+			_npc_name(str(link.get("id", ""))),
+			_signed_int(float(link.get("value", 0.0)))])
+	return ", ".join(names)
 
 
 func _people_family_text(npc: NPCRecord) -> String:

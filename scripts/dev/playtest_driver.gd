@@ -76,8 +76,14 @@ func _seed_people_app_state() -> void:
 		return
 	var date: NPCRecord = people[0]
 	var rival: NPCRecord = people[1]
+	var friend_a: NPCRecord = people[6] if people.size() > 6 else null
+	var friend_b: NPCRecord = people[7] if people.size() > 7 else null
 	date.relationships["player"] = 62.0
 	date.relationships[rival.id] = -45.0
+	if friend_a != null:
+		date.relationships[friend_a.id] = 57.0
+	if friend_b != null:
+		date.relationships[friend_b.id] = 49.0
 	date.flags["dating_player"] = true
 	date.add_memory("date", "player", "said yes to a date with you", 1.0, 7.0)
 	rival.relationships["player"] = -38.0
@@ -153,6 +159,9 @@ func _open_phone() -> void:
 	_check(_descendant_text_contains(people_content, "known contacts"),
 			"People tab hides unknown townsfolk")
 	_check(_descendant_text_contains(people_content, "dating you"), "People tab shows dating status")
+	_check(_descendant_text_contains(people_content, "close to") \
+			and _descendant_text_contains(people_content, ", "),
+			"People tab shows compact social circles")
 	_check(_descendant_text_contains(people_content, "Family: spouse; 1 child"),
 			"People tab shows family status")
 	_check(_descendant_text_contains(people_content, " via "),
