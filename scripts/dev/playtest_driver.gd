@@ -59,6 +59,8 @@ func _instantiate_main() -> void:
 	_player = _main.get_node("Player")
 	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
 	await _verify_player_outfit_switch()
+	_check(_exterior_ground_tile_count(Vector2i(5, 0)) > 0, "exterior sidewalks spawned")
+	_check(_exterior_ground_tile_count(Vector2i(6, 0)) > 0, "exterior dirt lots spawned")
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
 	_check(_exterior_street_prop_count() > 0, "exterior street props spawned")
 
@@ -224,6 +226,21 @@ func _exterior_street_prop_count() -> int:
 		return 0
 	var layer := world_root.get_child(0).get_node_or_null("StreetPropLayer")
 	return layer.get_child_count() if layer != null else 0
+
+
+func _exterior_ground_tile_count(tile: Vector2i) -> int:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return 0
+	var world = world_root.get_child(0)
+	var layer: TileMapLayer = world.get("ground")
+	if layer == null:
+		return 0
+	var count := 0
+	for cell in layer.get_used_cells():
+		if layer.get_cell_atlas_coords(cell) == tile:
+			count += 1
+	return count
 
 
 func _find_current_world_node_with_property(property_name: String) -> Node:

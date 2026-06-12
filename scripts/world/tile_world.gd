@@ -15,6 +15,9 @@ const WALL := Vector2i(3, 0)
 ## Floor with NO navigation polygon — placed under walls so paths can't
 ## route through buildings.
 const FLOOR_SOLID := Vector2i(4, 0)
+const SIDEWALK := Vector2i(5, 0)
+const DIRT := Vector2i(6, 0)
+const TILE_COUNT := 7
 
 var ground: TileMapLayer
 var walls: TileMapLayer
@@ -74,7 +77,7 @@ func _build_tileset() -> TileSet:
 	src.texture = tex
 	src.texture_region_size = Vector2i(TILE, TILE)
 	ts.add_source(src, 0)
-	for t in 5:
+	for t in TILE_COUNT:
 		src.create_tile(Vector2i(t, 0))
 
 	var half := TILE / 2.0
@@ -84,7 +87,7 @@ func _build_tileset() -> TileSet:
 	])
 
 	# Walkable tiles get a navigation polygon; the wall gets collision.
-	for t in [GRASS, ROAD, FLOOR]:
+	for t in [GRASS, ROAD, FLOOR, SIDEWALK, DIRT]:
 		var td := src.get_tile_data(t, 0)
 		var nav := NavigationPolygon.new()
 		nav.vertices = square
@@ -99,15 +102,17 @@ func _build_tileset() -> TileSet:
 
 
 func _build_fallback_atlas() -> Image:
-	var img := Image.create(TILE * 5, TILE, false, Image.FORMAT_RGB8)
+	var img := Image.create(TILE * TILE_COUNT, TILE, false, Image.FORMAT_RGB8)
 	var bases: Array[Color] = [
 		Color(0.30, 0.46, 0.25), # grass
 		Color(0.28, 0.28, 0.30), # road
 		Color(0.55, 0.45, 0.34), # floor (wood)
 		Color(0.42, 0.40, 0.45), # wall
 		Color(0.55, 0.45, 0.34), # floor under walls (no nav)
+		Color(0.52, 0.52, 0.50), # sidewalk
+		Color(0.46, 0.33, 0.21), # dirt
 	]
-	for t in 5:
+	for t in TILE_COUNT:
 		for px in TILE:
 			for py in TILE:
 				var c: Color = bases[t]

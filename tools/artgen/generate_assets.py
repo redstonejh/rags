@@ -98,6 +98,18 @@ PALETTES = {
         "light": (121, 116, 126),
         "accent": (74, 72, 80),
     },
+    "sidewalk": {
+        "base": (127, 128, 124),
+        "dark": (88, 89, 88),
+        "light": (160, 160, 154),
+        "accent": (108, 109, 106),
+    },
+    "dirt": {
+        "base": (104, 78, 52),
+        "dark": (71, 52, 39),
+        "light": (138, 102, 65),
+        "accent": (84, 64, 48),
+    },
 }
 
 
@@ -168,15 +180,44 @@ def draw_wall(draw: ImageDraw.ImageDraw, x0: int, rng: random.Random) -> None:
         draw.point((x, y), fill=jitter(p["accent"], 8, rng))
 
 
+def draw_sidewalk(draw: ImageDraw.ImageDraw, x0: int, rng: random.Random) -> None:
+    p = PALETTES["sidewalk"]
+    draw.rectangle((x0, 0, x0 + TILE - 1, TILE - 1), fill=p["base"])
+    for x in range(0, TILE, 16):
+        draw.line((x0 + x, 0, x0 + x, TILE - 1), fill=p["dark"])
+    for y in range(0, TILE, 16):
+        draw.line((x0, y, x0 + TILE - 1, y), fill=p["dark"])
+    for _ in range(45):
+        x = x0 + rng.randrange(TILE)
+        y = rng.randrange(TILE)
+        draw.point((x, y), fill=jitter(p["light"] if rng.random() < 0.45 else p["accent"], 9, rng))
+    draw.rectangle((x0, 0, x0 + TILE - 1, 1), fill=p["light"])
+
+
+def draw_dirt(draw: ImageDraw.ImageDraw, x0: int, rng: random.Random) -> None:
+    p = PALETTES["dirt"]
+    draw.rectangle((x0, 0, x0 + TILE - 1, TILE - 1), fill=p["base"])
+    for _ in range(90):
+        x = x0 + rng.randrange(TILE)
+        y = rng.randrange(TILE)
+        draw.point((x, y), fill=jitter(p["light"] if rng.random() < 0.35 else p["dark"], 10, rng))
+    for _ in range(4):
+        x = x0 + rng.randrange(3, TILE - 4)
+        y = rng.randrange(3, TILE - 4)
+        draw.arc((x - 3, y - 2, x + 5, y + 4), 0, 180, fill=p["accent"])
+
+
 def generate_terrain(rng: random.Random) -> None:
     TILES_DIR.mkdir(parents=True, exist_ok=True)
-    img = Image.new("RGB", (TILE * 5, TILE))
+    img = Image.new("RGB", (TILE * 7, TILE))
     draw = ImageDraw.Draw(img)
     draw_grass(draw, 0 * TILE, rng)
     draw_road(draw, 1 * TILE, rng)
     draw_floor(draw, 2 * TILE, rng)
     draw_wall(draw, 3 * TILE, rng)
     draw_floor(draw, 4 * TILE, rng, solid=True)
+    draw_sidewalk(draw, 5 * TILE, rng)
+    draw_dirt(draw, 6 * TILE, rng)
     img.save(TERRAIN_PATH)
     print(f"wrote {TERRAIN_PATH.relative_to(ROOT)}")
 

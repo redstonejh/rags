@@ -62,6 +62,8 @@ func _ready() -> void:
 	for y in H:
 		for x in [20, 21]:
 			set_ground(Vector2i(x, y), ROAD)
+	_stamp_sidewalks()
+	_stamp_dirt_lots()
 	facade_layer = Node2D.new()
 	facade_layer.name = "FacadeLayer"
 	add_child(facade_layer)
@@ -80,6 +82,38 @@ func _ready() -> void:
 	_place_street_props()
 	player_spawn = cell_to_world(Vector2i(22, 13))
 	Locations.register_door("exterior", player_spawn)
+
+
+func _stamp_sidewalks() -> void:
+	for x in W:
+		for y in [10, 13, 25, 28]:
+			_set_ground_if_grass(Vector2i(x, y), SIDEWALK)
+	for y in H:
+		for x in [19, 22]:
+			_set_ground_if_grass(Vector2i(x, y), SIDEWALK)
+	for b in BUILDINGS:
+		var door_cell: Vector2i = b.door
+		var front_dir := Vector2i(0, 1) if door_cell.y == b.rect.end.y - 1 else Vector2i(0, -1)
+		for dx in range(-2, 3):
+			_set_ground_if_grass(door_cell + front_dir + Vector2i(dx, 0), SIDEWALK)
+
+
+func _stamp_dirt_lots() -> void:
+	for x in range(42, 60):
+		for y in range(22, 26):
+			_set_ground_if_grass(Vector2i(x, y), DIRT)
+	for x in range(4, 17):
+		for y in range(22, 25):
+			_set_ground_if_grass(Vector2i(x, y), DIRT)
+	for cell in [Vector2i(55, 24), Vector2i(56, 24), Vector2i(5, 24), Vector2i(6, 24)]:
+		_set_ground_if_grass(cell, DIRT)
+
+
+func _set_ground_if_grass(cell: Vector2i, tile: Vector2i) -> void:
+	if cell.x < 0 or cell.x >= W or cell.y < 0 or cell.y >= H:
+		return
+	if ground.get_cell_atlas_coords(cell) == GRASS:
+		set_ground(cell, tile)
 
 
 func _stamp_building(rect: Rect2i, door_cell: Vector2i, loc_id: String, label: String) -> void:
