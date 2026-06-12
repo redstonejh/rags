@@ -10,3 +10,4 @@ description = "Malt liquor with a proud heritage of regret."
 value_cents = 800
 need_effects = {"fun": 25.0, "social": 5.0}
 tags = ["consumable", "booze"]
+substance_id = "alcohol"

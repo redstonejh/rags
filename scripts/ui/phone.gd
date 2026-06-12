@@ -12,6 +12,7 @@ var _jobs_box: VBoxContainer
 var _home_box: VBoxContainer
 var _bank_box: VBoxContainer
 var _mickey_box: VBoxContainer
+var _health_box: VBoxContainer
 var _paths_box: VBoxContainer
 
 
@@ -71,6 +72,7 @@ func _build_ui() -> void:
 	_home_box = _make_tab("Home")
 	_bank_box = _make_tab("Bank")
 	_mickey_box = _make_tab("Mickey")
+	_health_box = _make_tab("Health")
 	_paths_box = _make_tab("Paths")
 
 
@@ -91,6 +93,7 @@ func _refresh_all() -> void:
 	_refresh_home()
 	_refresh_bank()
 	_refresh_mickey()
+	_refresh_health()
 	_refresh_paths()
 
 
@@ -228,6 +231,18 @@ func _refresh_home() -> void:
 				buy_btn.text = buy_blocker
 				buy_btn.disabled = true
 			row.add_child(buy_btn)
+
+	# Wheels: fast-travel with a steering wheel attached.
+	if not sheet.flags.get("has_car", false):
+		var car := Button.new()
+		car.text = "Buy the $800 beater (it runs. mostly.)"
+		car.disabled = sheet.cash_cents < 80000
+		car.pressed.connect(func() -> void:
+			sheet.add_cash(-80000)
+			sheet.flags["has_car"] = true
+			EventBus.toast.emit("The beater coughs to life. The town just got smaller.")
+			_refresh_home())
+		_home_box.add_child(car)
 
 	var shop := Label.new()
 	shop.text = "— FURNITURE (a $30 mattress and a $3,000 bed are different lives) —"
@@ -373,11 +388,120 @@ func _repay() -> void:
 	_refresh_mickey()
 
 
+# ------------------------------------------------------------------ health
+
+func _refresh_health() -> void:
+	_clear(_health_box)
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var vitals := Label.new()
+	vitals.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var spouse: NPCRecord = WorldState.npcs.get(str(sheet.flags.get("spouse_id", "")))
+	vitals.text = "Age %d · %.1f kg · %d/32 teeth · %d scar%s%s%s" % [
+		int(sheet.age_years), sheet.weight_kg,
+		int(sheet.flags.get("teeth", Body.TEETH_FULL)),
+		int(sheet.flags.get("scars", 0)), "" if int(sheet.flags.get("scars", 0)) == 1 else "s",
+		"\nMarried to %s" % spouse.display_name if spouse else "",
+		"\nChildren: %d" % sheet.children.size() if not sheet.children.is_empty() else ""]
+	vitals.add_theme_font_size_override("font_size", 13)
+	_health_box.add_child(vitals)
+
+	if sheet.wounds.is_empty():
+		var fine := Label.new()
+		fine.text = "No open wounds. The body forgives. The body also keeps a list."
+		fine.add_theme_font_size_override("font_size", 12)
+		_health_box.add_child(fine)
+	else:
+		for w in sheet.wounds:
+			var lbl := Label.new()
+			lbl.text = "• %s — %d day%s left%s" % [str(w.kind), int(w.days_left),
+					"" if int(w.days_left) == 1 else "s",
+					" (treated)" if w.get("treated", false) else " (UNTREATED — may heal wrong)"]
+			lbl.add_theme_font_size_override("font_size", 12)
+			_health_box.add_child(lbl)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	_health_box.add_child(row)
+	_health_button(row, "County clinic ($150)", sheet.cash_cents >= 15000 and not sheet.wounds.is_empty(),
+		func() -> void:
+			sheet.add_cash(-15000)
+			var n := Body.treat_wounds(sheet)
+			GameClock.skip_minutes(180)
+			EventBus.toast.emit("%d wound%s set properly. The bill stings more than the sutures." % [n, "" if n == 1 else "s"])
+			_refresh_health())
+	_health_button(row, "Back-alley doc ($40)", sheet.cash_cents + sheet.dirty_cents >= 4000 and not sheet.wounds.is_empty(),
+		func() -> void:
+			var from_dirty: int = mini(sheet.dirty_cents, 4000)
+			sheet.dirty_cents -= from_dirty
+			if 4000 - from_dirty > 0:
+				sheet.add_cash(-(4000 - from_dirty))
+			var n := Body.treat_wounds(sheet)
+			if randf() < 0.2:
+				sheet.flags["scars"] = int(sheet.flags.get("scars", 0)) + 1
+				EventBus.toast.emit("He fixed %d wound%s. One of them will have a story." % [n, "" if n == 1 else "s"])
+			else:
+				EventBus.toast.emit("Cheap, quick, no questions. %d wound%s handled." % [n, "" if n == 1 else "s"])
+			_refresh_health())
+
+	var row2 := HBoxContainer.new()
+	row2.add_theme_constant_override("separation", 8)
+	_health_box.add_child(row2)
+	if int(sheet.flags.get("teeth", Body.TEETH_FULL)) <= 27 and not sheet.flags.get("dentures", false):
+		_health_button(row2, "Dentures ($300)", sheet.cash_cents >= 30000,
+			func() -> void:
+				sheet.add_cash(-30000)
+				sheet.flags["dentures"] = true
+				EventBus.toast.emit("A full smile again. Slightly too white. Nobody mentions it twice.")
+				_refresh_health())
+	if int(sheet.flags.get("cha_surgery", 0)) < 2:
+		_health_button(row2, "Plastic surgery ($2,000)", sheet.cash_cents >= 200000,
+			func() -> void:
+				sheet.add_cash(-200000)
+				if randf() < 0.1:
+					sheet.flags["cha_botched"] = true
+					EventBus.toast.emit("The surgeon said 'oops' in there. You both heard it.")
+				else:
+					sheet.flags["cha_surgery"] = int(sheet.flags.get("cha_surgery", 0)) + 1
+					sheet.flags["scars"] = 0
+					EventBus.toast.emit("New face, who's this? CHA up; the scars are someone else's now.")
+				_refresh_health())
+
+
+func _health_button(parent: Node, label: String, enabled: bool, action: Callable) -> void:
+	var btn := Button.new()
+	btn.text = label
+	btn.disabled = not enabled
+	btn.pressed.connect(action)
+	parent.add_child(btn)
+
+
 # ------------------------------------------------------------------- paths
 
 func _refresh_paths() -> void:
 	_clear(_paths_box)
 	var sheet: CharacterSheet = WorldState.player_sheet
+	# Night school: the Education path's enroll button lives here.
+	if not sheet.flags.get("ged", false) and not sheet.flags.has("ged_done_day"):
+		var ged := Button.new()
+		ged.text = "Enroll: GED night classes ($200, 14 days)"
+		ged.disabled = sheet.cash_cents < 20000
+		ged.pressed.connect(func() -> void:
+			sheet.add_cash(-20000)
+			sheet.flags["ged_done_day"] = GameClock.day + 14
+			EventBus.toast.emit("Enrolled. Tuesdays and Thursdays now taste like burnt coffee.")
+			EventBus.path_updated.emit()
+			_refresh_paths())
+		_paths_box.add_child(ged)
+	# Walking Away: retirement, the other way out. The sim takes the wheel.
+	var walk := Button.new()
+	walk.text = "Walk Away (retire this life — they become an NPC)"
+	walk.pressed.connect(func() -> void:
+		var npc := WorldState.walk_away()
+		if npc != null:
+			visible = false
+			EventBus.toast.emit("%s's life goes on without you at the wheel." % npc.display_name)
+			GameFlow.to_character_creation())
+	_paths_box.add_child(walk)
 	var paths := LifePaths.evaluate(sheet)
 	if paths.is_empty():
 		var none := Label.new()

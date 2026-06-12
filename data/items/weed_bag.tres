@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "weed_bag"
+display_name = "Bag of Weed"
+description = "Smells like a music festival's parking lot."
+value_cents = 1500
+need_effects = {}
+tags = ["consumable", "drug", "illegal"]
+substance_id = "weed"

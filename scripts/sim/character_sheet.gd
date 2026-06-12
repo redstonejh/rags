@@ -40,6 +40,10 @@ var lives_lived: int = 1         # which life in this world this is
 var alive: bool = true
 var credit_score: int = 30       # the bank's opinion of you, 0-100
 var furniture: Array = []        # furniture ids owned (home comfort + quality)
+var substances: Dictionary = {}  # substance_id -> {tolerance, addiction, last_use_day, clean_days}
+var wounds: Array = []           # [{kind, days_left, treated}]
+var age_years: float = 25.0      # 5 game days = 1 year; elders die
+var children: Array = []         # [{name, born_day, traits}]
 
 
 func _init() -> void:
@@ -47,7 +51,8 @@ func _init() -> void:
 		base_stats[s] = STAT_BASE
 
 
-## Final stat = point-buy + origin mods + trait mods.
+## Final stat = point-buy + origin mods + trait mods + what life did to you
+## (open wounds, missing teeth, the surgeon's work — good or botched).
 func get_stat(stat: String) -> int:
 	var value: int = base_stats.get(stat, STAT_BASE)
 	var origin := ContentDB.get_origin(origin_id)
@@ -57,6 +62,19 @@ func get_stat(stat: String) -> int:
 		var t := ContentDB.get_trait(tid)
 		if t:
 			value += int(t.stat_mods.get(stat, 0))
+	value += Body.wound_stat_penalty(self, stat)
+	match stat:
+		"CHA":
+			if int(flags.get("teeth", Body.TEETH_FULL)) <= 27 and not flags.get("dentures", false):
+				value -= 1 # the meth/bar-fight smile
+			if int(flags.get("scars", 0)) >= 3:
+				value -= 1
+			value += int(flags.get("cha_surgery", 0))
+			if flags.get("cha_botched", false):
+				value -= 1
+		"DEX":
+			if flags.get("crooked_arm", false):
+				value -= 1 # the self-set fracture, forever
 	return value
 
 
@@ -156,13 +174,18 @@ func consume_item(item_id: String) -> bool:
 	var item := ContentDB.get_item(item_id)
 	if item == null or "consumable" not in item.tags:
 		return false
-	for need_id in item.need_effects:
-		needs.change(need_id, float(item.need_effects[need_id]))
+	if item.substance_id != "":
+		# Drugs route through the body: tolerance, addiction, overdose.
+		var text := Body.use_substance(self, item.substance_id)
+		if text != "":
+			EventBus.toast.emit(text)
+	else:
+		for need_id in item.need_effects:
+			needs.change(need_id, float(item.need_effects[need_id]))
 	var hunger_restored := float(item.need_effects.get("hunger", 0.0))
 	if hunger_restored > 0.0:
 		flags["calories_today"] = int(flags.get("calories_today", 0)) + int(hunger_restored * 25)
-	if "booze" in item.tags:
-		# Drunk = confident. Confident = the perceived odds lie harder.
+	if "booze" in item.tags and item.substance_id == "":
 		flags["drunk_minutes"] = mini(int(flags.get("drunk_minutes", 0)) + 90, 240)
 	inventory.erase(item_id)
 	return true
@@ -171,9 +194,10 @@ func consume_item(item_id: String) -> bool:
 ## Per-game-minute upkeep beyond needs decay (the Player node drives this).
 func tick_minute() -> void:
 	needs.apply_minute()
-	var drunk := int(flags.get("drunk_minutes", 0))
-	if drunk > 0:
-		flags["drunk_minutes"] = drunk - 1
+	for flag in ["drunk_minutes", "lsd_minutes"]:
+		var left := int(flags.get(flag, 0))
+		if left > 0:
+			flags[flag] = left - 1
 
 
 func add_skill_xp(skill: String, xp: float) -> void:
@@ -236,6 +260,10 @@ func to_dict() -> Dictionary:
 		"alive": alive,
 		"credit_score": credit_score,
 		"furniture": furniture.duplicate(),
+		"substances": substances.duplicate(true),
+		"wounds": wounds.duplicate(true),
+		"age_years": age_years,
+		"children": children.duplicate(true),
 		"flags": flags.duplicate(true),
 		"needs": needs.to_dict(),
 	}
@@ -269,6 +297,10 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 	sheet.alive = d.get("alive", true)
 	sheet.credit_score = int(d.get("credit_score", 30))
 	sheet.furniture = d.get("furniture", []).duplicate()
+	sheet.substances = d.get("substances", {}).duplicate(true)
+	sheet.wounds = d.get("wounds", []).duplicate(true)
+	sheet.age_years = float(d.get("age_years", 25.0))
+	sheet.children = d.get("children", []).duplicate(true)
 	sheet.flags = d.get("flags", {}).duplicate(true)
 	sheet.needs = Needs.from_dict(d.get("needs", {}))
 	return sheet

@@ -1,6 +1,6 @@
 # RAGS — Build Progress
 
-*Last updated: 2026-06-11 (M6 complete). Repo: https://github.com/redstonejh/rags*
+*Last updated: 2026-06-11 (M7 complete). Repo: https://github.com/redstonejh/rags*
 
 ## Done & verified
 
@@ -13,6 +13,7 @@
 | M4 social + perception | ✅ Perception (perceived vs true stats via the Coherence table, drunk confidence inflation, streetwise reads), Social action resolver w/ visible odds + Reality Check moments, dialogue UI on every embodied NPC, memories w/ salience + decay + cap, GossipSystem (hourly propagation + familiarity drift), dating v1. 31/31 smoke tests |
 | M5 crime + police | ✅ CrimeDef catalog (8), CrimeCase records (UNREPORTED→OPEN→WARRANT→COLD, warrant @60), witness pipeline (id confidence × civic duty − friendship − fear + victimhood, forgettable_face halves), gossip→cop hearsay evidence, wanted stars + cop arrest confrontations, jail v1 (serve/bail/bribe-by-corruption), universal Confrontation (carjack gamble → fight/bluff/flee/beg → mercy/rob/kill), pickpocket/shoplift/register robbery, the fence, NPC death (permanent). 38/38 smoke tests |
 | M6 housing + status | ✅ HousingDef T0–T5 (poverty trap intact: motel > bricks rent), gates (ID/deposit/outfit tier/employment-or-clean-rent), credit score (on-time +1, miss −5, eviction −15), buying (credit + down payment, mortgage = rent with a deed), FurnitureDef (bed/tv quality + comfort → Mood), clothing as status (outfit_tier) + disguise (ski mask ×0.3 witness ID), phone Home app. 33/33 smoke tests |
+| M7 body/substances/family/aging | ✅ SubstanceDef ×8 (tolerance/addiction/craving/OD, xanax+alcohol lethality, meth teeth, LSD perception poetry), dealer full menu, Recovery + Education paths (GED), wounds heal-wrong (crooked arm forever) + clinic/back-alley/dentures/plastic surgery (phone Health app), aging 5d=1yr + elder deaths (player + NPC turnover), marriage→pregnancy→baby gauntlet→kid traits, heirs (continue as your kid, inherits estate), obituaries (Gazette archive), Walk Away (sheet→NPC), beater car. 45/45 smoke tests |
 
 Run tests: `godot --headless res://scenes/dev/M1SmokeTest.tscn` (and M2/M3SmokeTest).
 Godot exe: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_*\Godot_v4.6.3-stable_win64.exe`

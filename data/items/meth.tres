@@ -10,3 +10,4 @@ description = "The Need, answered. For a while. At interest."
 value_cents = 2000
 need_effects = {"craving": 100.0, "energy": 30.0}
 tags = ["consumable", "drug", "illegal"]
+substance_id = "meth"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "lsd_tab"
+display_name = "LSD Tab"
+description = "A tiny piece of paper with a cartoon on it. Allegedly."
+value_cents = 2500
+need_effects = {}
+tags = ["consumable", "drug", "illegal"]
+substance_id = "lsd"

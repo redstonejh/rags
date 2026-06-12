@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "xanax_pill"
+display_name = "Xanax"
+description = "Prescribed to someone, once."
+value_cents = 1000
+need_effects = {}
+tags = ["consumable", "drug", "illegal"]
+substance_id = "xanax"

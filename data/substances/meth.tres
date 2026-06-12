@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SubstanceDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/substance_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "meth"
+display_name = "Meth"
+price_cents = 2000
+need_effects = {"energy": 60.0, "fun": 15.0, "craving": 100.0}
+confidence_mult = 1.4
+duration_minutes = 180
+addiction_per_use = 0.10
+tolerance_per_use = 0.04
+overdose_chance = 0.01
+deadly_with_alcohol = false
+tooth_risk = 0.25
+blurb = "Huge real energy, huge fake confidence. Devours body, teeth, and eventually the part of you that knew better."

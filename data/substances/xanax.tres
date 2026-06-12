@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SubstanceDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/substance_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "xanax"
+display_name = "Xanax"
+price_cents = 1000
+need_effects = {"fun": 10.0, "energy": -10.0}
+confidence_mult = 1.1
+duration_minutes = 120
+addiction_per_use = 0.04
+tolerance_per_use = 0.02
+overdose_chance = 0.005
+deadly_with_alcohol = true
+tooth_risk = 0.0
+blurb = "Erases the panic. Slurs the speech. Lethal with alcohol — the game tracks this, and so should you."

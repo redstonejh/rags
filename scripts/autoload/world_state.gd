@@ -14,6 +14,9 @@ var npcs: Dictionary = {} # id -> NPCRecord
 var world_exists: bool = false
 var crime_cases: Dictionary = {} # id -> CrimeCase
 var _case_serial: int = 0
+## Every finished life leaves one paragraph behind. The next character
+## reads about the last one — the archive IS the legacy record.
+var obituaries: Array = []
 
 
 func next_case_serial() -> int:
@@ -26,10 +29,39 @@ func _ready() -> void:
 	EventBus.player_died.connect(_on_player_died)
 
 
-func _on_player_died(_cause: String) -> void:
+func _on_player_died(cause: String) -> void:
 	if player_sheet != null and player_sheet.alive:
 		player_sheet.alive = false
+		obituaries.append(Body.obituary(player_sheet, cause))
 		SaveManager.save_game()
+
+
+## Retirement: your character stops being yours and becomes a full NPC.
+## Nearly free in this architecture — the sheet becomes a record, the sim
+## takes the wheel, and your next character can meet them.
+func walk_away() -> NPCRecord:
+	var sheet := player_sheet
+	if sheet == null or not sheet.alive:
+		return null
+	var npc := NPCRecord.new()
+	npc.id = "npc_walked_%02d" % sheet.lives_lived
+	npc.display_name = sheet.char_name
+	npc.archetype_id = "barfly" # retirement has a look
+	npc.appearance_tags = sheet.appearance_tags.duplicate()
+	for s in CharacterSheet.STAT_IDS:
+		npc.stats[s] = sheet.get_stat(s)
+	npc.personality = {"bravery": 50, "greed": 40, "civic_duty": 50,
+			"kindness": 60, "chattiness": 60, "jealousy": 30}
+	npc.age_years = sheet.age_years
+	npc.home_id = "loc_bricks"
+	npc.money_cents = sheet.cash_cents + sheet.bank_cents
+	npc.relationships["player"] = 0.0
+	npc.flags["was_player_life"] = sheet.lives_lived
+	npcs[npc.id] = npc
+	sheet.alive = false
+	obituaries.append("%s walked away from the life you knew them in. They're still around. Ask at the bar." % sheet.char_name)
+	SaveManager.save_game()
+	return npc
 
 
 ## A brand-new town for a brand-new (first) life.
@@ -41,6 +73,7 @@ func new_world(sheet: CharacterSheet) -> void:
 	npcs = WorldGen.generate(world_seed)
 	crime_cases = {}
 	_case_serial = 0
+	obituaries = []
 	world_exists = true
 	GameClock.total_minutes = GameClock.MINUTES_PER_DAY + 7 * 60 # day 1, 7 AM
 
@@ -86,6 +119,7 @@ func to_dict() -> Dictionary:
 		"npcs": npc_dicts,
 		"crime_cases": case_dicts,
 		"case_serial": _case_serial,
+		"obituaries": obituaries.duplicate(),
 	}
 
 
@@ -106,3 +140,4 @@ func load_dict(d: Dictionary) -> void:
 	for id in case_dicts:
 		crime_cases[id] = CrimeCase.from_dict(case_dicts[id])
 	_case_serial = int(d.get("case_serial", crime_cases.size()))
+	obituaries = d.get("obituaries", []).duplicate()

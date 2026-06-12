@@ -25,8 +25,12 @@ func _ready() -> void:
 
 
 func _on_day_passed(day: int) -> void:
+	Body.age_npcs() # the town's population turns over across a long game
 	var sheet: CharacterSheet = WorldState.player_sheet
 	if sheet == null or not sheet.alive:
+		return
+	Body.daily_tick(sheet) # substances, wounds, aging, kids
+	if not sheet.alive:
 		return
 	_body_tick(sheet)
 	if not sheet.alive:

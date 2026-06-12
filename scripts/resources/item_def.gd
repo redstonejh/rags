@@ -14,3 +14,5 @@ extends Resource
 ## For clothing: the status the outfit projects (0 hoodie .. 3 great suit).
 ## Landlords, bouncers, and interviewers read it at a glance.
 @export var status_tier: int = 0
+## Non-empty = consuming this is a dose of that substance (Body handles it).
+@export var substance_id: String = ""

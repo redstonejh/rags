@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SubstanceDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/substance_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cocaine"
+display_name = "Cocaine"
+price_cents = 6000
+need_effects = {"energy": 40.0, "fun": 30.0}
+confidence_mult = 1.5
+duration_minutes = 60
+addiction_per_use = 0.06
+tolerance_per_use = 0.03
+overdose_chance = 0.02
+deadly_with_alcohol = false
+tooth_risk = 0.0
+blurb = "Real energy AND fake competence — the rich district's open secret, priced like one."

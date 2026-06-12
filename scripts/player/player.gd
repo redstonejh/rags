@@ -31,6 +31,10 @@ func _physics_process(_delta: float) -> void:
 	if needs.get_value("energy") < LOW_NEED_THRESHOLD \
 			or needs.get_value("hunger") < LOW_NEED_THRESHOLD:
 		speed *= LOW_NEED_SPEED_MULT
+	# The beater: fast-travel-with-steering, exterior only.
+	if WorldState.player_location_id == "exterior" \
+			and WorldState.player_sheet.flags.get("has_car", false):
+		speed *= 1.8
 	velocity = input * speed
 	move_and_slide()
 	_update_interact_target()

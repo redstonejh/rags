@@ -17,9 +17,12 @@ static func perceived_stats(sheet: CharacterSheet, npc: NPCRecord) -> Dictionary
 	var a := accuracy(sheet)
 	var guess := stereotype_stats(npc.appearance_tags)
 	var result: Dictionary = {}
+	var tripping := int(sheet.flags.get("lsd_minutes", 0)) > 0
 	for s in CharacterSheet.STAT_IDS:
 		var truth := float(npc.stats.get(s, 8))
 		result[s] = roundi(lerpf(float(guess[s]), truth, a))
+		if tripping: # the perception system goes fully unreliable
+			result[s] = clampi(int(result[s]) + (hash(npc.id + s) % 7) - 3, 3, 18)
 	return result
 
 
@@ -51,6 +54,8 @@ static func displayed_chance(sheet: CharacterSheet, perceived: float) -> float:
 
 ## The Streetwise internal monologue — one read line, quality by skill.
 static func read_line(sheet: CharacterSheet, npc: NPCRecord) -> String:
+	if int(sheet.flags.get("lsd_minutes", 0)) > 0:
+		return _LSD_READS[hash(npc.id) % _LSD_READS.size()]
 	var sw := sheet.skill_level("streetwise")
 	var tags := npc.appearance_tags
 	var first: String = str(tags[0]) if not tags.is_empty() else "plain"
@@ -71,4 +76,11 @@ const _LOW_READS := [
 	"A person. Standing there. That's all you've got.",
 	"Seems normal? People usually seem normal.",
 	"You get no particular feeling about this one.",
+]
+
+const _LSD_READS := [
+	"Their aura is a parking garage with the lights left on.",
+	"This person is mostly water, and the water remembers.",
+	"You can see exactly what they were like as a child. Probably.",
+	"A cathedral of meat, briefly wearing a name.",
 ]

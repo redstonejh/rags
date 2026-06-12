@@ -40,6 +40,28 @@ func continue_game() -> void:
 		push_error("GameFlow: no loadable save")
 
 
+## The signature inheritance: continue as your grown child. The house, the
+## money, and the family reputation come with the name.
+func continue_as_heir(kid: Dictionary) -> void:
+	var parent := WorldState.player_sheet
+	var sheet := CharacterSheet.new()
+	sheet.char_name = "%s %s" % [str(kid.get("name", "Kid")),
+			parent.char_name.get_slice(" ", 1) if " " in parent.char_name else "Jr."]
+	sheet.origin_id = "off_the_bus" # heirs start fresh on paper
+	sheet.age_years = (GameClock.day - int(kid.get("born_day", 0))) / Body.DAYS_PER_YEAR
+	sheet.cash_cents = parent.cash_cents + parent.bank_cents # the estate, settled fast
+	sheet.housing_id = parent.housing_id
+	sheet.furniture = parent.furniture.duplicate()
+	if parent.flags.get("home_owned", false):
+		sheet.flags["home_owned"] = true
+	sheet.flags["has_id"] = true
+	sheet.flags["heir_of"] = parent.char_name
+	for t in kid.get("traits", []):
+		sheet.flags["childhood_" + str(t)] = true
+	WorldState.start_life(sheet)
+	_enter_world()
+
+
 func _enter_world() -> void:
 	SaveManager.set_in_game(true)
 	get_tree().change_scene_to_file(GAME)

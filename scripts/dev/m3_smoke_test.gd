@@ -180,21 +180,29 @@ func _test_id_quest() -> void:
 func _test_paths() -> void:
 	print("[LifePaths: Getting Off the Street]")
 	var sheet := WorldState.player_sheet # rock_bottom, now with ID
-	var done_paths := LifePaths.evaluate(sheet)
-	_check(done_paths.size() == 1, "no_papers origin has the path")
+	var street := _find_path(LifePaths.evaluate(sheet), "Getting Off the Street")
+	_check(not street.is_empty(), "no_papers origin has the path")
 	var all_done := true
-	for step in done_paths[0].steps:
+	for step in street.steps:
 		if not step.done:
 			all_done = false
 	_check(all_done, "path fully complete after ID quest")
 
 	var broke := _fresh_sheet("rock_bottom")
 	broke.cash_cents = 0
-	var fresh_paths := LifePaths.evaluate(broke)
-	_check(not fresh_paths[0].steps[0].done and fresh_paths[0].steps[0].current,
+	var fresh := _find_path(LifePaths.evaluate(broke), "Getting Off the Street")
+	_check(not fresh.steps[0].done and fresh.steps[0].current,
 			"fresh tweaker's current step is scraping up the fee")
 	var none := _fresh_sheet("off_the_bus")
-	_check(LifePaths.evaluate(none).is_empty(), "papered origins see no path")
+	_check(_find_path(LifePaths.evaluate(none), "Getting Off the Street").is_empty(),
+			"papered origins see no ID path")
+
+
+func _find_path(paths: Array, name_part: String) -> Dictionary:
+	for p in paths:
+		if name_part in str(p.name):
+			return p
+	return {}
 
 
 func _test_starvation() -> void:

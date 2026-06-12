@@ -29,6 +29,9 @@ const ACTIONS := {
 		"atk_stat": "STR", "atk_skill": "streetwise", "def_stat": "STR", "def_bravery": true},
 	"pickpocket": {"label": "Pickpocket", "roll": true,
 		"atk_stat": "DEX", "atk_skill": "stealth", "def_stat": "WIS"},
+	"propose": {"label": "Propose", "roll": true, "min_rel": 70.0,
+		"atk_stat": "CHA", "atk_skill": "persuasion", "def_stat": "WIS"},
+	"try_for_baby": {"label": "Try for a baby", "roll": false},
 }
 
 
@@ -36,6 +39,8 @@ static func available_actions(sheet: CharacterSheet, npc: NPCRecord) -> Array:
 	var rel := npc.rel("player")
 	var out: Array = []
 	for id in ACTIONS:
+		if id in ["propose", "try_for_baby"]:
+			continue # appended below, gated on the relationship stage
 		var a: Dictionary = ACTIONS[id]
 		if rel < float(a.get("min_rel", -1000.0)):
 			continue
@@ -44,6 +49,11 @@ static func available_actions(sheet: CharacterSheet, npc: NPCRecord) -> Array:
 		out.append(id)
 	if npc.flags.get("dating_player", false):
 		out.append("spend_time")
+		if rel >= 70.0 and not npc.flags.get("married_to_player", false):
+			out.append("propose")
+	if npc.flags.get("married_to_player", false) \
+			and not sheet.flags.has("pregnant_due_day"):
+		out.append("try_for_baby")
 	return out
 
 
@@ -115,6 +125,27 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 			sheet.needs.change("social", 20.0)
 			sheet.needs.change("fun", 10.0)
 			result.text = "An hour disappears the good way."
+		"propose":
+			if success:
+				npc.flags["married_to_player"] = true
+				sheet.flags["spouse_id"] = npc.id
+				npc.home_id = "loc_bricks" # they move in; the Bricks gains a romance
+				npc.change_rel("player", 20.0)
+				npc.add_memory("wedding", "player", "married you at the courthouse, twenty minutes, no music", 1.0, 9.0)
+				sheet.needs.change("social", 40.0)
+				result.text = "\"Yes.\" The courthouse charges $20 and doesn't validate parking. Married."
+			else:
+				npc.change_rel("player", -12.0)
+				npc.add_memory("rejection", "player", "proposed and got a 'not yet'", -0.3, 7.0)
+				result.text = "\"...not yet.\" The ring goes back in the sock drawer."
+		"try_for_baby":
+			GameClock.skip_minutes(60)
+			sheet.needs.change("social", 15.0)
+			if roll < 0.35:
+				sheet.flags["pregnant_due_day"] = GameClock.day + 7
+				result.text = "A few weeks later: two pink lines. The math starts immediately."
+			else:
+				result.text = "Nature takes its time. Nature has no rent due."
 		"insult":
 			npc.change_rel("player", -15.0)
 			npc.add_memory("insult", "player", "insulted you to your face", -0.8, 6.0)

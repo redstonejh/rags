@@ -94,6 +94,7 @@ static func _resolve_carjack(choice: String, sheet: CharacterSheet,
 			# You started it; you lose it. Reality Check rules apply.
 			sheet.needs.change("energy", -35.0)
 			sheet.needs.change("fun", -10.0)
+			Body.add_wound(sheet, "fracture" if randf() < 0.25 else "bruise")
 			if perceived >= Social.RC_PERCEIVED_FLOOR and actual <= Social.RC_TRUE_CEILING:
 				EventBus.reality_check.emit(perceived, actual, npc.id)
 				EventBus.toast.emit("%d%% became %d%% somewhere around the second punch." % [

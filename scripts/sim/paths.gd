@@ -12,7 +12,47 @@ static func evaluate(sheet: CharacterSheet) -> Array:
 	var paths: Array = []
 	if sheet.has_tag("no_papers"):
 		paths.append(_getting_off_the_street(sheet))
+	var worst := Body.worst_addiction(sheet)
+	if float(worst.addiction) > 0.05 or int(worst.clean_days) > 0:
+		paths.append(_recovery(worst))
+	paths.append(_education(sheet))
 	return paths
+
+
+## Generalizes the Tweaker's arc to every substance: clean days are the
+## only currency, and the counter resets the moment you don't mean it.
+static func _recovery(worst: Dictionary) -> Dictionary:
+	var clean := int(worst.clean_days)
+	var steps: Array = [
+		{"label": "Admit the %s has the wheel" % str(worst.id), "done": true},
+		{"label": "Detox: 3 days clean (the gauntlet)", "done": clean >= 3},
+		{"label": "The hard week: 7 days clean", "done": clean >= 7},
+		{"label": "30 days clean — the chip, and the willpower that comes with it",
+			"done": clean >= 30},
+	]
+	return _mark_current({"name": "Recovery (%d days clean)" % clean, "steps": steps})
+
+
+static func _education(sheet: CharacterSheet) -> Dictionary:
+	var enrolled: bool = sheet.flags.has("ged_done_day")
+	var done: bool = sheet.flags.get("ged", false) or sheet.skill_level("education") >= 1
+	var steps: Array = [
+		{"label": "Scrape together the $200 GED course fee",
+			"done": done or enrolled or sheet.cash_cents >= 20000},
+		{"label": "Enroll in night classes (phone)", "done": done or enrolled},
+		{"label": "Two weeks of Tuesdays that taste like burnt coffee", "done": done},
+		{"label": "GED in hand — office doors open", "done": done},
+	]
+	return _mark_current({"name": "Education", "steps": steps})
+
+
+static func _mark_current(path: Dictionary) -> Dictionary:
+	var found := false
+	for step in path.steps:
+		step["current"] = not step.done and not found
+		if step.current:
+			found = true
+	return path
 
 
 static func _getting_off_the_street(sheet: CharacterSheet) -> Dictionary:

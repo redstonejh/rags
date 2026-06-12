@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SubstanceDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/substance_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "heroin"
+display_name = "Heroin"
+price_cents = 3000
+need_effects = {"fun": 60.0, "energy": -30.0, "craving": 100.0}
+confidence_mult = 0.9
+duration_minutes = 150
+addiction_per_use = 0.12
+tolerance_per_use = 0.05
+overdose_chance = 0.05
+deadly_with_alcohol = false
+tooth_risk = 0.0
+blurb = "Bliss, on schedule. The hardest track. Nodding off in public is a robbery invitation."

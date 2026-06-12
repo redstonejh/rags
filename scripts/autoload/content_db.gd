@@ -14,6 +14,7 @@ var jobs: Dictionary = {}
 var crimes: Dictionary = {}
 var housings: Dictionary = {}
 var furnitures: Dictionary = {}
+var substances: Dictionary = {}
 
 ## class -> destination index
 @onready var _index_for_type := {
@@ -26,6 +27,7 @@ var furnitures: Dictionary = {}
 	"CrimeDef": crimes,
 	"HousingDef": housings,
 	"FurnitureDef": furnitures,
+	"SubstanceDef": substances,
 }
 
 
@@ -94,6 +96,10 @@ func get_housing(id: String) -> HousingDef:
 
 func get_furniture(id: String) -> FurnitureDef:
 	return furnitures.get(id)
+
+
+func get_substance(id: String) -> SubstanceDef:
+	return substances.get(id)
 
 
 func all_housings() -> Array:

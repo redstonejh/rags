@@ -46,6 +46,7 @@ static func generate(seed_value: int) -> Dictionary:
 			if "cop" in arch.tags:
 				n.flags["corruption"] = clampi(int(rng.randfn(25.0, 18.0)), 0, 95)
 
+			n.age_years = rng.randf_range(19.0, 75.0)
 			n.home_id = HOME_POOL[rng.randi() % HOME_POOL.size()]
 			n.workplace_id = arch.workplace_id
 			n.schedule_offset = rng.randi_range(-40, 40)

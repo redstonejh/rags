@@ -1,15 +1,16 @@
 class_name DealerSpot
 extends Interactable
-## A guy who knows a guy, behind Site 9. Sells exactly one product.
-## Cash only, obviously. (Full drug economy lands in M7; this exists in M3
-## because the Tweaker origin's craving needs an answer in the world.)
+## A guy who knows a guy, behind Site 9. M7: the full catalog — every
+## substance with a street price, sold through the same shop UI. Cash only,
+## obviously; the dirty kind preferred.
 
-const PRICE_CENTS := 2000
+const MENU := ["meth", "weed_bag", "heroin_dose", "cocaine_gram",
+		"xanax_pill", "lsd_tab", "oxy_pill"]
 
 
 func _init() -> void:
 	verb = "Talk to"
-	display_name = "a guy ($20)"
+	display_name = "a guy"
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = Vector2(34, 34)
@@ -23,15 +24,5 @@ func _init() -> void:
 
 
 func interact(_actor: Node) -> void:
-	var sheet: CharacterSheet = WorldState.player_sheet
-	var total := sheet.cash_cents + sheet.dirty_cents
-	if total < PRICE_CENTS:
-		EventBus.toast.emit("\"Come back with twenty.\" He says it almost kindly.")
-		return
-	# Dirty money spends fine on the street.
-	var from_dirty: int = mini(sheet.dirty_cents, PRICE_CENTS)
-	sheet.dirty_cents -= from_dirty
-	if PRICE_CENTS - from_dirty > 0:
-		sheet.add_cash(-(PRICE_CENTS - from_dirty))
-	sheet.inventory.append("meth")
-	EventBus.toast.emit("The handshake had something in it. Inventory updated.")
+	EventBus.toast.emit("\"What do you need?\" He asks it like a pharmacist who lost a bet.")
+	EventBus.shop_opened.emit(MENU)

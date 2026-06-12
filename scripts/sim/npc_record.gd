@@ -41,6 +41,7 @@ var flags: Dictionary = {}
 ## Dead NPCs stay in WorldState forever — the town remembers — but stop
 ## ticking, working, and gossiping. Their job opens up.
 var alive: bool = true
+var age_years: float = 35.0
 
 ## Not serialized — the live puppet, if embodied.
 var agent: Node = null
@@ -150,6 +151,7 @@ func to_dict() -> Dictionary:
 		"memories": memories.duplicate(true),
 		"flags": flags.duplicate(true),
 		"alive": alive,
+		"age_years": age_years,
 	}
 
 
@@ -185,4 +187,5 @@ static func from_dict(d: Dictionary) -> NPCRecord:
 	n.memories = d.get("memories", []).duplicate(true)
 	n.flags = d.get("flags", {}).duplicate(true)
 	n.alive = d.get("alive", true)
+	n.age_years = float(d.get("age_years", 35.0))
 	return n

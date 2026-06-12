@@ -109,6 +109,16 @@ func _on_player_died(cause: String) -> void:
 	cause_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(cause_label)
 
+	# Your obituary, as the Gazette will run it. Your next character can read it.
+	if not WorldState.obituaries.is_empty():
+		var obit := Label.new()
+		obit.text = "— THE RUST HARBOR GAZETTE —\n%s" % str(WorldState.obituaries.back())
+		obit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		obit.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		obit.add_theme_font_size_override("font_size", 12)
+		obit.add_theme_color_override("font_color", Color(0.75, 0.72, 0.6))
+		vbox.add_child(obit)
+
 	var epitaph := Label.new()
 	epitaph.text = "The town continues without you."
 	epitaph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -124,3 +134,15 @@ func _on_player_died(cause: String) -> void:
 		EventBus.time_scale_changed.emit(GameClock.time_scale)
 		GameFlow.to_character_creation())
 	vbox.add_child(button)
+
+	# Generational play: a grown child can take over the house and the grudges.
+	for kid in Body.heir_candidates(WorldState.player_sheet):
+		var heir_btn := Button.new()
+		heir_btn.text = "Continue as %s (your kid — inherits everything)" % str(kid.get("name", "?"))
+		heir_btn.custom_minimum_size = Vector2(240, 40)
+		heir_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		heir_btn.pressed.connect(func() -> void:
+			GameClock.paused = false
+			EventBus.time_scale_changed.emit(GameClock.time_scale)
+			GameFlow.continue_as_heir(kid))
+		vbox.add_child(heir_btn)

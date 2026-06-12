@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SubstanceDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/substance_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "weed"
+display_name = "Weed"
+price_cents = 1500
+need_effects = {"fun": 25.0, "hunger": -15.0}
+confidence_mult = 1.0
+duration_minutes = 120
+addiction_per_use = 0.01
+tolerance_per_use = 0.01
+overdose_chance = 0.0
+deadly_with_alcohol = false
+tooth_risk = 0.0
+blurb = "Mellow. The munchies wreck the food budget; the giggle-fits wreck stealth."

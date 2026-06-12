@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SubstanceDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/substance_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "oxy"
+display_name = "Oxy"
+price_cents = 2500
+need_effects = {"fun": 40.0, "energy": -10.0}
+confidence_mult = 1.0
+duration_minutes = 120
+addiction_per_use = 0.08
+tolerance_per_use = 0.04
+overdose_chance = 0.03
+deadly_with_alcohol = false
+tooth_risk = 0.0
+blurb = "The respectable addiction. Comes in a bottle with somebody else's name on it."
