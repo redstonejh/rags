@@ -326,10 +326,13 @@ func _verify_social_playthrough() -> void:
 	var before_pulses := int(camera.get_meta("reality_check_pulses", 0)) if camera != null else -1
 	dialogue.call("_do_action_with_roll", "threaten", 0.99)
 	await get_tree().process_frame
+	await get_tree().process_frame
 	var collapse := _find_named_descendant(dialogue, "RealityCheckLabel")
 	_check(collapse is Label and collapse.visible and str(collapse.text).contains("REALITY CHECK") \
 			and str(collapse.text).contains("->"),
 			"dialogue shows Reality Check odds collapse")
+	_check(_descendant_text_contains_all(dialogue, ["Threaten", "->"]),
+			"Reality Check marks the collapsed action button")
 	_check(camera != null and int(camera.get_meta("reality_check_pulses", 0)) > before_pulses \
 			and str(camera.get_meta("last_reality_check_target", "")) == target.id,
 			"Reality Check pulses the player camera")
@@ -410,6 +413,21 @@ func _descendant_text_contains(node: Node, text: String) -> bool:
 		return true
 	for child in node.get_children():
 		if _descendant_text_contains(child, text):
+			return true
+	return false
+
+
+func _descendant_text_contains_all(node: Node, pieces: Array[String]) -> bool:
+	var value = node.get("text")
+	if value != null:
+		var text := str(value)
+		var has_all := true
+		for piece in pieces:
+			has_all = has_all and text.contains(piece)
+		if has_all:
+			return true
+	for child in node.get_children():
+		if _descendant_text_contains_all(child, pieces):
 			return true
 	return false
 

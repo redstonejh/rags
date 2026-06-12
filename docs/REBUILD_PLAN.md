@@ -65,6 +65,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Started 2026-06-12: dialogue now renders a dedicated Reality Check callout with perceived-to-actual odds collapse text and aftermath flavor, and the scripted playtest forces/captures the moment through the real dialogue UI. Button-level odds animation and visible witness reactions remain.
   - Continued 2026-06-12: social witnesses now keep a timed reaction state; embodied NPCs pause, face the target, and show a `!` cue while reacting. Stronger animation/camera staging remains.
   - Continued 2026-06-12: Reality Check events now pulse the player camera and bias toward an embodied target when available. Button-level odds animation, audio sting, and deeper aftermath animation remain.
+  - Continued 2026-06-12: the collapsed action button now gets a red odds-collapse treatment and pulse when Reality Check reveals the true odds. Audio sting and deeper aftermath animation remain.
 - Gossip made visible: NPCs reference what they heard with source flavor; the phone gets a People app (relationships, hearts/daggers, who's dating whom).
   - Started 2026-06-12: the phone now has a People tab backed by `NPCRecord` relationships, dating flags, top gossip memories, and NPC-to-NPC bonds/feuds. Player-knowledge gating and richer couple/family records remain.
   - Continued 2026-06-12: secondhand gossip now records the NPC source, and both chat lines and the phone People tab name who passed the story along with relationship-flavored skepticism/trust. Player-knowledge gating remains.

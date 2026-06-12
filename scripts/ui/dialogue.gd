@@ -157,6 +157,7 @@ func _refresh() -> void:
 			"label": "Spend time together",
 			"roll": false,
 		})
+		var is_revealed: bool = action_id == _revealed_action
 		var btn := Button.new()
 		btn.name = "Action_%s" % action_id
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -172,9 +173,49 @@ func _refresh() -> void:
 				roundi(_revealed_perceived * 100),
 				roundi(_revealed_actual * 100),
 			]
-			btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
+			btn.set_meta("reality_check_button_pulse", true)
+			_style_revealed_action_button(btn)
 		btn.pressed.connect(_do_action.bind(action_id))
 		_actions_box.add_child(btn)
+		if is_revealed:
+			_pulse_revealed_action_button.call_deferred(btn)
+
+
+func _style_revealed_action_button(btn: Button) -> void:
+	btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.62, 0.52))
+	btn.add_theme_stylebox_override("normal",
+			_revealed_button_style(Color(0.18, 0.045, 0.035, 0.95)))
+	btn.add_theme_stylebox_override("hover",
+			_revealed_button_style(Color(0.24, 0.06, 0.045, 0.95)))
+	btn.add_theme_stylebox_override("pressed",
+			_revealed_button_style(Color(0.12, 0.03, 0.025, 0.95)))
+	btn.add_theme_stylebox_override("focus",
+			_revealed_button_style(Color(0.20, 0.05, 0.04, 0.95)))
+
+
+func _revealed_button_style(bg: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.border_color = Color(1.0, 0.34, 0.24, 0.95)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	return style
+
+
+func _pulse_revealed_action_button(btn: Button) -> void:
+	if btn == null or not is_instance_valid(btn):
+		return
+	btn.pivot_offset = btn.size * 0.5
+	btn.modulate = Color(1.25, 0.85, 0.78, 1.0)
+	btn.scale = Vector2(1.03, 1.03)
+	var tween := btn.create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(btn, "modulate", Color.WHITE, 0.28)
+	tween.parallel().tween_property(btn, "scale", Vector2.ONE, 0.28)
 
 
 func _set_portrait(npc: NPCRecord) -> void:
