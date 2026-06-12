@@ -12,6 +12,7 @@ const OUT_DIR := "user://playtests"
 var failures: int = 0
 var _main: Node = null
 var _player: Node = null
+var _shop_counter: Node = null
 var _shots: Array[String] = []
 
 
@@ -27,10 +28,12 @@ func _ready() -> void:
 	await _checkpoint("04_phone")
 	await _close_phone_open_inventory()
 	await _checkpoint("05_inventory")
-	await _enter_store_open_shop()
-	await _checkpoint("06_shop")
+	await _enter_store_move_to_counter()
+	await _checkpoint("06_store_counter")
+	await _open_shop_from_counter()
+	await _checkpoint("07_shop")
 	await _open_pause_menu()
-	await _checkpoint("07_pause_menu")
+	await _checkpoint("08_pause_menu")
 	_report()
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -78,6 +81,8 @@ func _enter_diner() -> void:
 	await get_tree().physics_frame
 	_check(WorldState.player_location_id == "loc_diner", "travel entered the diner")
 	_check(_current_world_named_count("PropSprite") > 0, "interior prop sprites spawned")
+	_move_player_to_current_world_cell(Vector2i(7, 4))
+	await get_tree().physics_frame
 
 
 func _open_phone() -> void:
@@ -96,7 +101,7 @@ func _close_phone_open_inventory() -> void:
 	_check(not phone.visible and inventory.visible and GameClock.paused, "inventory opened after phone")
 
 
-func _enter_store_open_shop() -> void:
+func _enter_store_move_to_counter() -> void:
 	var inventory: CanvasLayer = _main.get_node("Inventory")
 	if inventory.visible:
 		inventory._unhandled_input(_action("inventory"))
@@ -105,12 +110,20 @@ func _enter_store_open_shop() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 	_check(WorldState.player_location_id == "loc_store", "travel entered the store")
-	var counter := _find_current_world_node_with_property("stock")
-	if counter == null:
+	_shop_counter = _find_current_world_node_with_property("stock")
+	if _shop_counter == null:
 		_check(false, "shop counter exists")
 		return
 	_check(true, "shop counter exists")
-	_player.set("global_position", counter.get("global_position"))
+	_player.set("global_position", _shop_counter.get("global_position"))
+	_reset_player_camera_smoothing()
+	await get_tree().physics_frame
+
+
+func _open_shop_from_counter() -> void:
+	if _shop_counter == null:
+		_check(false, "shop counter available for interaction")
+		return
 	await get_tree().physics_frame
 	_player.call("_physics_process", 0.0)
 	_player.call("_unhandled_input", _action("interact"))
@@ -207,6 +220,22 @@ func _current_world_named_count(node_name: String) -> int:
 	if world_root.get_child_count() == 0:
 		return 0
 	return _count_named_descendants(world_root.get_child(0), node_name)
+
+
+func _move_player_to_current_world_cell(cell: Vector2i) -> void:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return
+	var world := world_root.get_child(0)
+	if world.has_method("cell_to_world"):
+		_player.set("global_position", world.call("cell_to_world", cell))
+		_reset_player_camera_smoothing()
+
+
+func _reset_player_camera_smoothing() -> void:
+	var camera := _player.get_node_or_null("Camera2D")
+	if camera != null and camera.has_method("reset_smoothing"):
+		camera.call("reset_smoothing")
 
 
 func _count_named_descendants(node: Node, node_name: String) -> int:
