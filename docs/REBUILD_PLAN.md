@@ -75,6 +75,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: the dialogue UI now opens venue date scenes with three player choices at Mel's or the Rusty Anchor, and each choice has distinct relationship/need/memory outcomes. Richer personality-driven date branches and balance remain.
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
   - Started 2026-06-12: `Perception.read_line()` now gives People Reader a true-stat readout (`STR/DEX/CON/INT/WIS/CHA`) in dialogue, with M4 coverage for the visible text. Full social odds balance remains.
+  - Continued 2026-06-12: M4 now has social odds guardrails for average, favorable, and hostile interactions, and the chance spread was widened so strong social builds help without immediately pinning the 95% cap. Broader play-balance telemetry remains.
 - **DoD:** scripted playthrough covering chat → flirt → reality check → hearing about it from a stranger later.
   - Started 2026-06-12: `PlaytestDriver.tscn` now drives chat -> flirt -> forced Reality Check -> sourced gossip from a stranger through the real dialogue UI. Full balance and human play checkpoint remain.
 

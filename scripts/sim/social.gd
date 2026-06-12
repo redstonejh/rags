@@ -9,6 +9,7 @@ extends RefCounted
 
 const REL_MIN := -100.0
 const REL_MAX := 100.0
+const ODDS_SPREAD := 140.0
 
 ## Perceived >= this, true <= that, and a failure = a Reality Check moment.
 const RC_PERCEIVED_FLOOR := 0.70
@@ -111,7 +112,7 @@ static func _chance(sheet: CharacterSheet, npc: NPCRecord, action: String, def_s
 		def += float(npc.personality.get("bravery", 50)) * 0.4
 	var rel_bonus := npc.rel("player") * 0.002
 	var perk_bonus := 0.05 if sheet.has_perk("silver_tongue") else 0.0
-	return clampf(0.5 + (atk - def) / 120.0 + rel_bonus + perk_bonus, 0.05, 0.95)
+	return clampf(0.5 + (atk - def) / ODDS_SPREAD + rel_bonus + perk_bonus, 0.05, 0.95)
 
 
 ## Perform an action. forced_roll in [0,1) makes tests deterministic.

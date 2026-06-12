@@ -29,6 +29,7 @@ func _ready() -> void:
 	_test_streetwise_reads()
 	_test_reality_check()
 	_test_relationship_deltas()
+	_test_social_odds_balance()
 	_test_gossip()
 	_test_memory_hygiene()
 	_test_dating()
@@ -144,6 +145,31 @@ func _test_relationship_deltas() -> void:
 	_check(mark.rel("player") <= before - 15.0, "insult costs 15 (%.1f)" % mark.rel("player"))
 	_check(mark.memories.any(func(m: Dictionary) -> bool: return m.kind == "insult"),
 			"the insult is now a memory")
+
+
+func _test_social_odds_balance() -> void:
+	print("[Odds balance: social math stays in sane bands]")
+	var mark := _mk_npc("npc_odds", "loc_test_room", ["plain"], 8, 50, 50)
+	var baseline := _fresh_viewer()
+	var baseline_chance := Social.true_chance(baseline, mark, "compliment")
+	_check(baseline_chance >= 0.45 and baseline_chance <= 0.55,
+			"average stranger compliment sits near even odds (%d%%)" % roundi(baseline_chance * 100))
+
+	var smooth := _fresh_viewer()
+	smooth.base_stats["CHA"] = 10
+	smooth.skills["persuasion"] = 60.0
+	smooth.perk_ids.append("silver_tongue")
+	mark.relationships["player"] = 50.0
+	var smooth_chance := Social.true_chance(smooth, mark, "compliment")
+	_check(smooth_chance > baseline_chance + 0.20 and smooth_chance < 0.95,
+			"skill, warmth, and Silver Tongue help without auto-winning (%d%%)" % roundi(smooth_chance * 100))
+
+	var disliked := _fresh_viewer()
+	disliked.base_stats["CHA"] = 6
+	mark.relationships["player"] = -80.0
+	var disliked_chance := Social.true_chance(disliked, mark, "compliment")
+	_check(disliked_chance < baseline_chance - 0.20,
+			"bad stats and hostility materially hurt the roll (%d%%)" % roundi(disliked_chance * 100))
 
 
 func _test_gossip() -> void:
