@@ -6,6 +6,7 @@ extends Node2D
 ## NavigationAgent2D works everywhere without hand-baking.
 
 const TILE := 32
+const TERRAIN_ATLAS_PATH := "res://assets/tiles/terrain_atlas.png"
 
 const GRASS := Vector2i(0, 0)
 const ROAD := Vector2i(1, 0)
@@ -60,24 +61,9 @@ func place_door(cell: Vector2i, target_location_id: String, label: String) -> vo
 
 
 func _build_tileset() -> TileSet:
-	var img := Image.create(TILE * 5, TILE, false, Image.FORMAT_RGB8)
-	var bases: Array[Color] = [
-		Color(0.30, 0.46, 0.25), # grass
-		Color(0.28, 0.28, 0.30), # road
-		Color(0.55, 0.45, 0.34), # floor (wood)
-		Color(0.42, 0.40, 0.45), # wall
-		Color(0.55, 0.45, 0.34), # floor under walls (no nav)
-	]
-	for t in 5:
-		for px in TILE:
-			for py in TILE:
-				var c: Color = bases[t]
-				if (px + py) % 2 == 0:
-					c = c.darkened(0.06)
-				if px == 0 or py == 0:
-					c = c.darkened(0.18)
-				img.set_pixel(t * TILE + px, py, c)
-	var tex := ImageTexture.create_from_image(img)
+	var tex: Texture2D = load(TERRAIN_ATLAS_PATH)
+	if tex == null:
+		tex = ImageTexture.create_from_image(_build_fallback_atlas())
 
 	var ts := TileSet.new()
 	ts.tile_size = Vector2i(TILE, TILE)
@@ -110,3 +96,24 @@ func _build_tileset() -> TileSet:
 	wall_td.set_collision_polygon_points(0, 0, square)
 
 	return ts
+
+
+func _build_fallback_atlas() -> Image:
+	var img := Image.create(TILE * 5, TILE, false, Image.FORMAT_RGB8)
+	var bases: Array[Color] = [
+		Color(0.30, 0.46, 0.25), # grass
+		Color(0.28, 0.28, 0.30), # road
+		Color(0.55, 0.45, 0.34), # floor (wood)
+		Color(0.42, 0.40, 0.45), # wall
+		Color(0.55, 0.45, 0.34), # floor under walls (no nav)
+	]
+	for t in 5:
+		for px in TILE:
+			for py in TILE:
+				var c: Color = bases[t]
+				if (px + py) % 2 == 0:
+					c = c.darkened(0.06)
+				if px == 0 or py == 0:
+					c = c.darkened(0.18)
+				img.set_pixel(t * TILE + px, py, c)
+	return img
