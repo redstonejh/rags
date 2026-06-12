@@ -3,8 +3,14 @@ extends Node2D
 ## swaps it on door travel, and wires the SimEngine's embodiment hooks.
 
 const TOWN_SCENE := preload("res://scenes/world/Town.tscn")
+const REALITY_CAMERA_ZOOM_MULT := 1.12
+const REALITY_CAMERA_OFFSET_MAX := 36.0
+const REALITY_CAMERA_IN_TIME := 0.08
+const REALITY_CAMERA_HOLD_TIME := 0.10
+const REALITY_CAMERA_OUT_TIME := 0.22
 
 var current_world: Node2D = null
+var _reality_camera_tween: Tween = null
 
 @onready var world_root: Node2D = $WorldRoot
 @onready var player: Player = $Player
@@ -15,6 +21,7 @@ func _ready() -> void:
 	WorldState.ensure_player_sheet()
 	EventBus.travel_requested.connect(_travel_to)
 	EventBus.player_died.connect(_on_player_died)
+	EventBus.reality_check.connect(_on_reality_check)
 	SimEngine.player_node = player
 	# Resume wherever the save says the player was; new games start outside.
 	_enter_location(WorldState.player_location_id, true)
@@ -63,6 +70,60 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		ui_stack.call("toggle_pause_menu")
 		get_viewport().set_input_as_handled()
+
+
+# -------------------------------------------------------- Reality Check
+
+func _on_reality_check(_perceived: float, _actual: float, npc_id: String) -> void:
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera == null:
+		return
+
+	var base_zoom := _camera_base_zoom(camera)
+	var base_offset := _camera_base_offset(camera)
+	if _reality_camera_tween != null:
+		_reality_camera_tween.kill()
+	_reality_camera_tween = create_tween()
+	_reality_camera_tween.set_trans(Tween.TRANS_QUAD)
+	_reality_camera_tween.set_ease(Tween.EASE_OUT)
+
+	var pulse_count := int(camera.get_meta("reality_check_pulses", 0)) + 1
+	camera.set_meta("reality_check_pulses", pulse_count)
+	camera.set_meta("last_reality_check_target", npc_id)
+
+	var focus_offset := _reality_camera_focus_offset(npc_id)
+	camera.zoom = base_zoom
+	camera.offset = base_offset
+	_reality_camera_tween.tween_property(camera, "zoom",
+			base_zoom * REALITY_CAMERA_ZOOM_MULT, REALITY_CAMERA_IN_TIME)
+	_reality_camera_tween.parallel().tween_property(camera, "offset",
+			base_offset + focus_offset, REALITY_CAMERA_IN_TIME)
+	_reality_camera_tween.tween_interval(REALITY_CAMERA_HOLD_TIME)
+	_reality_camera_tween.tween_property(camera, "zoom", base_zoom, REALITY_CAMERA_OUT_TIME)
+	_reality_camera_tween.parallel().tween_property(camera, "offset",
+			base_offset, REALITY_CAMERA_OUT_TIME)
+
+
+func _camera_base_zoom(camera: Camera2D) -> Vector2:
+	if not camera.has_meta("reality_check_base_zoom"):
+		camera.set_meta("reality_check_base_zoom", camera.zoom)
+	return camera.get_meta("reality_check_base_zoom") as Vector2
+
+
+func _camera_base_offset(camera: Camera2D) -> Vector2:
+	if not camera.has_meta("reality_check_base_offset"):
+		camera.set_meta("reality_check_base_offset", camera.offset)
+	return camera.get_meta("reality_check_base_offset") as Vector2
+
+
+func _reality_camera_focus_offset(npc_id: String) -> Vector2:
+	var npc: NPCRecord = WorldState.npcs.get(npc_id)
+	if npc == null or npc.agent == null or not is_instance_valid(npc.agent):
+		return Vector2.ZERO
+	var to_target: Vector2 = npc.agent.global_position - player.global_position
+	if to_target.length_squared() <= 1.0:
+		return Vector2.ZERO
+	return to_target.limit_length(REALITY_CAMERA_OFFSET_MAX)
 
 
 # ---------------------------------------------------------------- death

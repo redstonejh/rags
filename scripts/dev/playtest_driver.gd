@@ -311,12 +311,17 @@ func _verify_social_playthrough() -> void:
 	_check(target.rel("player") > before_flirt, "dialogue flirt changes relationship")
 	target.relationships["player"] = 0.0
 	_place_social_playtest_records(target, witness, stranger)
+	var camera := _player.get_node_or_null("Camera2D")
+	var before_pulses := int(camera.get_meta("reality_check_pulses", 0)) if camera != null else -1
 	dialogue.call("_do_action_with_roll", "threaten", 0.99)
 	await get_tree().process_frame
 	var collapse := _find_named_descendant(dialogue, "RealityCheckLabel")
 	_check(collapse is Label and collapse.visible and str(collapse.text).contains("REALITY CHECK") \
 			and str(collapse.text).contains("->"),
 			"dialogue shows Reality Check odds collapse")
+	_check(camera != null and int(camera.get_meta("reality_check_pulses", 0)) > before_pulses \
+			and str(camera.get_meta("last_reality_check_target", "")) == target.id,
+			"Reality Check pulses the player camera")
 	await _checkpoint("00_dialogue")
 	dialogue._unhandled_input(_action("ui_cancel"))
 	await get_tree().process_frame
