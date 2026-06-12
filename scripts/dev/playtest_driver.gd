@@ -391,6 +391,9 @@ func _verify_social_playthrough() -> void:
 	_check(GossipSystem.share(witness, stranger), "witness can pass the Reality Check story")
 	EventBus.dialogue_requested.emit(stranger.id)
 	await get_tree().process_frame
+	var rumor := _find_named_descendant(dialogue, "DialogueRumor")
+	_check(rumor is Label and witness.display_name in str(rumor.text),
+			"dialogue previews sourced gossip")
 	dialogue.call("_do_action_with_roll", "chat")
 	await get_tree().process_frame
 	var result := _find_named_descendant(dialogue, "DialogueResult")

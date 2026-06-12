@@ -70,6 +70,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: the target of a Reality Check now gets a called-out reaction state, faces the player when embodied, and shows a stronger `!!` cue. Richer multi-NPC aftermath choreography remains.
 - Gossip made visible: NPCs reference what they heard with source flavor; the phone gets a People app (relationships, hearts/daggers, who's dating whom).
   - Started 2026-06-12: the phone now has a People tab backed by `NPCRecord` relationships, dating flags, top gossip memories, and NPC-to-NPC bonds/feuds. Player-knowledge gating and richer couple/family records remain.
+  - Continued 2026-06-12: dialogue now previews a compact Memory/Rumor line when the NPC already knows a salient player story, including source-chain flavor for secondhand gossip.
   - Continued 2026-06-12: secondhand gossip now records the NPC source, and both chat lines and the phone People tab name who passed the story along with relationship-flavored skepticism/trust. Player-knowledge gating remains.
   - Continued 2026-06-12: two-hop gossip now shows a compact source chain in chat and the People tab, so players can see when a story came through another NPC. Longer archive/history views remain.
   - Continued 2026-06-12: People rows now include a compact recent-stories line with multiple salient memories, including source-chain flavor. Longer archive/history views remain.

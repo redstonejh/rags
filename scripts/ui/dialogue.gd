@@ -7,6 +7,7 @@ var _panel: PanelContainer
 var _name_label: Label
 var _rel_label: Label
 var _read_label: Label
+var _rumor_label: Label
 var _reality_label: Label
 var _result_label: Label
 var _actions_box: GridContainer
@@ -86,6 +87,13 @@ func _build_ui() -> void:
 	_read_label.add_theme_color_override("font_color", Color(0.7, 0.68, 0.55))
 	vbox.add_child(_read_label)
 
+	_rumor_label = Label.new()
+	_rumor_label.name = "DialogueRumor"
+	_rumor_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_rumor_label.add_theme_font_size_override("font_size", 12)
+	_rumor_label.add_theme_color_override("font_color", Color(0.72, 0.76, 0.86))
+	vbox.add_child(_rumor_label)
+
 	_reality_label = Label.new()
 	_reality_label.name = "RealityCheckLabel"
 	_reality_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -144,6 +152,9 @@ func _refresh() -> void:
 		return
 	_name_label.text = _npc.display_name + ("  <3" if _npc.flags.get("dating_player", false) else "")
 	_rel_label.text = _rel_text(_npc.rel("player"))
+	var rumor := _dialogue_rumor_text(_npc)
+	_rumor_label.text = rumor
+	_rumor_label.visible = rumor != ""
 	for child in _actions_box.get_children():
 		child.queue_free()
 
@@ -323,3 +334,33 @@ func _rel_text(value: float) -> String:
 	elif value <= -15.0:
 		word = "sour"
 	return "%s (%d)" % [word, roundi(value)]
+
+
+func _dialogue_rumor_text(npc: NPCRecord) -> String:
+	var story := npc.top_gossip(3.0)
+	if story.is_empty() or str(story.get("subject", "")) != "player":
+		return ""
+	var phrase := str(story.get("text", "did something"))
+	if story.get("secondhand", false):
+		return "Rumor: %s heard from %s that you %s." % [
+			npc.display_name.get_slice(" ", 0),
+			_dialogue_gossip_source_chain(story),
+			phrase]
+	return "Memory: %s remembers you %s." % [
+		npc.display_name.get_slice(" ", 0),
+		phrase]
+
+
+func _dialogue_gossip_source_chain(story: Dictionary) -> String:
+	var source_id := str(story.get("source_id", ""))
+	var previous_id := str(story.get("previous_source_id", ""))
+	if previous_id != "" and previous_id != source_id:
+		return "%s via %s" % [_npc_name(source_id), _npc_name(previous_id)]
+	return _npc_name(source_id)
+
+
+func _npc_name(npc_id: String) -> String:
+	if npc_id == "player":
+		return "you"
+	var npc: NPCRecord = WorldState.npcs.get(npc_id)
+	return npc.display_name if npc != null else "someone"
