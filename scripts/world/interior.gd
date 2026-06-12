@@ -221,7 +221,12 @@ func _ready() -> void:
 
 
 func get_npc_spawn_position(_npc) -> Vector2:
-	return npc_spawn_points.pick_random()
+	if npc_spawn_points.is_empty():
+		return entry_point
+	var key := location_id
+	if _npc != null:
+		key += ":%s" % str(_npc.get("id"))
+	return npc_spawn_points[absi(hash(key)) % npc_spawn_points.size()]
 
 
 func _place_decor() -> void:
