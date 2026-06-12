@@ -149,6 +149,8 @@ func _enter_diner() -> void:
 	await get_tree().physics_frame
 	_check(WorldState.player_location_id == "loc_diner", "travel entered the diner")
 	_check(_current_world_named_count("PropSprite") > 0, "interior prop sprites spawned")
+	_check(_current_world_named_count("DecorSprite") >= 8,
+			"diner decorative sprites spawned")
 	_move_player_to_current_world_cell(Vector2i(7, 4))
 	await get_tree().physics_frame
 
@@ -250,6 +252,8 @@ func _enter_store_move_to_counter() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 	_check(WorldState.player_location_id == "loc_store", "travel entered the store")
+	_check(_current_world_named_count("DecorSprite") >= 4,
+			"store decorative sprites spawned")
 	_shop_counter = _find_current_world_node_with_property("stock")
 	if _shop_counter == null:
 		_check(false, "shop counter exists")
@@ -257,6 +261,7 @@ func _enter_store_move_to_counter() -> void:
 	_check(true, "shop counter exists")
 	_player.set("global_position", _shop_counter.get("global_position"))
 	_reset_player_camera_smoothing()
+	await get_tree().create_timer(1.0).timeout
 	await get_tree().physics_frame
 
 

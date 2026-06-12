@@ -41,6 +41,9 @@ FRIDGE_PATH = PROPS_DIR / "fridge.png"
 BED_PATH = PROPS_DIR / "bed.png"
 SHOWER_PATH = PROPS_DIR / "shower.png"
 TV_PATH = PROPS_DIR / "tv.png"
+TABLE_PATH = PROPS_DIR / "table.png"
+CHAIR_PATH = PROPS_DIR / "chair.png"
+PLANT_PATH = PROPS_DIR / "plant.png"
 BENCH_PATH = PROPS_DIR / "bench.png"
 STREET_LAMP_PATH = PROPS_DIR / "street_lamp.png"
 TRASH_CAN_PATH = PROPS_DIR / "trash_can.png"
@@ -468,6 +471,54 @@ def draw_tv() -> None:
     print(f"wrote {TV_PATH.relative_to(ROOT)}")
 
 
+def draw_table() -> None:
+    img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse((5, 6, 43, 27), fill=(83, 54, 38, 255))
+    draw.ellipse((8, 5, 40, 22), fill=(132, 85, 48, 255))
+    draw.arc((10, 8, 38, 22), 180, 360, fill=(181, 126, 73, 255), width=2)
+    draw.rectangle((13, 21, 17, 29), fill=(61, 42, 34, 255))
+    draw.rectangle((31, 21, 35, 29), fill=(61, 42, 34, 255))
+    draw.rectangle((21, 9, 27, 13), fill=(228, 220, 184, 255))
+    img.save(TABLE_PATH)
+    print(f"wrote {TABLE_PATH.relative_to(ROOT)}")
+
+
+def draw_chair() -> None:
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((9, 7, 23, 16), fill=(91, 56, 38, 255))
+    draw.rectangle((11, 9, 21, 17), fill=(140, 86, 48, 255))
+    draw.rectangle((8, 16, 24, 23), fill=(114, 70, 42, 255))
+    draw.rectangle((10, 22, 13, 29), fill=(54, 39, 33, 255))
+    draw.rectangle((19, 22, 22, 29), fill=(54, 39, 33, 255))
+    draw.line((11, 12, 21, 12), fill=(183, 121, 67, 255))
+    img.save(CHAIR_PATH)
+    print(f"wrote {CHAIR_PATH.relative_to(ROOT)}")
+
+
+def draw_plant() -> None:
+    img = Image.new("RGBA", (32, 40), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((10, 27, 22, 36), fill=(101, 62, 44, 255))
+    draw.rectangle((12, 29, 20, 37), fill=(142, 84, 54, 255))
+    draw.rectangle((9, 25, 23, 28), fill=(74, 50, 41, 255))
+    leaves = [
+        (16, 12, 25, 23),
+        (7, 13, 17, 24),
+        (12, 7, 21, 19),
+        (17, 17, 28, 28),
+        (4, 18, 15, 29),
+    ]
+    colors = [(58, 119, 73, 255), (75, 145, 82, 255), (47, 96, 68, 255)]
+    for i, rect in enumerate(leaves):
+        draw.ellipse(rect, fill=colors[i % len(colors)])
+        draw.arc(rect, 210, 330, fill=(111, 166, 94, 255), width=1)
+    draw.rectangle((15, 20, 17, 28), fill=(61, 86, 50, 255))
+    img.save(PLANT_PATH)
+    print(f"wrote {PLANT_PATH.relative_to(ROOT)}")
+
+
 def draw_bench() -> None:
     img = Image.new("RGBA", (48, 28), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -601,6 +652,9 @@ def generate_props() -> None:
     draw_bed()
     draw_shower()
     draw_tv()
+    draw_table()
+    draw_chair()
+    draw_plant()
     draw_bench()
     draw_street_lamp()
     draw_trash_can()

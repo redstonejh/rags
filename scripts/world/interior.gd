@@ -72,6 +72,67 @@ const SHOP_STOCK := [
 	"six_pack", "candy_bar", "gas_station_burrito",
 ]
 
+const DECOR_TEXTURES := {
+	"table": "res://assets/props/table.png",
+	"chair": "res://assets/props/chair.png",
+	"plant": "res://assets/props/plant.png",
+}
+
+const DECOR_OFFSETS := {
+	"table": Vector2(0, -5),
+	"chair": Vector2(0, -3),
+	"plant": Vector2(0, -8),
+}
+
+const DECOR_BY_LOCATION := {
+	"loc_diner": [
+		{"kind": "table", "cell": Vector2i(4, 1)},
+		{"kind": "chair", "cell": Vector2i(3, 1)},
+		{"kind": "chair", "cell": Vector2i(5, 1)},
+		{"kind": "table", "cell": Vector2i(9, 1)},
+		{"kind": "chair", "cell": Vector2i(8, 1)},
+		{"kind": "chair", "cell": Vector2i(10, 1)},
+		{"kind": "table", "cell": Vector2i(9, 5)},
+		{"kind": "chair", "cell": Vector2i(8, 5)},
+		{"kind": "chair", "cell": Vector2i(10, 5)},
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+		{"kind": "plant", "cell": Vector2i(12, 6)},
+	],
+	"loc_store": [
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+		{"kind": "table", "cell": Vector2i(4, 3)},
+		{"kind": "chair", "cell": Vector2i(8, 3)},
+		{"kind": "plant", "cell": Vector2i(10, 4)},
+		{"kind": "chair", "cell": Vector2i(9, 1)},
+	],
+	"loc_bricks": [
+		{"kind": "table", "cell": Vector2i(4, 2)},
+		{"kind": "chair", "cell": Vector2i(3, 2)},
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+		{"kind": "plant", "cell": Vector2i(12, 5)},
+	],
+	"loc_offices": [
+		{"kind": "table", "cell": Vector2i(3, 1)},
+		{"kind": "chair", "cell": Vector2i(4, 1)},
+		{"kind": "table", "cell": Vector2i(10, 4)},
+		{"kind": "chair", "cell": Vector2i(11, 4)},
+		{"kind": "plant", "cell": Vector2i(1, 5)},
+		{"kind": "plant", "cell": Vector2i(14, 1)},
+	],
+	"loc_site": [
+		{"kind": "table", "cell": Vector2i(8, 3)},
+		{"kind": "chair", "cell": Vector2i(9, 3)},
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+	],
+	"loc_bar": [
+		{"kind": "table", "cell": Vector2i(3, 1)},
+		{"kind": "chair", "cell": Vector2i(4, 1)},
+		{"kind": "table", "cell": Vector2i(8, 4)},
+		{"kind": "chair", "cell": Vector2i(7, 4)},
+		{"kind": "plant", "cell": Vector2i(1, 4)},
+	],
+}
+
 
 func _ready() -> void:
 	var map: Array = MAPS.get(location_id, MAPS["loc_diner"])
@@ -154,9 +215,28 @@ func _ready() -> void:
 				"X":
 					place_door(cell, "exterior", "Leave")
 					entry_point = cell_to_world(cell + Vector2i(0, -1))
+	_place_decor()
 	if npc_spawn_points.is_empty():
 		npc_spawn_points.append(entry_point)
 
 
 func get_npc_spawn_position(_npc) -> Vector2:
 	return npc_spawn_points.pick_random()
+
+
+func _place_decor() -> void:
+	var decor: Array = DECOR_BY_LOCATION.get(location_id, [])
+	for item in decor:
+		var kind := str(item.get("kind", ""))
+		if not DECOR_TEXTURES.has(kind):
+			continue
+		var texture: Texture2D = load(DECOR_TEXTURES[kind])
+		if texture == null:
+			continue
+		var sprite := Sprite2D.new()
+		sprite.name = "DecorSprite"
+		sprite.texture = texture
+		sprite.texture_filter = 1
+		var cell: Vector2i = item.get("cell", Vector2i.ZERO)
+		sprite.position = cell_to_world(cell) + DECOR_OFFSETS.get(kind, Vector2.ZERO)
+		add_child(sprite)
