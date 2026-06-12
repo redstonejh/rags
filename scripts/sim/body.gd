@@ -72,8 +72,7 @@ static func _overdose(sheet: CharacterSheet) -> String:
 	sheet.needs.change("energy", -80.0)
 	sheet.needs.change("hygiene", -40.0)
 	var robbed: int = sheet.cash_cents / 2
-	sheet.cash_cents -= robbed
-	EventBus.money_changed.emit(sheet.cash_cents)
+	sheet.add_cash(-robbed)
 	EventBus.toast.emit("You wake up twelve hours later, half your cash gone, all of your dignity.")
 	return "Too much. The ground came up to meet you."
 

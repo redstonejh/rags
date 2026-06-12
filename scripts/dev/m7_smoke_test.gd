@@ -25,6 +25,7 @@ func _ready() -> void:
 	_test_catalog()
 	_test_substance_use()
 	_test_tolerance()
+	_test_overdose_robbery()
 	_test_recovery()
 	_test_wounds()
 	_test_teeth_and_surgery()
@@ -44,6 +45,16 @@ func _check(ok: bool, what: String) -> void:
 	else:
 		failures += 1
 		printerr("  FAIL: %s" % what)
+
+
+func _count_money_updates(action: Callable) -> int:
+	var events := {"count": 0}
+	var signal_handler := func(_cash_cents: int) -> void:
+		events["count"] = int(events.count) + 1
+	EventBus.money_changed.connect(signal_handler)
+	action.call()
+	EventBus.money_changed.disconnect(signal_handler)
+	return int(events.count)
 
 
 func _fresh_sheet() -> CharacterSheet:
@@ -91,6 +102,16 @@ func _test_tolerance() -> void:
 	Body.use_substance(sheet, "weed")
 	_check(sheet.needs.get_value("fun") < first_hit,
 			"maxed tolerance blunts the hit (%.0f -> %.0f)" % [first_hit, sheet.needs.get_value("fun")])
+
+
+func _test_overdose_robbery() -> void:
+	print("[Collapse: wake up robbed]")
+	var sheet := _fresh_sheet()
+	sheet.cash_cents = 10000
+	var money_events := _count_money_updates(func() -> void:
+		Body._overdose(sheet))
+	_check(sheet.cash_cents == 5000, "collapse robbery takes half your cash")
+	_check(money_events > 0, "collapse robbery refreshes money UI")
 
 
 func _test_recovery() -> void:
