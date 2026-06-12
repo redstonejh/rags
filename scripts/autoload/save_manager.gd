@@ -8,12 +8,13 @@ const SAVE_PATH := SAVE_DIR + "/world.json"
 const SAVE_VERSION := 1
 
 var _in_game: bool = false
+var _autosave_queued: bool = false
 
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
 	# Ironman cadence: autosave at the top of every game day and on quit.
-	EventBus.day_passed.connect(func(_day: int) -> void: save_game())
+	EventBus.day_passed.connect(_queue_daily_autosave)
 
 
 func _notification(what: int) -> void:
@@ -23,6 +24,18 @@ func _notification(what: int) -> void:
 
 func set_in_game(value: bool) -> void:
 	_in_game = value
+
+
+func _queue_daily_autosave(_day: int) -> void:
+	if _autosave_queued:
+		return
+	_autosave_queued = true
+	call_deferred("_run_daily_autosave")
+
+
+func _run_daily_autosave() -> void:
+	_autosave_queued = false
+	save_game()
 
 
 func has_save() -> bool:

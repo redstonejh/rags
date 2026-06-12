@@ -4,16 +4,10 @@ extends Node
 ##   godot --headless --path <repo> res://scenes/dev/RealSaveLoadSmokeTest.tscn
 
 const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
-const SAVE_FILES := [
-	SaveManager.SAVE_PATH,
-	SaveManager.SAVE_PATH + ".bak",
-]
-const BACKUP_SUFFIX := ".real_save_load_smoke_backup"
-
 var failures := 0
 var _main: Node = null
 var _loaded_main: Node = null
-var _had_save_file := {}
+var _save_guard := SaveSlotGuard.new()
 var _case_id := ""
 var _cop_id := ""
 var _cop_rel_before := 0.0
@@ -22,7 +16,7 @@ var _time_before := 0
 
 
 func _ready() -> void:
-	_backup_save_files()
+	_save_guard.backup()
 	await _test_real_scene_save_load()
 	_restore_save_files()
 	print("Real save/load smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
@@ -202,34 +196,13 @@ func _descendant_text_contains(node: Node, text: String) -> bool:
 	return false
 
 
-func _backup_save_files() -> void:
-	for path in SAVE_FILES:
-		_had_save_file[path] = FileAccess.file_exists(path)
-		_remove_if_exists(_backup_path(path))
-		if bool(_had_save_file[path]):
-			DirAccess.copy_absolute(path, _backup_path(path))
-
-
 func _restore_save_files() -> void:
 	SaveManager.set_in_game(false)
 	GameClock.clear_pause_locks()
 	GameClock.set_manual_paused(false)
 	_teardown_main()
 	_teardown_loaded_main()
-	for path in SAVE_FILES:
-		_remove_if_exists(path)
-		if bool(_had_save_file.get(path, false)):
-			DirAccess.copy_absolute(_backup_path(path), path)
-		_remove_if_exists(_backup_path(path))
-
-
-func _backup_path(path: String) -> String:
-	return path + BACKUP_SUFFIX
-
-
-func _remove_if_exists(path: String) -> void:
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
+	_save_guard.restore()
 
 
 func _check(ok: bool, what: String) -> void:
