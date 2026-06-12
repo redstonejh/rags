@@ -31,6 +31,7 @@ func _ready() -> void:
 	_test_evidence_decay()
 	_test_gossip_to_cop()
 	_test_carjack_fight()
+	_test_crime_rng_save_roundtrip()
 	_test_arrest_paths()
 	_test_pickpocket()
 	_test_fence()
@@ -198,6 +199,51 @@ func _test_carjack_fight() -> void:
 	_check(not loss.success and weak.needs.get_value("energy") < 100.0,
 			"losing your own fight costs you")
 	CrimeSystem._close_warrants()
+
+
+func _test_crime_rng_save_roundtrip() -> void:
+	print("[Save round trip: crime RNG]")
+	var sheet := _fresh_sheet()
+	WorldState.crime_cases.clear()
+	WorldState.gazette = []
+	WorldState.town_fear = 0.0
+	WorldState.world_seed = 555123
+	WorldState.reset_crime_rng()
+	var case := CrimeSystem.commit("murder", "loc_hidden")
+	_check(case.status == CrimeCase.UNREPORTED, "silent murder exists before discovery roll")
+	var before_state := WorldState.crime_rng_state
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with crime RNG state")
+	CrimeSystem._bodies_and_detectives()
+	var expected := _crime_signature()
+	_check(WorldState.crime_rng_state != before_state,
+			"body discovery advances saved crime RNG state")
+	WorldState.player_sheet = null
+	WorldState.crime_cases.clear()
+	WorldState.gazette = []
+	WorldState.town_fear = 0.0
+	WorldState.crime_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores crime RNG state")
+	CrimeSystem._bodies_and_detectives()
+	_check(_crime_signature() == expected,
+			"loaded crime RNG repeats the same body-discovery result")
+	SaveManager.set_in_game(false)
+	WorldState.player_sheet = sheet
+
+
+func _crime_signature() -> String:
+	var ids := WorldState.crime_cases.keys()
+	ids.sort()
+	var rows := []
+	for id in ids:
+		var case: CrimeCase = WorldState.crime_cases[id]
+		rows.append(case.to_dict())
+	return JSON.stringify({
+		"cases": rows,
+		"gazette": WorldState.gazette,
+		"town_fear": WorldState.town_fear,
+		"crime_rng_state": str(WorldState.crime_rng_state),
+	})
 
 
 func _test_arrest_paths() -> void:

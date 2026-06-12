@@ -105,7 +105,7 @@ static func witnesses_at(location_id: String, world_pos := Vector2.INF,
 		if location_id == "exterior" and world_pos != Vector2.INF \
 				and npc.abstract_position(now).distance_to(world_pos) > EXTERIOR_WITNESS_RADIUS:
 			continue
-		if WorldState.town_fear >= 40.0 and randf() < 0.3:
+		if WorldState.town_fear >= 40.0 and _randf() < 0.3:
 			continue # fewer people out; fewer eyes
 		out.append(npc)
 	return out
@@ -167,7 +167,7 @@ static func _bodies_and_detectives() -> void:
 		if case.crime_id != "murder":
 			continue
 		if case.status == CrimeCase.UNREPORTED:
-			if randf() < 0.25: # discovery roll: traffic, smell, a dog
+			if _randf() < 0.25: # discovery roll: traffic, smell, a dog
 				case.status = CrimeCase.OPEN
 				case.suspect_id = "player"
 				case.evidence = clampf(case.evidence + 20.0, 0.0, 100.0)
@@ -323,3 +323,14 @@ static func _close_warrants() -> void:
 	for case in WorldState.crime_cases.values():
 		if case.is_active_warrant():
 			case.status = CrimeCase.CLOSED
+
+
+static func _randf() -> float:
+	var rng := RandomNumberGenerator.new()
+	if WorldState.crime_rng_state == 0:
+		WorldState.reset_crime_rng()
+	rng.seed = WorldState.crime_rng_seed
+	rng.state = WorldState.crime_rng_state
+	var value := rng.randf()
+	WorldState.crime_rng_state = rng.state
+	return value
