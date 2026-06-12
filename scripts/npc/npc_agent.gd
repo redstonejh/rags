@@ -13,6 +13,7 @@ const DIR_RIGHT := 1
 const DIR_UP := 2
 const DIR_LEFT := 3
 const REACTION_TEXT := "!"
+const TARGET_REACTION_TEXT := "!!"
 
 var record: NPCRecord
 var _wander_target: Vector2 = Vector2.ZERO
@@ -57,14 +58,24 @@ func _physics_process(delta: float) -> void:
 func _update_reaction_cue() -> bool:
 	var until_min := int(record.flags.get("reacting_until_min", -1))
 	if until_min < GameClock.total_minutes:
-		if name_label.text == REACTION_TEXT:
+		if name_label.text in [REACTION_TEXT, TARGET_REACTION_TEXT]:
 			name_label.text = _base_name
 		return false
-	name_label.text = REACTION_TEXT
-	var target: NPCRecord = WorldState.npcs.get(str(record.flags.get("reaction_target_id", "")))
+	name_label.text = _reaction_text()
+	var target_id := str(record.flags.get("reaction_target_id", ""))
+	if target_id == "player" and SimEngine.player_node != null \
+			and is_instance_valid(SimEngine.player_node):
+		_facing_dir = _direction_from_velocity(
+				global_position.direction_to(SimEngine.player_node.global_position))
+		return true
+	var target: NPCRecord = WorldState.npcs.get(target_id)
 	if target != null and target.agent != null and is_instance_valid(target.agent):
 		_facing_dir = _direction_from_velocity(global_position.direction_to(target.agent.global_position))
 	return true
+
+
+func _reaction_text() -> String:
+	return TARGET_REACTION_TEXT if record.flags.get("reaction_kind", "") == "called_out" else REACTION_TEXT
 
 
 func _walk_toward(target: Vector2, _delta: float) -> void:

@@ -131,6 +131,10 @@ func _test_reality_check() -> void:
 	_check(int(witness.flags.get("reacting_until_min", -1)) > GameClock.total_minutes \
 			and witness.flags.get("reaction_target_id", "") == mark.id,
 			"the witness visibly reacts to the Reality Check")
+	_check(int(mark.flags.get("reacting_until_min", -1)) > GameClock.total_minutes \
+			and mark.flags.get("reaction_target_id", "") == "player" \
+			and mark.flags.get("reaction_kind", "") == "called_out",
+			"the target visibly calls out the player")
 
 
 func _test_relationship_deltas() -> void:

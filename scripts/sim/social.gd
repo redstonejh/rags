@@ -263,6 +263,9 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 		sheet.needs.change("social", -8.0)
 		_witness_event(sheet, npc,
 				"saw you misjudge %s" % npc.display_name, -0.3, 10.0)
+		npc.flags["reacting_until_min"] = GameClock.total_minutes + 20
+		npc.flags["reaction_target_id"] = "player"
+		npc.flags["reaction_kind"] = "called_out"
 		npc.add_memory("embarrassment", "player",
 				"misjudged you in public; you put them right", -0.4, 9.0)
 		EventBus.reality_check.emit(perceived, actual, npc.id)

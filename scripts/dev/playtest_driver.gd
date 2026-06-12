@@ -363,6 +363,10 @@ func _verify_social_playthrough() -> void:
 	dialogue._unhandled_input(_action("ui_cancel"))
 	await get_tree().process_frame
 
+	_check(int(target.flags.get("reacting_until_min", -1)) > GameClock.total_minutes \
+			and target.flags.get("reaction_target_id", "") == "player" \
+			and target.flags.get("reaction_kind", "") == "called_out",
+			"Reality Check target calls out the player")
 	_check(witness.memories.any(func(m: Dictionary) -> bool:
 		return m.get("subject", "") == "player" and "misjudge" in str(m.get("text", ""))),
 			"Reality Check witness records the public miss")
