@@ -435,16 +435,26 @@ func _open_shop_from_counter() -> void:
 			"title": "A GUY BEHIND SITE 9",
 			"allow_pocket": false,
 			"allow_register_robbery": false,
+			"prefer_dirty_cash": true,
 		})
 		await get_tree().process_frame
 		_check(_descendant_text_contains(shop, "A GUY BEHIND SITE 9"),
 				"dealer payload replaces the shop title")
-		_check(_find_named_descendant(shop, "Buy_meth") != null,
+		var buy_meth := _find_named_descendant(shop, "Buy_meth") as Button
+		_check(buy_meth != null,
 				"dealer payload exposes contraband purchase")
 		_check(_find_named_descendant(shop, "Pocket_meth") == null,
 				"dealer payload suppresses store shoplifting")
 		_check(not _descendant_text_contains(shop, "Rob the register"),
 				"dealer payload suppresses register robbery")
+		if buy_meth != null:
+			WorldState.player_sheet.cash_cents = 5000
+			WorldState.player_sheet.dirty_cents = 2000
+			buy_meth.pressed.emit()
+			await get_tree().process_frame
+			_check(WorldState.player_sheet.dirty_cents == 0
+					and WorldState.player_sheet.cash_cents == 5000,
+					"dealer purchases spend dirty cash before clean cash")
 
 
 func _open_pause_menu() -> void:

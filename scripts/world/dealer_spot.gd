@@ -45,5 +45,6 @@ func interact(_actor: Node) -> void:
 		"title": "A GUY BEHIND SITE 9",
 		"allow_pocket": false,
 		"allow_register_robbery": false,
+		"prefer_dirty_cash": true,
 		"buy_toast": "%s disappears into your pocket like evidence.",
 	})

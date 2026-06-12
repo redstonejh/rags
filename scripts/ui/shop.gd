@@ -125,6 +125,7 @@ func _normalize_payload(payload) -> Array:
 		"title": "QUIKSTOP - \"Open Late. Regret Later.\"",
 		"allow_pocket": true,
 		"allow_register_robbery": true,
+		"prefer_dirty_cash": false,
 		"buy_toast": "Bought %s. Press I to use it.",
 	}
 	if payload is Dictionary:
@@ -142,17 +143,28 @@ func _buy(item: ItemDef) -> void:
 	if sheet.cash_cents + sheet.dirty_cents < item.value_cents:
 		EventBus.toast.emit("The register makes a sad noise. You can't afford that.")
 		return
-	# Clean cash first; the street kind covers the rest. The clerk does not care.
-	var from_clean: int = mini(sheet.cash_cents, item.value_cents)
-	if from_clean > 0:
-		sheet.add_cash(-from_clean)
-	var from_dirty := item.value_cents - from_clean
-	if from_dirty > 0:
-		sheet.add_dirty_cash(-from_dirty)
+	_pay_vendor(sheet, item.value_cents)
 	sheet.inventory.append(item.id)
 	EventBus.path_updated.emit()
 	EventBus.toast.emit(str(_context.get("buy_toast", "Bought %s. Press I to use it.")) % item.display_name)
 	_update_cash()
+
+
+func _pay_vendor(sheet: CharacterSheet, cost_cents: int) -> void:
+	if _context.get("prefer_dirty_cash", false):
+		var from_dirty: int = mini(sheet.dirty_cents, cost_cents)
+		if from_dirty > 0:
+			sheet.add_dirty_cash(-from_dirty)
+		var from_clean := cost_cents - from_dirty
+		if from_clean > 0:
+			sheet.add_cash(-from_clean)
+		return
+	var from_clean: int = mini(sheet.cash_cents, cost_cents)
+	if from_clean > 0:
+		sheet.add_cash(-from_clean)
+	var from_dirty := cost_cents - from_clean
+	if from_dirty > 0:
+		sheet.add_dirty_cash(-from_dirty)
 
 
 ## Catch chance starts from DESIGN.md's 20% baseline, then sightlines do the rest.
