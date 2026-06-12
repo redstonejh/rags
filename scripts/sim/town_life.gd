@@ -18,6 +18,8 @@ const HOLIDAYS := {
 	30: "ALL HALLOWS",     # masks are normal for one night
 }
 
+var _rng := RandomNumberGenerator.new()
+
 
 static func holiday_today() -> String:
 	return HOLIDAYS.get(GameClock.day % 35, "")
@@ -66,11 +68,13 @@ func _random_event() -> void:
 			pool.append(npc)
 	if pool.size() < 2:
 		return
-	var a: NPCRecord = pool.pick_random()
-	var b: NPCRecord = pool.pick_random()
+	_load_rng_state()
+	var a: NPCRecord = _pick(pool)
+	var b: NPCRecord = _pick(pool)
 	if a == b:
+		_store_rng_state()
 		return
-	match randi() % 6:
+	match _rng.randi() % 6:
 		0: # romance
 			a.change_rel(b.id, 25.0)
 			b.change_rel(a.id, 25.0)
@@ -80,7 +84,7 @@ func _random_event() -> void:
 			a.change_rel(b.id, -30.0)
 			b.change_rel(a.id, -30.0)
 			WorldState.add_news("A dispute over %s has ended the friendship of %s and %s." % [
-					["a parking spot", "a borrowed ladder", "a casserole dish", "fourteen dollars"][randi() % 4],
+					_pick(["a parking spot", "a borrowed ladder", "a casserole dish", "fourteen dollars"]),
 					a.display_name, b.display_name])
 		2: # promotion
 			a.money_cents += 5000
@@ -95,12 +99,28 @@ func _random_event() -> void:
 				b.add_memory("mugged", a.id, "mugged you in the alley", -0.9, 8.0)
 				WorldState.town_fear = minf(WorldState.town_fear + 2.0, 100.0)
 				WorldState.add_news("MUGGING ON THE %s SIDE: residents report a figure, a demand, and the usual outcome." % \
-						["EAST", "WEST", "DOCK", "WRONG"][randi() % 4])
+						_pick(["EAST", "WEST", "DOCK", "WRONG"]))
 		4: # small fortune
 			a.money_cents += 2000
 			WorldState.add_news("%s won at cards behind the Rusty Anchor and told absolutely everyone." % a.display_name)
 		5: # gossip burst: a juicy memory travels for free
 			GossipSystem.share(a, b)
+	_store_rng_state()
+
+
+func _load_rng_state() -> void:
+	if WorldState.town_rng_state == 0:
+		WorldState.reset_town_rng()
+	_rng.seed = WorldState.town_rng_seed
+	_rng.state = WorldState.town_rng_state
+
+
+func _store_rng_state() -> void:
+	WorldState.town_rng_state = _rng.state
+
+
+func _pick(values: Array):
+	return values[_rng.randi() % values.size()]
 
 
 # ------------------------------------------------------------- businesses

@@ -31,6 +31,7 @@ func _ready() -> void:
 
 	_test_content()
 	_test_town_news()
+	_test_town_rng_save_roundtrip()
 	_test_fear()
 	_test_fame_infamy()
 	_test_bodies_and_detectives()
@@ -96,6 +97,56 @@ func _test_town_news() -> void:
 		EventBus.day_passed.emit(100 + d) # mid-cycle days, no election
 	_check(WorldState.gazette.size() > before, "the Gazette filled itself (%d items)" % WorldState.gazette.size())
 	_check(WorldState.gazette.size() <= WorldState.GAZETTE_CAP, "archive capped")
+
+
+func _test_town_rng_save_roundtrip() -> void:
+	print("[TownLife RNG save continuity]")
+	_fresh_sheet()
+	WorldState.npcs.clear()
+	WorldState.gazette = []
+	WorldState.town_fear = 0.0
+	WorldState.world_seed = 424242
+	WorldState.reset_town_rng()
+	for i in 20:
+		var npc := _mk_npc("rng_%02d" % i, "exterior", 50)
+		npc.personality["greed"] = 80
+	var before_state := WorldState.town_rng_state
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with TownLife RNG state")
+	_town_life._random_event()
+	var expected := _town_event_signature()
+	_check(WorldState.town_rng_state != before_state,
+			"TownLife event advances saved RNG state")
+	WorldState.player_sheet = null
+	WorldState.npcs.clear()
+	WorldState.gazette = []
+	WorldState.town_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores TownLife RNG state")
+	_town_life._random_event()
+	_check(_town_event_signature() == expected,
+			"loaded TownLife RNG repeats the same autonomous event")
+	SaveManager.set_in_game(false)
+
+
+func _town_event_signature() -> String:
+	var ids := WorldState.npcs.keys()
+	ids.sort()
+	var rows := []
+	for id in ids:
+		var npc: NPCRecord = WorldState.npcs[id]
+		rows.append([
+			npc.id,
+			npc.money_cents,
+			npc.relationships,
+			npc.memories,
+			npc.flags,
+		])
+	return JSON.stringify({
+		"gazette": WorldState.gazette,
+		"town_fear": WorldState.town_fear,
+		"town_rng_state": str(WorldState.town_rng_state),
+		"npcs": rows,
+	})
 
 
 func _test_fear() -> void:
