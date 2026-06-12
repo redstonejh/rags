@@ -152,24 +152,28 @@ func _refresh_jobs() -> void:
 	intro.add_theme_font_size_override("font_size", 11)
 	intro.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 	_jobs_box.add_child(intro)
-	for job in ContentDB.all_jobs():
+	for job in _jobs_for_sheet(sheet):
 		var row := HBoxContainer.new()
+		row.name = "JobRow_%s" % job.id
 		row.add_theme_constant_override("separation", 10)
 		_jobs_box.add_child(row)
 
 		var info := Label.new()
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var access_note := "Cash work - no ID required" if not job.requires_id else "Requires ID"
 		info.text = "%s — $%.0f/shift\n%s %d:00–%d:00 at %s%s" % [
 			job.display_name, job.wage_cents_per_shift / 100.0,
 			_days_string(job.work_days), job.shift_start_hour,
 			(job.shift_start_hour + job.shift_len_hours) % 24,
 			Locations.display_name(job.workplace_id),
 			"" if job.blurb == "" else "\n\"%s\"" % job.blurb]
+		info.text += "\n%s" % access_note
 		info.add_theme_font_size_override("font_size", 12)
 		row.add_child(info)
 
 		var btn := Button.new()
+		btn.name = "JobButton_%s" % job.id
 		btn.custom_minimum_size = Vector2(120, 0)
 		if sheet.job_id == job.id:
 			btn.text = "Current job"
@@ -183,6 +187,27 @@ func _refresh_jobs() -> void:
 				btn.text = blocker
 				btn.disabled = true
 		row.add_child(btn)
+
+
+func _jobs_for_sheet(sheet: CharacterSheet) -> Array:
+	var jobs := ContentDB.all_jobs()
+	jobs.sort_custom(func(a: JobDef, b: JobDef) -> bool:
+		var a_rank := _job_sort_rank(sheet, a)
+		var b_rank := _job_sort_rank(sheet, b)
+		if a_rank != b_rank:
+			return a_rank < b_rank
+		if a.ladder_id != b.ladder_id:
+			return a.ladder_id < b.ladder_id
+		if a.rung != b.rung:
+			return a.rung < b.rung
+		return a.display_name < b.display_name)
+	return jobs
+
+
+func _job_sort_rank(sheet: CharacterSheet, job: JobDef) -> int:
+	if sheet.job_id == job.id:
+		return 0
+	return 1 if _job_blocker(sheet, job) == "" else 2
 
 
 func _job_blocker(sheet: CharacterSheet, job: JobDef) -> String:

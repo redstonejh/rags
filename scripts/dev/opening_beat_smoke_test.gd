@@ -41,7 +41,7 @@ func _run_origin_start_case(origin: OriginDef, expected_prop_name: String) -> vo
 	await _teardown_main()
 	_setup_world(origin, "%s Tester" % origin.id.capitalize())
 	await _instantiate_main()
-	_test_origin_start_and_opening_beat(origin, expected_prop_name)
+	await _test_origin_start_and_opening_beat(origin, expected_prop_name)
 
 
 func _setup_world(origin: OriginDef, char_name: String) -> void:
@@ -94,6 +94,37 @@ func _test_origin_start_and_opening_beat(origin: OriginDef, expected_prop_name: 
 			"%s opening prop exists near the start marker" % origin.id)
 	_check(_hud_objective_matches_origin(origin),
 			"%s opening HUD objective matches origin constraints" % origin.id)
+	if origin.tags.has("no_papers"):
+		await _test_no_papers_job_board(origin)
+
+
+func _test_no_papers_job_board(origin: OriginDef) -> void:
+	var phone := _main.get_node_or_null("Phone") as CanvasLayer
+	if phone == null:
+		_check(false, "%s job board has a phone UI" % origin.id)
+		return
+	phone.call("_open")
+	phone.call("open_tab", "Jobs")
+	await get_tree().process_frame
+	var jobs_content := _find_named_descendant(phone, "JobsContent")
+	var dishwasher_row := _find_named_descendant(phone, "JobRow_dishwasher")
+	var labor_row := _find_named_descendant(phone, "JobRow_day_laborer")
+	var id_row := _find_named_descendant(phone, "JobRow_stock_boy")
+	var dishwasher_button := _find_named_descendant(phone, "JobButton_dishwasher") as Button
+	var labor_button := _find_named_descendant(phone, "JobButton_day_laborer") as Button
+	_check(dishwasher_button != null and not dishwasher_button.disabled \
+			and labor_button != null and not labor_button.disabled,
+			"%s job board exposes no-ID cash work applications" % origin.id)
+	_check(jobs_content != null and dishwasher_row != null and labor_row != null \
+			and id_row != null \
+			and _direct_child_index(jobs_content, dishwasher_row) < _direct_child_index(jobs_content, id_row) \
+			and _direct_child_index(jobs_content, labor_row) < _direct_child_index(jobs_content, id_row),
+			"%s job board lists cash work before ID-gated jobs" % origin.id)
+	_check(jobs_content != null and _descendant_text_contains(jobs_content,
+			"Cash work - no ID required"),
+			"%s job board labels cash work" % origin.id)
+	phone.call("_close")
+	await get_tree().process_frame
 
 
 func _hud_objective_matches_origin(origin: OriginDef) -> bool:
@@ -124,6 +155,24 @@ func _find_named_descendant(node: Node, node_name: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+func _descendant_text_contains(node: Node, text: String) -> bool:
+	var value = node.get("text")
+	if value != null and str(value).contains(text):
+		return true
+	for child in node.get_children():
+		if _descendant_text_contains(child, text):
+			return true
+	return false
+
+
+func _direct_child_index(parent: Node, child: Node) -> int:
+	var children := parent.get_children()
+	for i in children.size():
+		if children[i] == child:
+			return i
+	return 999999
 
 
 func _teardown_main() -> void:
