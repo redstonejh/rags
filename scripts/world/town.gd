@@ -37,6 +37,8 @@ const STREET_CAMP_TEXTURE_PATH := "res://assets/props/street_camp.png"
 const APARTMENT_SIGN_TEXTURE_PATH := "res://assets/props/apartment_sign.png"
 const ROOF_FADE_ALPHA := 0.38
 const ROOF_FADE_SPEED := 10.0
+const HORIZONTAL_ROAD_Y := [11, 12, 26, 27]
+const VERTICAL_ROAD_X := [20, 21]
 
 var player_spawn: Vector2
 var facade_layer: Node2D = null
@@ -259,5 +261,7 @@ func _add_street_prop(texture_path: String, cell: Vector2i, offset: Vector2,
 ## A random spot on the road network — wander anchors for exterior NPCs.
 func random_exterior_point(rng: RandomNumberGenerator) -> Vector2:
 	if rng.randf() < 0.5:
-		return cell_to_world(Vector2i(rng.randi_range(1, W - 2), [11, 12, 26, 27].pick_random()))
-	return cell_to_world(Vector2i([20, 21].pick_random(), rng.randi_range(1, H - 2)))
+		var y: int = HORIZONTAL_ROAD_Y[rng.randi() % HORIZONTAL_ROAD_Y.size()]
+		return cell_to_world(Vector2i(rng.randi_range(1, W - 2), y))
+	var x: int = VERTICAL_ROAD_X[rng.randi() % VERTICAL_ROAD_X.size()]
+	return cell_to_world(Vector2i(x, rng.randi_range(1, H - 2)))

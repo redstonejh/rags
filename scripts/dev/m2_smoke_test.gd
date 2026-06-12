@@ -7,13 +7,14 @@ extends Node
 
 var failures: int = 0
 var _save_guard := SaveSlotGuard.new()
+var _town: Node = null
 
 
 func _ready() -> void:
 	_save_guard.backup()
 	# A town must exist so doors register their positions.
-	var town: Node2D = load("res://scenes/world/Town.tscn").instantiate()
-	add_child(town)
+	_town = load("res://scenes/world/Town.tscn").instantiate()
+	add_child(_town)
 
 	_test_world_gen()
 	_test_schedule_day()
@@ -65,6 +66,8 @@ func _test_world_gen() -> void:
 	var seeded_b := WorldGen.generate(24680)
 	_check(_population_signature(seeded_a) == _population_signature(seeded_b),
 			"world generation is deterministic for a fixed seed")
+	_check(_exterior_anchor_signature(13579) == _exterior_anchor_signature(13579),
+			"exterior wander anchors are deterministic for a fixed seed")
 	var doors := Locations.door_positions.size()
 	_check(doors >= 9, "door registry populated (%d doors)" % doors)
 
@@ -137,6 +140,18 @@ func _population_signature(population: Dictionary) -> String:
 			npc.hunger,
 		])
 	return JSON.stringify(rows)
+
+
+func _exterior_anchor_signature(seed_value: int) -> String:
+	if _town == null or not _town.has_method("random_exterior_point"):
+		return ""
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var points := []
+	for _i in 20:
+		var point: Vector2 = _town.random_exterior_point(rng)
+		points.append([point.x, point.y])
+	return JSON.stringify(points)
 
 
 func _test_save_roundtrip() -> void:
