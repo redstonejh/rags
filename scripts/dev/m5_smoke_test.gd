@@ -35,6 +35,7 @@ func _ready() -> void:
 	_test_crime_rng_public_rolls_roundtrip()
 	_test_shoplift_sightlines()
 	_test_register_robbery_is_never_quiet()
+	_test_register_silent_alarm_response()
 	_test_arrest_paths()
 	_test_pickpocket()
 	_test_fence()
@@ -306,6 +307,41 @@ func _test_register_robbery_is_never_quiet() -> void:
 	_check(not WorldState.gazette.is_empty()
 			and "QUIKSTOP ROBBED" in str(WorldState.gazette.back().get("text", "")),
 			"register robbery makes the Gazette")
+	CrimeSystem._close_warrants()
+
+
+func _test_register_silent_alarm_response() -> void:
+	print("[Register robbery: silent alarm response]")
+	var sheet := _fresh_sheet()
+	WorldState.crime_cases.clear()
+	WorldState.gazette = []
+	WorldState.player_location_id = "loc_alarm_store"
+	GameClock.total_minutes = 10 * 60
+	_mk_npc("alarm_cop", "loc_alarm_store", 100, 10, 80, "cop")
+	var payloads: Array = []
+	var handler := func(data: Dictionary) -> void:
+		payloads.append(data.duplicate(true))
+	EventBus.confrontation_started.connect(handler)
+	CrimeSystem.commit_register_robbery("loc_alarm_store", Vector2.INF, 0.0)
+	var alarm_minute := int(sheet.flags.get("silent_alarm_minute", -1))
+	_check(alarm_minute == GameClock.total_minutes + CrimeSystem.REGISTER_SILENT_ALARM_MINUTES,
+			"silent alarm schedules a three-minute response")
+	EventBus.minute_passed.emit(alarm_minute - 1)
+	_check(payloads.is_empty(), "silent alarm does not fire early")
+	EventBus.minute_passed.emit(alarm_minute)
+	_check(payloads.size() == 1 and str(payloads[0].get("kind", "")) == "arrest",
+			"silent alarm opens an arrest confrontation")
+	_check(not sheet.flags.has("silent_alarm_minute")
+			and not sheet.flags.has("silent_alarm_location_id"),
+			"silent alarm clears after response")
+	EventBus.confrontation_started.disconnect(handler)
+	CrimeSystem._close_warrants()
+
+	var quiet_sheet := _fresh_sheet()
+	WorldState.crime_cases.clear()
+	CrimeSystem.commit_register_robbery("loc_alarm_store", Vector2.INF, 0.99)
+	_check(not quiet_sheet.flags.has("silent_alarm_minute"),
+			"high alarm roll skips silent alarm")
 	CrimeSystem._close_warrants()
 
 

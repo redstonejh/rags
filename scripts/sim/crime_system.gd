@@ -18,6 +18,8 @@ const MAX_STARS := 5
 const COP_CHECK_MINUTES := 5
 const ARREST_COOLDOWN_MINUTES := 90
 const EXTERIOR_WITNESS_RADIUS := 320.0
+const REGISTER_SILENT_ALARM_CHANCE := 0.50
+const REGISTER_SILENT_ALARM_MINUTES := 3
 const SHOPLIFT_BASE_CATCH_CHANCE := 0.20
 const SHOPLIFT_STEALTH_REDUCTION := 0.025
 const SHOPLIFT_EMPTY_STORE_FACTOR := 0.35
@@ -239,10 +241,19 @@ static func shoplift_attention_text(location_id: String, world_pos := Vector2.IN
 	return "%d shopper%s nearby" % [witnesses.size(), "" if witnesses.size() == 1 else "s"]
 
 
-static func commit_register_robbery(location_id: String, world_pos := Vector2.INF) -> CrimeCase:
+static func commit_register_robbery(location_id: String, world_pos := Vector2.INF,
+		forced_alarm_roll := -1.0) -> CrimeCase:
 	var case := commit("armed_robbery", location_id, null, world_pos)
 	if not case.is_active_warrant():
 		_force_warrant(case)
+	var roll := forced_alarm_roll if forced_alarm_roll >= 0.0 else random_float()
+	if roll < REGISTER_SILENT_ALARM_CHANCE:
+		var sheet: CharacterSheet = WorldState.player_sheet
+		if sheet != null:
+			sheet.flags["silent_alarm_minute"] = GameClock.total_minutes \
+					+ REGISTER_SILENT_ALARM_MINUTES
+			sheet.flags["silent_alarm_location_id"] = location_id
+			sheet.flags["silent_alarm_case_id"] = case.id
 	WorldState.add_news("QUIKSTOP ROBBED. Police say the register survived emotionally, but not financially.")
 	return case
 
@@ -318,6 +329,8 @@ static func _process_cop_gossip() -> void:
 # ------------------------------------------------------------ cops on patrol
 
 func _on_minute_passed(total: int) -> void:
+	if _maybe_trigger_silent_alarm(total):
+		return
 	if total % COP_CHECK_MINUTES != 0 or total < _arrest_cooldown_until:
 		return
 	var sheet: CharacterSheet = WorldState.player_sheet
@@ -354,6 +367,50 @@ func _cop_who_spots_player() -> NPCRecord:
 			continue
 		if int(npc.flags.get("bribed_until_day", -1)) >= GameClock.day:
 			continue
+		return npc
+	return null
+
+
+func _maybe_trigger_silent_alarm(total: int) -> bool:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet == null:
+		return false
+	var alarm_minute := int(sheet.flags.get("silent_alarm_minute", -1))
+	if alarm_minute < 0 or total < alarm_minute:
+		return false
+	var location_id := str(sheet.flags.get("silent_alarm_location_id", ""))
+	sheet.flags.erase("silent_alarm_minute")
+	sheet.flags.erase("silent_alarm_location_id")
+	sheet.flags.erase("silent_alarm_case_id")
+	if wanted_stars() == 0:
+		return false
+	if WorldState.player_location_id != location_id:
+		EventBus.toast.emit("Sirens find the QuikStop after you are already gone.")
+		return false
+	var cop := _responding_cop(location_id)
+	if cop == null:
+		return false
+	_arrest_cooldown_until = total + ARREST_COOLDOWN_MINUTES
+	EventBus.confrontation_started.emit({
+		"kind": "arrest", "npc_id": cop.id,
+		"text": "Sirens hit the curb. Officer %s comes through the door: \"Register alarm. Hands.\""
+				% cop.display_name,
+	})
+	return true
+
+
+func _responding_cop(location_id: String) -> NPCRecord:
+	var cop := _cop_who_spots_player()
+	if cop != null:
+		return cop
+	for npc in WorldState.npcs.values():
+		if not npc.alive or not npc.is_cop():
+			continue
+		if int(npc.flags.get("bribed_until_day", -1)) >= GameClock.day:
+			continue
+		npc.current_location_id = location_id
+		npc.current_activity = "responding"
+		npc.traveling = false
 		return npc
 	return null
 
