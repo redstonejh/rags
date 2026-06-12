@@ -16,6 +16,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Modal pause safety:** phone, inventory, shop, dialogue, dilemma, confrontation, and death screen flows now use composable pause locks, so closing one modal cannot accidentally resume time while another modal or manual pause is still active.
 - **Click-to-move foundation:** `Player.tscn` now has a `NavigationAgent2D`; clicking walkable ground sets a path, clicking an interactable arms a walk-then-interact target, and WASD immediately cancels the click path to keep direct control authoritative.
 - **Regression coverage:** added `UIStackSmokeTest.tscn`, which instantiates the real main scene, opens overlapping panels, verifies speed keys cannot break modal pause, checks Esc pause-menu toggling, and covers click movement, click-to-interact arrival, and WASD cancellation.
+- **Scripted playtest harness:** added `PlaytestDriver.tscn`, which runs the real gameplay scene through spawn, movement, diner travel, phone, inventory, and pause-menu checkpoints. Headless mode validates flow and reports screenshot skips; windowed mode saves PNG checkpoints to `user://playtests`.
 
 ## Systems implemented (headless-tested only — see status note above)
 
@@ -31,7 +32,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 | M7 body/substances/family/aging | ✅ 8-substance catalog (tolerance/addiction/OD/teeth/LSD), Recovery + Education paths, wounds that heal wrong, clinics + plastic surgery, aging (5d=1yr) + elder turnover, marriage → baby gauntlet → kid traits → heirs, obituaries, Walk Away, beater car |
 | M8 the living town | ✅ TownLife (autonomous NPC events + NPC crime), the Rust Harbor Gazette, town fear equilibrium, fame/infamy, bodies + detectives, elections (buyable, dirty money welcome) + mayor police-budget lever, businesses + laundering, lifestyle stat drift, 3 new origins (Ex-Con/Gambler/Doctor) with Going Straight path, perks (Silver Tongue/Iron Liver/Brawler/People Reader) |
 
-Run tests: `godot --headless --path <abs> res://scenes/dev/M<N>SmokeTest.tscn` (N = 1..8; ~250 checks, all green). UI/modal regression: `godot --headless --path <abs> res://scenes/dev/UIStackSmokeTest.tscn`.
+Run tests: `godot --headless --path <abs> res://scenes/dev/M<N>SmokeTest.tscn` (N = 1..8; ~250 checks, all green). Phase 0 regression: `godot --headless --path <abs> res://scenes/dev/UIStackSmokeTest.tscn`. Scripted flow: `godot --headless --path <abs> res://scenes/dev/PlaytestDriver.tscn` (omit `--headless` to dump PNG checkpoints).
 Godot exe: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_*\Godot_v4.6.3-stable_win64.exe`
 IMPORTANT (headless): run `godot --headless --path <abs> --import` after adding new class_name scripts, or scenes hang on parse errors with no visible output.
 
