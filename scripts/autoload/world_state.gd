@@ -1,19 +1,53 @@
 extends Node
 ## ALL mutable simulation state lives here (and only here). This is what
 ## gets saved: the player sheet, every NPC record, and world flags.
+##
+## Lifecycle: new_world() builds a fresh town for a first life; start_life()
+## drops a NEW character into the EXISTING town — the persistent-world
+## permadeath feature. The town doesn't reset because you did.
 
 var player_sheet: CharacterSheet = null
 var player_location_id: String = "exterior"
 var world_seed: int = 0
 var npcs: Dictionary = {} # id -> NPCRecord
+## True once a town has been generated; survives the player's death.
+var world_exists: bool = false
 
 
-func new_game(sheet: CharacterSheet) -> void:
+func _ready() -> void:
+	# Death is written to the world immediately — ironman means ironman.
+	EventBus.player_died.connect(_on_player_died)
+
+
+func _on_player_died(_cause: String) -> void:
+	if player_sheet != null and player_sheet.alive:
+		player_sheet.alive = false
+		SaveManager.save_game()
+
+
+## A brand-new town for a brand-new (first) life.
+func new_world(sheet: CharacterSheet) -> void:
 	player_sheet = sheet
 	sheet.rebuild_needs_multipliers()
 	player_location_id = "exterior"
 	world_seed = randi()
 	npcs = WorldGen.generate(world_seed)
+	world_exists = true
+	GameClock.total_minutes = GameClock.MINUTES_PER_DAY + 7 * 60 # day 1, 7 AM
+
+
+## A new character in the SAME town: NPCs, clock, and history persist.
+func start_life(sheet: CharacterSheet) -> void:
+	var prev_lives := player_sheet.lives_lived if player_sheet != null else 0
+	sheet.lives_lived = prev_lives + 1
+	player_sheet = sheet
+	sheet.rebuild_needs_multipliers()
+	player_location_id = "exterior"
+
+
+## Back-compat alias (M1/M2 tests and tools call this).
+func new_game(sheet: CharacterSheet) -> void:
+	new_world(sheet)
 
 
 ## Lets Main.tscn run standalone from the editor (F5 on the scene) without
@@ -25,7 +59,7 @@ func ensure_player_sheet() -> void:
 	sheet.char_name = "Debug Drifter"
 	sheet.origin_id = "off_the_bus"
 	sheet.cash_cents = 40000
-	new_game(sheet)
+	new_world(sheet)
 
 
 func to_dict() -> Dictionary:
@@ -36,6 +70,7 @@ func to_dict() -> Dictionary:
 		"player": player_sheet.to_dict() if player_sheet else {},
 		"player_location_id": player_location_id,
 		"world_seed": world_seed,
+		"world_exists": world_exists,
 		"npcs": npc_dicts,
 	}
 
@@ -51,3 +86,4 @@ func load_dict(d: Dictionary) -> void:
 	var npc_dicts: Dictionary = d.get("npcs", {})
 	for id in npc_dicts:
 		npcs[id] = NPCRecord.from_dict(npc_dicts[id])
+	world_exists = d.get("world_exists", not npcs.is_empty())

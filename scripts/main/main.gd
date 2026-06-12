@@ -13,6 +13,7 @@ var current_world: Node2D = null
 func _ready() -> void:
 	WorldState.ensure_player_sheet()
 	EventBus.travel_requested.connect(_travel_to)
+	EventBus.player_died.connect(_on_player_died)
 	SimEngine.player_node = player
 	# Resume wherever the save says the player was; new games start outside.
 	_enter_location(WorldState.player_location_id, true)
@@ -60,3 +61,66 @@ func _enter_location(location_id: String, initial: bool) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		GameFlow.to_main_menu()
+
+
+# ---------------------------------------------------------------- death
+
+const DEATH_LINES := {
+	"starvation": "Starved. The dollar menu was right there.",
+}
+
+var _death_screen: CanvasLayer = null
+
+
+## Permadeath, but the world persists: the screen offers exactly one path
+## forward — a new life in the same town.
+func _on_player_died(cause: String) -> void:
+	if _death_screen != null:
+		return
+	GameClock.paused = true
+	EventBus.time_scale_changed.emit(0.0)
+
+	_death_screen = CanvasLayer.new()
+	_death_screen.layer = 50
+	add_child(_death_screen)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0.02, 0.02, 0.03, 0.88)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_death_screen.add_child(dim)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.position = Vector2(-260, -110)
+	vbox.custom_minimum_size = Vector2(520, 0)
+	vbox.add_theme_constant_override("separation", 16)
+	_death_screen.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "YOU DIED"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_color_override("font_color", Color(0.85, 0.2, 0.15))
+	vbox.add_child(title)
+
+	var cause_label := Label.new()
+	cause_label.text = DEATH_LINES.get(cause, "Cause of death: %s." % cause)
+	cause_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cause_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(cause_label)
+
+	var epitaph := Label.new()
+	epitaph.text = "The town continues without you."
+	epitaph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	epitaph.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
+	vbox.add_child(epitaph)
+
+	var button := Button.new()
+	button.text = "Continue (as someone new)"
+	button.custom_minimum_size = Vector2(240, 40)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.pressed.connect(func() -> void:
+		GameClock.paused = false
+		EventBus.time_scale_changed.emit(GameClock.time_scale)
+		GameFlow.to_character_creation())
+	vbox.add_child(button)

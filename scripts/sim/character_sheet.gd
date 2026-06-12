@@ -136,6 +136,24 @@ func count_item(item_id: String) -> int:
 	return inventory.count(item_id)
 
 
+## Eat/drink/use one of item_id from inventory: applies need effects, logs
+## calories for the daily body tick, removes one instance. False if absent
+## or not consumable.
+func consume_item(item_id: String) -> bool:
+	if item_id not in inventory:
+		return false
+	var item := ContentDB.get_item(item_id)
+	if item == null or "consumable" not in item.tags:
+		return false
+	for need_id in item.need_effects:
+		needs.change(need_id, float(item.need_effects[need_id]))
+	var hunger_restored := float(item.need_effects.get("hunger", 0.0))
+	if hunger_restored > 0.0:
+		flags["calories_today"] = int(flags.get("calories_today", 0)) + int(hunger_restored * 25)
+	inventory.erase(item_id)
+	return true
+
+
 func add_skill_xp(skill: String, xp: float) -> void:
 	var fast := 1.3 if has_tag("fast_learner") else 1.0
 	var hard := 1.1 if has_tag("hardworking") else 1.0

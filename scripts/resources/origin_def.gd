@@ -16,6 +16,11 @@ extends Resource
 @export var starting_cash_cents: int = 0
 @export var starting_items: Array = []        # item ids
 @export var starting_location_id: String = ""
+## Housing id ("" = homeless). Rent comes due Mondays — see EconomySystem.
+@export var starting_housing_id: String = ""
+## Initial sheet flags, e.g. {"rent_prepaid_weeks": 4} for the exec's
+## one-month head start.
+@export var starting_flags: Dictionary = {}
 
 ## Flat stat adjustments applied AFTER point-buy, e.g. {"CHA": 2, "CON": -1}
 @export var stat_mods: Dictionary = {}

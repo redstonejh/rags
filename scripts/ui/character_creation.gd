@@ -39,6 +39,12 @@ func _ready() -> void:
 	%BackButton.pressed.connect(func() -> void: GameFlow.to_main_menu())
 	start_button.pressed.connect(_on_start_pressed)
 	name_edit.text_changed.connect(func(_t: String) -> void: _refresh())
+	# Lives after the first get numbered — the town remembers the others.
+	if WorldState.world_exists and not WorldState.npcs.is_empty() \
+			and WorldState.player_sheet != null and not WorldState.player_sheet.alive:
+		var header: Label = $Margin/Root/Header
+		header.text = "Life #%d in Rust Harbor — who are you this time?" \
+				% (WorldState.player_sheet.lives_lived + 1)
 	if not ContentDB.all_origins().is_empty():
 		_select_origin(ContentDB.all_origins()[0].id)
 	_refresh()
@@ -244,4 +250,8 @@ func _on_start_pressed() -> void:
 	sheet.bio = bio
 	sheet.cash_cents = origin.starting_cash_cents
 	sheet.skills = origin.skill_seeds.duplicate()
+	sheet.inventory = origin.starting_items.duplicate()
+	sheet.housing_id = origin.starting_housing_id
+	for flag in origin.starting_flags:
+		sheet.flags[flag] = origin.starting_flags[flag]
 	GameFlow.start_new_game(sheet)

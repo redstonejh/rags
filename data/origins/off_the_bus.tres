@@ -17,6 +17,7 @@ difficulty = 1
 starting_cash_cents = 40000
 starting_items = ["duffel_bag", "sturdy_boots"]
 starting_location_id = "loc_bus_stop"
+starting_housing_id = "bricks_unit"
 stat_mods = {}
 stat_bias = {
 "CON": 1.5,

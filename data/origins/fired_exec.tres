@@ -17,6 +17,10 @@ difficulty = 2
 starting_cash_cents = 240000
 starting_items = ["nice_suit", "leased_car_keys"]
 starting_location_id = "loc_decent_apartment"
+starting_housing_id = "decent_apartment"
+starting_flags = {
+"rent_prepaid_weeks": 4
+}
 stat_mods = {
 "CHA": 2,
 "CON": -1,
