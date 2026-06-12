@@ -200,10 +200,13 @@ func _test_dating() -> void:
 	var actions := Social.available_actions(viewer, mark)
 	_check("date_mels" in actions and "date_anchor" in actions and "ask_out" not in actions,
 			"dating swaps ask-out for named date activities")
+	var scene := Social.date_scene("date_mels")
+	_check(scene.has("choices") and scene.choices.size() >= 3,
+			"date activity opens a venue scene with choices")
 	var before := mark.rel("player")
 	WorldState.player_location_id = "exterior"
 	_travel_requests.clear()
-	Social.interact(viewer, mark, "date_mels")
+	Social.interact(viewer, mark, "date_mels_listen")
 	_check(mark.rel("player") > before, "date activity compounds the relationship")
 	_check(_travel_requests == ["loc_diner"], "date activity requests venue travel")
 	_check(WorldState.player_location_id == "loc_diner" and mark.current_location_id == "loc_diner",

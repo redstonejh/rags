@@ -69,8 +69,9 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: secondhand gossip now records the NPC source, and both chat lines and the phone People tab name who passed the story along with relationship-flavored skepticism/trust. Longer source chains and player-knowledge gating remain.
   - Continued 2026-06-12: the People tab now shows known contacts only and hides unknown townsfolk until relationship, dating, or memory state gives the player a reason to know them. Richer couple/family records remain.
 - Dating becomes activities (a drink at the Anchor, a meal at Mel's — short scenes with choices), not a button.
-  - Started 2026-06-12: dating now unlocks named activities (`Date: meal at Mel's`, `Date: drink at the Anchor`) instead of generic spend-time, with venue-specific time skips, need effects, relationship gains, and memories. Multi-choice date scenes remain.
-  - Continued 2026-06-12: date activities now request the live world travel path before resolving the venue date, keeping the active scene and saved player location in sync. Multi-choice date scenes remain.
+  - Started 2026-06-12: dating now unlocks named activities (`Date: meal at Mel's`, `Date: drink at the Anchor`) instead of generic spend-time, with venue-specific time skips, need effects, relationship gains, and memories.
+  - Continued 2026-06-12: date activities now request the live world travel path before resolving the venue date, keeping the active scene and saved player location in sync.
+  - Continued 2026-06-12: the dialogue UI now opens venue date scenes with three player choices at Mel's or the Rusty Anchor, and each choice has distinct relationship/need/memory outcomes. Richer personality-driven date branches and balance remain.
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
   - Started 2026-06-12: `Perception.read_line()` now gives People Reader a true-stat readout (`STR/DEX/CON/INT/WIS/CHA`) in dialogue, with M4 coverage for the visible text. Full social odds balance remains.
 - **DoD:** scripted playthrough covering chat → flirt → reality check → hearing about it from a stranger later.

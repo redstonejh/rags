@@ -15,6 +15,7 @@ var _npc: NPCRecord = null
 var _revealed_action: String = ""
 var _revealed_perceived: float = -1.0
 var _revealed_actual: float = -1.0
+var _date_scene_action: String = ""
 
 const MODAL_ID := "dialogue"
 const PORTRAIT_DIR := "res://assets/portraits/"
@@ -111,6 +112,7 @@ func _open(npc_id: String) -> void:
 	if _npc == null:
 		return
 	_result_label.text = ""
+	_date_scene_action = ""
 	_clear_reality_check()
 	_set_portrait(_npc)
 	_read_label.text = "( %s )" % Perception.read_line(WorldState.player_sheet, _npc)
@@ -144,6 +146,10 @@ func _refresh() -> void:
 	_rel_label.text = _rel_text(_npc.rel("player"))
 	for child in _actions_box.get_children():
 		child.queue_free()
+
+	if _date_scene_action != "":
+		_refresh_date_scene()
+		return
 
 	var sheet: CharacterSheet = WorldState.player_sheet
 	for action_id in Social.available_actions(sheet, _npc):
@@ -182,12 +188,17 @@ func _set_portrait(npc: NPCRecord) -> void:
 
 
 func _do_action(action_id: String) -> void:
+	if Social.is_date_scene(action_id):
+		_open_date_scene(action_id)
+		return
 	_do_action_with_roll(action_id)
 
 
 func _do_action_with_roll(action_id: String, forced_roll := -1.0) -> void:
 	if _npc == null:
 		return
+	if _is_date_choice(action_id):
+		_date_scene_action = ""
 	var result := Social.interact(WorldState.player_sheet, _npc, action_id, forced_roll)
 	if result.reality_check:
 		_revealed_action = action_id
@@ -206,6 +217,47 @@ func _do_action_with_roll(action_id: String, forced_roll := -1.0) -> void:
 		_result_label.add_theme_color_override("font_color",
 				Color(0.8, 0.9, 0.75) if result.success else Color(0.8, 0.7, 0.6))
 	_refresh()
+
+
+func _open_date_scene(action_id: String) -> void:
+	var scene := Social.date_scene(action_id)
+	if scene.is_empty():
+		return
+	_clear_reality_check()
+	_date_scene_action = action_id
+	_result_label.text = "%s\n%s" % [str(scene.get("title", "")), str(scene.get("prompt", ""))]
+	_result_label.add_theme_color_override("font_color", Color(0.82, 0.86, 0.75))
+	_refresh()
+
+
+func _refresh_date_scene() -> void:
+	var scene := Social.date_scene(_date_scene_action)
+	if scene.is_empty():
+		_date_scene_action = ""
+		return
+	for choice in scene.get("choices", []):
+		var choice_dict: Dictionary = choice
+		var btn := Button.new()
+		btn.name = "DateChoice_%s" % str(choice_dict.get("id", ""))
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.custom_minimum_size = Vector2(260, 0)
+		btn.text = str(choice_dict.get("label", "Spend time"))
+		btn.pressed.connect(_do_action_with_roll.bind(str(choice_dict.get("id", ""))))
+		_actions_box.add_child(btn)
+	var back := Button.new()
+	back.name = "DateChoice_Back"
+	back.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	back.custom_minimum_size = Vector2(260, 0)
+	back.text = "Back"
+	back.pressed.connect(func() -> void:
+		_date_scene_action = ""
+		_result_label.text = ""
+		_refresh())
+	_actions_box.add_child(back)
+
+
+func _is_date_choice(action_id: String) -> bool:
+	return action_id.begins_with("date_mels_") or action_id.begins_with("date_anchor_")
 
 
 func _clear_reality_check() -> void:

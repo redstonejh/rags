@@ -36,6 +36,35 @@ const ACTIONS := {
 	"try_for_baby": {"label": "Try for a baby", "roll": false},
 }
 
+const DATE_SCENES := {
+	"date_mels": {
+		"title": "Mel's Diner",
+		"prompt": "Mel's gives you a booth by the window. The coffee is bitter, the plates are chipped, and nobody is in a hurry.",
+		"choices": [
+			{"id": "date_mels_listen", "label": "Ask about their week"},
+			{"id": "date_mels_joke", "label": "Make booth jokes"},
+			{"id": "date_mels_future", "label": "Talk future plans"},
+		],
+	},
+	"date_anchor": {
+		"title": "The Rusty Anchor",
+		"prompt": "The Anchor is loud enough to make honesty feel private. The jukebox keeps picking fights with the room.",
+		"choices": [
+			{"id": "date_anchor_round", "label": "Buy the next round"},
+			{"id": "date_anchor_corner", "label": "Find a quiet corner"},
+			{"id": "date_anchor_darts", "label": "Play darts badly"},
+		],
+	},
+}
+
+
+static func is_date_scene(action: String) -> bool:
+	return DATE_SCENES.has(action)
+
+
+static func date_scene(action: String) -> Dictionary:
+	return DATE_SCENES.get(action, {})
+
 
 static func available_actions(sheet: CharacterSheet, npc: NPCRecord) -> Array:
 	var rel := npc.rel("player")
@@ -138,6 +167,36 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 			result.text = _date_activity(sheet, npc, "loc_bar", 120, 4.0, 14.0, 16.0,
 					"had drinks with you at the Rusty Anchor",
 					"The Anchor is loud enough to make honesty feel private. It works, mostly.")
+		"date_mels_listen":
+			date_location = "loc_diner"
+			result.text = _date_activity(sheet, npc, "loc_diner", 90, 8.0, 24.0, 5.0,
+					"felt heard over pancakes at Mel's",
+					"You let them talk until the coffee goes cold. It is cheaper than therapy and more useful.")
+		"date_mels_joke":
+			date_location = "loc_diner"
+			result.text = _date_activity(sheet, npc, "loc_diner", 90, 5.0, 16.0, 14.0,
+					"laughed with you in a Mel's booth",
+					"The booth becomes a two-person comedy club. The waitress does not tip you back.")
+		"date_mels_future":
+			date_location = "loc_diner"
+			result.text = _date_activity(sheet, npc, "loc_diner", 90, 6.0, 18.0, 6.0,
+					"talked future plans with you at Mel's",
+					"You talk about next week like rent, weather, and fate can be negotiated.")
+		"date_anchor_round":
+			date_location = "loc_bar"
+			result.text = _date_activity(sheet, npc, "loc_bar", 120, 4.0, 14.0, 18.0,
+					"had a round with you at the Rusty Anchor",
+					"The next round buys warmth, noise, and a mercifully blurry memory of the bill.")
+		"date_anchor_corner":
+			date_location = "loc_bar"
+			result.text = _date_activity(sheet, npc, "loc_bar", 120, 8.0, 24.0, 8.0,
+					"shared a quiet corner with you at the Rusty Anchor",
+					"You find the least sticky corner and talk like the rest of the bar is weather.")
+		"date_anchor_darts":
+			date_location = "loc_bar"
+			result.text = _date_activity(sheet, npc, "loc_bar", 120, 5.0, 16.0, 20.0,
+					"played darts with you at the Rusty Anchor",
+					"You both learn that confidence and aim are separate skill trees.")
 		"propose":
 			if success:
 				npc.flags["married_to_player"] = true

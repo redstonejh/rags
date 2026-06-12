@@ -24,6 +24,7 @@ func _ready() -> void:
 	await _checkpoint("02_approach_diner")
 	await _enter_diner()
 	await _checkpoint("03_inside_diner")
+	await _verify_date_scene_ui()
 	await _open_phone()
 	await _checkpoint("04_phone")
 	await _close_phone_open_inventory()
@@ -123,6 +124,37 @@ func _open_phone() -> void:
 			"People tab hides unknown townsfolk")
 	_check(_descendant_text_contains(people_content, "dating you"), "People tab shows dating status")
 	_check(_descendant_text_contains(people_content, "Gossip:"), "People tab shows gossip")
+
+
+func _verify_date_scene_ui() -> void:
+	var npcs: Array = WorldState.npcs.values()
+	if npcs.is_empty():
+		_check(false, "dating scene has a seeded NPC")
+		return
+	var date: NPCRecord = npcs[0]
+	date.relationships["player"] = maxf(date.rel("player"), 62.0)
+	date.flags["dating_player"] = true
+	date.current_location_id = "loc_diner"
+	date.current_activity = "idle"
+	date.traveling = false
+	EventBus.dialogue_requested.emit(date.id)
+	await get_tree().process_frame
+	var dialogue: CanvasLayer = _main.get_node("Dialogue")
+	dialogue.call("_do_action", "date_mels")
+	await get_tree().process_frame
+	var choice := _find_named_descendant(dialogue, "DateChoice_date_mels_listen")
+	_check(choice is Button and str(choice.text).contains("week"),
+			"date activity opens venue choices")
+	await _checkpoint("03_date_scene")
+	var before := date.rel("player")
+	if choice is Button:
+		choice.pressed.emit()
+	await get_tree().process_frame
+	_check(date.rel("player") > before, "date scene choice changes relationship")
+	_check(WorldState.player_location_id == "loc_diner" and date.current_location_id == "loc_diner",
+			"date scene choice keeps couple at venue")
+	dialogue._unhandled_input(_action("ui_cancel"))
+	await get_tree().process_frame
 
 
 func _close_phone_open_inventory() -> void:
