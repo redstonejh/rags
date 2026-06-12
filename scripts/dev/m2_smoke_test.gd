@@ -117,7 +117,7 @@ func _test_save_roundtrip() -> void:
 	var probe_loc := probe.current_location_id
 	var probe_stats := probe.stats.duplicate()
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	WorldState.npcs.clear()
 	WorldState.player_sheet = null
 	var ok := SaveManager.load_game()

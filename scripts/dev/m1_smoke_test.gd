@@ -96,7 +96,7 @@ func _test_save_roundtrip() -> void:
 	WorldState.new_game(sheet)
 	GameClock.total_minutes = 2000
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	_check(SaveManager.has_save(), "save file written")
 
 	# Wreck the live state, then load it back.

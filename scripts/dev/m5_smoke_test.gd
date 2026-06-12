@@ -293,7 +293,7 @@ func _test_save_roundtrip() -> void:
 	var probe_id := probe.id
 	var probe_evidence := probe.evidence
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	WorldState.crime_cases.clear()
 	WorldState.npcs.clear()
 	var ok := SaveManager.load_game()

@@ -143,8 +143,7 @@ func _add_button(parent: Node, text: String, action: Callable, icon_id := "") ->
 
 
 func _save_game() -> void:
-	SaveManager.save_game()
-	_set_pause_message("Saved.")
+	_set_pause_message("Saved." if SaveManager.save_game() else "Save failed.")
 
 
 func _walk_away() -> void:

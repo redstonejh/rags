@@ -281,7 +281,7 @@ func _test_save_roundtrip() -> void:
 	var mem_count := mark.memories.size()
 	var rel := mark.rel("player")
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	WorldState.npcs.clear()
 	WorldState.player_sheet = null
 	var ok := SaveManager.load_game()

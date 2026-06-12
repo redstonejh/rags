@@ -291,7 +291,7 @@ func _test_save_roundtrip() -> void:
 	sheet.flags["has_id"] = true
 	sheet.flags["calories_today"] = 500
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	WorldState.player_sheet = null
 	var npc_count := WorldState.npcs.size()
 	WorldState.npcs.clear()

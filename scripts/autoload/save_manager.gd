@@ -42,9 +42,9 @@ func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
 
-func save_game() -> void:
+func save_game() -> bool:
 	if not _in_game or WorldState.player_sheet == null:
-		return
+		return false
 	var data := {
 		"save_version": SAVE_VERSION,
 		"clock": GameClock.to_dict(),
@@ -56,13 +56,26 @@ func save_game() -> void:
 	var f := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if f == null:
 		push_error("SaveManager: cannot write %s" % tmp_path)
-		return
+		return false
 	f.store_string(json)
 	f.close()
 
 	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.copy_absolute(SAVE_PATH, SAVE_PATH + ".bak")
-	DirAccess.rename_absolute(tmp_path, SAVE_PATH)
+		var backup_err := DirAccess.copy_absolute(SAVE_PATH, SAVE_PATH + ".bak")
+		if backup_err != OK:
+			_remove_if_exists(tmp_path)
+			push_error("SaveManager: cannot back up %s (%d)" % [SAVE_PATH, backup_err])
+			return false
+	var rename_err := DirAccess.rename_absolute(tmp_path, SAVE_PATH)
+	if rename_err != OK and FileAccess.file_exists(SAVE_PATH):
+		var remove_err := DirAccess.remove_absolute(SAVE_PATH)
+		if remove_err == OK:
+			rename_err = DirAccess.rename_absolute(tmp_path, SAVE_PATH)
+	if rename_err != OK:
+		_remove_if_exists(tmp_path)
+		push_error("SaveManager: cannot replace %s (%d)" % [SAVE_PATH, rename_err])
+		return false
+	return true
 
 
 func load_game() -> bool:
@@ -93,6 +106,11 @@ func _read_save_file(path: String) -> Dictionary:
 			path, parser.get_error_message(), parser.get_error_line()])
 		return {}
 	return parser.data
+
+
+func _remove_if_exists(path: String) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
 
 
 ## Migration chain: each step upgrades one version. New fields should also

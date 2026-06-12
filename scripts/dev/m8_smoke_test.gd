@@ -290,7 +290,7 @@ func _test_save_roundtrip() -> void:
 	WorldState.town_fear = 17.0
 	var news_count := WorldState.gazette.size()
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	WorldState.player_sheet = null
 	WorldState.gazette = []
 	WorldState.town_fear = 0.0

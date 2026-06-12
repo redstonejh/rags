@@ -286,7 +286,7 @@ func _test_save_roundtrip() -> void:
 	sheet.children = [{"name": "Dot", "born_day": 3, "traits": ["sunny"]}]
 	var obit_count := WorldState.obituaries.size()
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	WorldState.player_sheet = null
 	WorldState.obituaries = []
 	var ok := SaveManager.load_game()

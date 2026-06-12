@@ -194,7 +194,7 @@ func _test_save_roundtrip() -> void:
 	sheet.credit_score = 61
 	sheet.furniture = ["pillowtop", "sofa"]
 	SaveManager.set_in_game(true)
-	SaveManager.save_game()
+	_check(SaveManager.save_game(), "save_game reports success")
 	WorldState.player_sheet = null
 	var ok := SaveManager.load_game()
 	var s := WorldState.player_sheet
