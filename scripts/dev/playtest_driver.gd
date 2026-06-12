@@ -119,6 +119,8 @@ func _open_phone() -> void:
 	await get_tree().process_frame
 	var people_content := _find_named_descendant(phone, "PeopleContent")
 	_check(people_content != null, "phone People content exists")
+	_check(_descendant_text_contains(people_content, "known contacts"),
+			"People tab hides unknown townsfolk")
 	_check(_descendant_text_contains(people_content, "dating you"), "People tab shows dating status")
 	_check(_descendant_text_contains(people_content, "Gossip:"), "People tab shows gossip")
 

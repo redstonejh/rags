@@ -329,10 +329,15 @@ func _refresh_home() -> void:
 func _refresh_people() -> void:
 	_clear(_people_box)
 	var people: Array = []
+	var hidden_count := 0
 	for candidate in WorldState.npcs.values():
 		var npc: NPCRecord = candidate
-		if npc != null and npc.alive:
+		if npc == null or not npc.alive:
+			continue
+		if _people_is_known(npc):
 			people.append(npc)
+		else:
+			hidden_count += 1
 	people.sort_custom(func(a: NPCRecord, b: NPCRecord) -> bool:
 		var score_a := _people_sort_score(a)
 		var score_b := _people_sort_score(b)
@@ -343,14 +348,17 @@ func _refresh_people() -> void:
 	var header := Label.new()
 	header.name = "PeopleHeader"
 	header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	header.text = "PEOPLE - %d living records, %d with history on you" % [
-		people.size(), _people_known_count(people)]
+	header.text = "PEOPLE - %d known contact%s%s" % [
+		people.size(),
+		"" if people.size() == 1 else "s",
+		" (%d townsfolk still unknown)" % hidden_count if hidden_count > 0 else ""]
 	header.add_theme_font_size_override("font_size", 13)
 	_people_box.add_child(header)
 
 	if people.is_empty():
 		var empty := Label.new()
-		empty.text = "Nobody in town. Even the gossip gave up."
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.text = "No contacts yet. Talk to people, date them, wrong them, or become gossip-worthy."
 		_people_box.add_child(empty)
 		return
 
@@ -394,17 +402,20 @@ func _people_sort_score(npc: NPCRecord) -> float:
 	return score
 
 
-func _people_known_count(people: Array) -> int:
-	var count := 0
-	for npc: NPCRecord in people:
-		if absf(npc.rel("player")) > 0.01 or npc.flags.get("dating_player", false):
-			count += 1
-			continue
-		for memory in npc.memories:
-			if memory.get("subject", "") == "player":
-				count += 1
-				break
-	return count
+func _people_is_known(npc: NPCRecord) -> bool:
+	if absf(npc.rel("player")) > 0.01:
+		return true
+	if npc.flags.get("dating_player", false) or npc.flags.get("married_to_player", false):
+		return true
+	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet != null and str(sheet.flags.get("spouse_id", "")) == npc.id:
+		return true
+	for memory in npc.memories:
+		if memory.get("subject", "") == "player":
+			return true
+		if memory.get("source_id", "") == "player":
+			return true
+	return false
 
 
 func _people_rel_text(value: float) -> String:
@@ -463,13 +474,13 @@ func _people_gossip_text(npc: NPCRecord) -> String:
 		return "Gossip: nothing useful yet."
 	var subject := _npc_name(str(story.get("subject", "")))
 	if story.get("secondhand", false):
-		return "Gossip: %s heard from %s that %s %s (day %d)" % [
+		return "Gossip: %s heard from %s that %s %s - D%d" % [
 			npc.display_name.get_slice(" ", 0),
 			_npc_name(str(story.get("source_id", ""))),
 			subject,
 			str(story.get("text", "did something")),
 			int(story.get("day", 0))]
-	return "Gossip: %s remembers %s %s (day %d)" % [
+	return "Gossip: %s remembers %s %s - D%d" % [
 		npc.display_name.get_slice(" ", 0),
 		subject,
 		str(story.get("text", "did something")),

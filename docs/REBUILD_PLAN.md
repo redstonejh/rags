@@ -66,6 +66,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 - Gossip made visible: NPCs reference what they heard with source flavor; the phone gets a People app (relationships, hearts/daggers, who's dating whom).
   - Started 2026-06-12: the phone now has a People tab backed by `NPCRecord` relationships, dating flags, top gossip memories, and NPC-to-NPC bonds/feuds. Player-knowledge gating and richer couple/family records remain.
   - Continued 2026-06-12: secondhand gossip now records the NPC source, and both chat lines and the phone People tab name who passed the story along with relationship-flavored skepticism/trust. Longer source chains and player-knowledge gating remain.
+  - Continued 2026-06-12: the People tab now shows known contacts only and hides unknown townsfolk until relationship, dating, or memory state gives the player a reason to know them. Richer couple/family records remain.
 - Dating becomes activities (a drink at the Anchor, a meal at Mel's — short scenes with choices), not a button.
   - Started 2026-06-12: dating now unlocks named activities (`Date: meal at Mel's`, `Date: drink at the Anchor`) instead of generic spend-time, with venue-specific time skips, need effects, relationship gains, and memories. Multi-choice date scenes and in-world venue travel remain.
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
