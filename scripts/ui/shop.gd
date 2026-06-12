@@ -167,7 +167,7 @@ func _rob_register() -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	var loot := CrimeSystem.random_int(20000, 60000)
 	sheet.add_dirty_cash(loot)
-	CrimeSystem.commit("armed_robbery", WorldState.player_location_id)
+	CrimeSystem.commit_register_robbery(WorldState.player_location_id)
 	EventBus.toast.emit("$%.2f in a paper bag. Everyone in the store memorized your face." % (loot / 100.0))
 	_close()
 

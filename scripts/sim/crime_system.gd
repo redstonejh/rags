@@ -239,6 +239,14 @@ static func shoplift_attention_text(location_id: String, world_pos := Vector2.IN
 	return "%d shopper%s nearby" % [witnesses.size(), "" if witnesses.size() == 1 else "s"]
 
 
+static func commit_register_robbery(location_id: String, world_pos := Vector2.INF) -> CrimeCase:
+	var case := commit("armed_robbery", location_id, null, world_pos)
+	if not case.is_active_warrant():
+		_force_warrant(case)
+	WorldState.add_news("QUIKSTOP ROBBED. Police say the register survived emotionally, but not financially.")
+	return case
+
+
 # ------------------------------------------------------------ the law's day
 
 func _on_day_passed(_day: int) -> void:
@@ -550,6 +558,19 @@ static func _close_warrants() -> void:
 	for case in WorldState.crime_cases.values():
 		if case.is_active_warrant():
 			case.status = CrimeCase.CLOSED
+
+
+static func _force_warrant(case: CrimeCase) -> void:
+	var def := case.def()
+	case.suspect_id = "player"
+	case.evidence = maxf(case.evidence, CrimeCase.WARRANT_EVIDENCE)
+	case.status = CrimeCase.WARRANT
+	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet != null and def != null:
+		sheet.infamy = clampf(sheet.infamy + def.severity, 0.0, 100.0)
+		sheet.flags["last_warrant_day"] = GameClock.day
+	EventBus.warrant_issued.emit(case.id)
+	EventBus.wanted_changed.emit(wanted_stars())
 
 
 static func _randf() -> float:

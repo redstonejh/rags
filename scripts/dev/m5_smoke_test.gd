@@ -34,6 +34,7 @@ func _ready() -> void:
 	_test_crime_rng_save_roundtrip()
 	_test_crime_rng_public_rolls_roundtrip()
 	_test_shoplift_sightlines()
+	_test_register_robbery_is_never_quiet()
 	_test_arrest_paths()
 	_test_pickpocket()
 	_test_fence()
@@ -286,6 +287,25 @@ func _test_shoplift_sightlines() -> void:
 			"clerk-witnessed shoplifting opens a stronger case")
 	var cop_case := CrimeSystem.commit("shoplift", "loc_shop_cop")
 	_check(cop_case.is_active_warrant(), "shoplifting in front of a cop is instant warrant")
+	CrimeSystem._close_warrants()
+
+
+func _test_register_robbery_is_never_quiet() -> void:
+	print("[Register robbery: never quiet]")
+	var sheet := _fresh_sheet()
+	WorldState.crime_cases.clear()
+	WorldState.gazette = []
+	WorldState.town_fear = 0.0
+	var case := CrimeSystem.commit_register_robbery("loc_empty_register")
+	_check(case.crime_id == "armed_robbery", "register robbery records armed robbery")
+	_check(case.is_active_warrant(), "register robbery creates a warrant without bystanders")
+	_check(case.evidence >= CrimeCase.WARRANT_EVIDENCE,
+			"register robbery forces warrant-grade evidence")
+	_check(CrimeSystem.wanted_stars() == 1, "register robbery raises wanted stars")
+	_check(sheet.infamy >= 6.0, "register robbery adds infamy")
+	_check(not WorldState.gazette.is_empty()
+			and "QUIKSTOP ROBBED" in str(WorldState.gazette.back().get("text", "")),
+			"register robbery makes the Gazette")
 	CrimeSystem._close_warrants()
 
 
