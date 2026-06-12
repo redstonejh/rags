@@ -6,7 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 import random
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +15,7 @@ TILES_DIR = ROOT / "assets" / "tiles"
 CHARS_DIR = ROOT / "assets" / "chars"
 PROPS_DIR = ROOT / "assets" / "props"
 UI_DIR = ROOT / "assets" / "ui"
+BUILDINGS_DIR = ROOT / "assets" / "buildings"
 TERRAIN_PATH = TILES_DIR / "terrain_atlas.png"
 BODY_PATH = CHARS_DIR / "body_base.png"
 PLAYER_OUTFIT_PATH = CHARS_DIR / "outfit_player.png"
@@ -22,6 +23,24 @@ NPC_OUTFIT_PATH = CHARS_DIR / "outfit_npc.png"
 DOOR_PATH = PROPS_DIR / "door.png"
 SHOP_COUNTER_PATH = PROPS_DIR / "shop_counter.png"
 PARKED_CAR_PATH = PROPS_DIR / "parked_car.png"
+BUILDING_ASSET_PATHS = {
+    "roof_tile": BUILDINGS_DIR / "roof_tile.png",
+    "facade_plain": BUILDINGS_DIR / "facade_plain.png",
+    "facade_window_lit": BUILDINGS_DIR / "facade_window_lit.png",
+    "facade_window_dark": BUILDINGS_DIR / "facade_window_dark.png",
+    "awning_red": BUILDINGS_DIR / "awning_red.png",
+    "awning_green": BUILDINGS_DIR / "awning_green.png",
+}
+BUILDING_SIGNS = {
+    "loc_diner": "MEL'S",
+    "loc_store": "QUIKSTOP",
+    "loc_offices": "VANTAGE",
+    "loc_bar": "ANCHOR",
+    "loc_bricks": "BRICKS",
+    "loc_site": "SITE 9",
+    "loc_rowhouse_a": "ROW EAST",
+    "loc_rowhouse_b": "ROW WEST",
+}
 UI_ICON_PATHS = {
     "resume": UI_DIR / "icon_resume.png",
     "save": UI_DIR / "icon_save.png",
@@ -242,6 +261,99 @@ def generate_props() -> None:
     draw_parked_car()
 
 
+def _draw_brick_pattern(draw: ImageDraw.ImageDraw, x0: int, y0: int, x1: int, y1: int,
+                        mortar: tuple[int, int, int, int]) -> None:
+    for y in range(y0, y1 + 1, 8):
+        draw.line((x0, y, x1, y), fill=mortar)
+        offset = 0 if ((y - y0) // 8) % 2 == 0 else 10
+        for x in range(x0 + offset, x1 + 1, 20):
+            draw.line((x, y, x, min(y1, y + 7)), fill=mortar)
+
+
+def draw_roof_tile() -> None:
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.polygon([(0, 12), (15, 2), (31, 12), (31, 31), (0, 31)],
+                 fill=(83, 62, 56, 255))
+    draw.polygon([(2, 13), (15, 5), (29, 13), (29, 20), (2, 20)],
+                 fill=(121, 82, 63, 255))
+    for y in range(14, 31, 6):
+        draw.line((2, y, 29, y), fill=(64, 46, 44, 255))
+    for x in range(4, 31, 8):
+        draw.line((x, 13, x - 2, 30), fill=(96, 61, 52, 255))
+    draw.line((15, 3, 30, 12), fill=(164, 113, 81, 255))
+    BUILDING_ASSET_PATHS["roof_tile"].parent.mkdir(parents=True, exist_ok=True)
+    img.save(BUILDING_ASSET_PATHS["roof_tile"])
+    print(f"wrote {BUILDING_ASSET_PATHS['roof_tile'].relative_to(ROOT)}")
+
+
+def _facade_base() -> Image:
+    img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((0, 0, 31, 47), fill=(105, 94, 89, 255))
+    draw.rectangle((0, 0, 31, 4), fill=(138, 126, 116, 255))
+    draw.rectangle((0, 42, 31, 47), fill=(67, 61, 62, 255))
+    _draw_brick_pattern(draw, 1, 5, 30, 42, (76, 70, 72, 255))
+    return img
+
+
+def draw_facade(path: Path, window: str = "") -> None:
+    img = _facade_base()
+    draw = ImageDraw.Draw(img)
+    if window:
+        glow = (220, 186, 91, 255) if window == "lit" else (45, 55, 67, 255)
+        shadow = (88, 65, 46, 255) if window == "lit" else (30, 35, 43, 255)
+        draw.rectangle((8, 13, 24, 29), fill=shadow)
+        draw.rectangle((10, 15, 22, 27), fill=glow)
+        draw.line((16, 15, 16, 27), fill=shadow)
+        draw.line((10, 21, 22, 21), fill=shadow)
+        draw.rectangle((7, 29, 25, 31), fill=(55, 49, 49, 255))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path)
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def draw_awning(path: Path, color: tuple[int, int, int]) -> None:
+    img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    dark = tuple(max(0, c - 48) for c in color)
+    draw.rectangle((2, 12, 29, 19), fill=(*dark, 255))
+    for x in range(2, 30, 6):
+        draw.rectangle((x, 12, min(x + 4, 29), 23), fill=(*color, 255))
+    draw.line((2, 23, 29, 23), fill=(45, 40, 38, 255))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path)
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def draw_sign(path: Path, text: str) -> None:
+    img = Image.new("RGBA", (96, 24), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((3, 5, 92, 20), fill=(43, 39, 43, 255))
+    draw.rectangle((5, 7, 90, 18), fill=(178, 68, 53, 255))
+    draw.rectangle((7, 8, 88, 17), outline=(238, 230, 196, 255))
+    font = ImageFont.load_default()
+    bbox = draw.textbbox((0, 0), text, font=font)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+    draw.text(((96 - tw) // 2, (24 - th) // 2 - 1), text, font=font,
+              fill=(246, 237, 190, 255))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path)
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def generate_buildings() -> None:
+    draw_roof_tile()
+    draw_facade(BUILDING_ASSET_PATHS["facade_plain"])
+    draw_facade(BUILDING_ASSET_PATHS["facade_window_lit"], "lit")
+    draw_facade(BUILDING_ASSET_PATHS["facade_window_dark"], "dark")
+    draw_awning(BUILDING_ASSET_PATHS["awning_red"], (178, 68, 53))
+    draw_awning(BUILDING_ASSET_PATHS["awning_green"], (65, 119, 88))
+    for loc_id, label in BUILDING_SIGNS.items():
+        draw_sign(BUILDINGS_DIR / ("sign_%s.png" % loc_id), label)
+
+
 def _icon_base() -> Image:
     return Image.new("RGBA", (16, 16), (0, 0, 0, 0))
 
@@ -291,6 +403,7 @@ def generate_ui() -> None:
 def main() -> None:
     rng = random.Random(SEED)
     generate_terrain(rng)
+    generate_buildings()
     generate_characters()
     generate_props()
     generate_ui()

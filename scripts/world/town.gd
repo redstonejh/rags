@@ -6,8 +6,31 @@ extends TileWorld
 
 const W := 62
 const H := 34
+const BUILDING_ASSET_DIR := "res://assets/buildings/"
+const ROOF_TEXTURE_PATH := BUILDING_ASSET_DIR + "roof_tile.png"
+const FACADE_PLAIN_TEXTURE_PATH := BUILDING_ASSET_DIR + "facade_plain.png"
+const FACADE_WINDOW_LIT_TEXTURE_PATH := BUILDING_ASSET_DIR + "facade_window_lit.png"
+const FACADE_WINDOW_DARK_TEXTURE_PATH := BUILDING_ASSET_DIR + "facade_window_dark.png"
+const AWNING_RED_TEXTURE_PATH := BUILDING_ASSET_DIR + "awning_red.png"
+const AWNING_GREEN_TEXTURE_PATH := BUILDING_ASSET_DIR + "awning_green.png"
+const SIGN_TEXTURES := {
+	"loc_diner": BUILDING_ASSET_DIR + "sign_loc_diner.png",
+	"loc_store": BUILDING_ASSET_DIR + "sign_loc_store.png",
+	"loc_offices": BUILDING_ASSET_DIR + "sign_loc_offices.png",
+	"loc_bar": BUILDING_ASSET_DIR + "sign_loc_bar.png",
+	"loc_bricks": BUILDING_ASSET_DIR + "sign_loc_bricks.png",
+	"loc_site": BUILDING_ASSET_DIR + "sign_loc_site.png",
+	"loc_rowhouse_a": BUILDING_ASSET_DIR + "sign_loc_rowhouse_a.png",
+	"loc_rowhouse_b": BUILDING_ASSET_DIR + "sign_loc_rowhouse_b.png",
+}
+const AWNING_TEXTURES := {
+	"loc_diner": AWNING_RED_TEXTURE_PATH,
+	"loc_store": AWNING_GREEN_TEXTURE_PATH,
+	"loc_bar": AWNING_RED_TEXTURE_PATH,
+}
 
 var player_spawn: Vector2
+var facade_layer: Node2D = null
 
 ## Buildings: rect (in cells), door cell, location id, label.
 const BUILDINGS := [
@@ -34,6 +57,9 @@ func _ready() -> void:
 	for y in H:
 		for x in [20, 21]:
 			set_ground(Vector2i(x, y), ROAD)
+	facade_layer = Node2D.new()
+	facade_layer.name = "FacadeLayer"
+	add_child(facade_layer)
 	# Buildings.
 	for b in BUILDINGS:
 		_stamp_building(b.rect, b.door, b.id, b.label)
@@ -57,11 +83,46 @@ func _stamp_building(rect: Rect2i, door_cell: Vector2i, loc_id: String, label: S
 				set_wall(cell)
 			else:
 				set_ground(cell, FLOOR)
+	_add_facade(rect, door_cell, loc_id)
 	place_door(door_cell, loc_id, label)
 	# Door position registered one tile OUTSIDE the wall so NPC paths end
 	# on walkable ground.
 	var outside := door_cell + (Vector2i(0, 1) if door_cell.y == rect.end.y - 1 else Vector2i(0, -1))
 	Locations.register_door(loc_id, cell_to_world(outside))
+
+
+func _add_facade(rect: Rect2i, door_cell: Vector2i, loc_id: String) -> void:
+	if facade_layer == null:
+		return
+	for x in range(rect.position.x, rect.end.x):
+		_add_facade_sprite(ROOF_TEXTURE_PATH, Vector2i(x, rect.position.y), Vector2(0, -20))
+	var face_y := door_cell.y
+	for x in range(rect.position.x, rect.end.x):
+		var cell := Vector2i(x, face_y)
+		if cell == door_cell:
+			continue
+		var front_index := x - rect.position.x
+		var texture_path := FACADE_PLAIN_TEXTURE_PATH
+		if front_index % 3 == 1:
+			texture_path = FACADE_WINDOW_LIT_TEXTURE_PATH \
+					if loc_id in ["loc_diner", "loc_store", "loc_bar"] \
+					else FACADE_WINDOW_DARK_TEXTURE_PATH
+		_add_facade_sprite(texture_path, cell, Vector2(0, -8))
+	if AWNING_TEXTURES.has(loc_id):
+		_add_facade_sprite(AWNING_TEXTURES[loc_id], door_cell, Vector2(0, -16))
+	if SIGN_TEXTURES.has(loc_id):
+		_add_facade_sprite(SIGN_TEXTURES[loc_id], door_cell, Vector2(0, -42))
+
+
+func _add_facade_sprite(texture_path: String, cell: Vector2i, offset: Vector2) -> void:
+	var texture: Texture2D = load(texture_path)
+	if texture == null:
+		return
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.texture_filter = 1
+	sprite.position = cell_to_world(cell) + offset
+	facade_layer.add_child(sprite)
 
 
 ## A random spot on the road network — wander anchors for exterior NPCs.
