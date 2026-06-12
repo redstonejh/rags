@@ -63,6 +63,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Started 2026-06-12: generated 64x64 archetype portraits now render in the dialogue UI beside the relationship/read/intent menu. Individualized portraits, stronger composition, and full Reality Check theater remain.
 - **The Reality Check moment as theater:** the on-screen odds visibly re-roll and collapse (90% → 4%) with a sting; aftermath lines; witnesses turn to look.
 - Gossip made visible: NPCs reference what they heard with source flavor; the phone gets a People app (relationships, hearts/daggers, who's dating whom).
+  - Started 2026-06-12: the phone now has a People tab backed by `NPCRecord` relationships, dating flags, top gossip memories, and NPC-to-NPC bonds/feuds. Player-knowledge gating and richer couple/family records remain.
 - Dating becomes activities (a drink at the Anchor, a meal at Mel's — short scenes with choices), not a button.
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
 - **DoD:** scripted playthrough covering chat → flirt → reality check → hearing about it from a stranger later.

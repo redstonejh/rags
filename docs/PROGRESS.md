@@ -24,6 +24,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Directional character animation started:** generated 4-direction x 4-frame walk sheets now drive the player and embodied NPC body/outfit layers. The playtest asserts that the player uses walk sheets and that movement advances the animation frame.
 - **Player clothing visuals started:** the player outfit layer now follows the worn clothing flag, with generated walk sheets for the hoodie, thrift blazer, nice suit, and ski mask. The playtest equips the suit and verifies the rendered outfit texture changes.
 - **Dialogue portraits started:** generated 64x64 archetype portraits now live in `assets/portraits/`, and the dialogue UI displays the target NPC's archetype portrait beside the relationship/read/intent menu. The scripted playtest opens a real dialogue, asserts the portrait is present, and captures a windowed dialogue screenshot.
+- **Phone People app started:** the phone now has a People tab that reads directly from `NPCRecord` relationship values, dating flags, top gossip memories, and NPC-to-NPC bonds/feuds. The scripted playtest seeds dating/gossip state, opens the tab, and verifies the content renders.
 - **Generated prop sprites started:** doors, shop counters, and parked cars now use generated sprites from `assets/props/` with their existing collision and interaction behavior intact.
 - **Generated building facades started:** `assets/buildings/` now contains generated roof tiles, wall/window facades, shop awnings, and per-location signs. `Town.gd` renders them through a non-colliding `FacadeLayer` over the existing building shells, preserving door registration, nav, and collision behavior.
 - **Interior prop sprites started:** generated sprites now cover the fridge, bed, shower, TV, bar counter, records desk, work spot, dealer, and fence. Existing interactable behavior and collision stay intact through sprite-first/fallback rendering, and the scripted playtest now asserts that interior prop sprites spawn after entering the diner.
@@ -55,7 +56,7 @@ IMPORTANT (headless): run `godot --headless --path <abs> --import` after adding 
 - **Plain system Nodes in Main.tscn:** ShiftSystem, EconomySystem (drives Body daily ticks + stat drift), GossipSystem, CrimeSystem, TownLife, UIStack. Sim systems are EventBus-driven; headless tests instantiate them directly.
 - **Static libraries:** Perception, Social, Confrontation, Body, Housing, LifePaths, Coherence, WorldGen, Locations.
 - **Data (`data/**`, all .tres):** origins ×6, traits ×18, jobs ×8, items ×22, crimes ×8, housing ×6, furniture ×7, substances ×8, perks ×4, npc_archetypes ×11.
-- **UI:** HUD (dynamic bars, toasts, wanted stars), phone (Jobs/Home/Bank/Mickey/Health/Paths/Town), shop, inventory, dialogue, dilemma, confrontation, death screen (obituary + heir), character creation (Life #N).
+- **UI:** HUD (dynamic bars, toasts, wanted stars), phone (Jobs/Home/People/Bank/Mickey/Health/Paths/Town), shop, inventory, dialogue, dilemma, confrontation, death screen (obituary + heir), character creation (Life #N).
 - **Saves:** versioned JSON, ironman; everything round-trips (sheet incl. substances/wounds/children/fame, NPCs incl. memories/age/alive, crime cases, gazette, town fear).
 
 ## Next: the rebuild

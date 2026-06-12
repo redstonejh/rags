@@ -46,8 +46,25 @@ func _setup_world() -> void:
 	sheet.cash_cents = 50000
 	sheet.flags["has_id"] = true
 	WorldState.new_world(sheet)
+	_seed_people_app_state()
 	GameClock.clear_pause_locks()
 	GameClock.set_manual_paused(false)
+
+
+func _seed_people_app_state() -> void:
+	var people: Array = WorldState.npcs.values()
+	if people.size() < 2:
+		_check(false, "people app seed has enough NPCs")
+		return
+	var date: NPCRecord = people[0]
+	var rival: NPCRecord = people[1]
+	date.relationships["player"] = 62.0
+	date.relationships[rival.id] = -45.0
+	date.flags["dating_player"] = true
+	date.add_memory("date", "player", "said yes to a date with you", 1.0, 7.0)
+	rival.relationships["player"] = -38.0
+	rival.relationships[date.id] = -45.0
+	rival.add_memory("witnessed", "player", "were seen arguing outside Mel's", -0.4, 5.0, true)
 
 
 func _instantiate_main() -> void:
@@ -97,6 +114,12 @@ func _open_phone() -> void:
 	phone._unhandled_input(_action("phone"))
 	await get_tree().process_frame
 	_check(phone.visible and GameClock.paused, "phone opened from input event")
+	_check(phone.call("open_tab", "People"), "phone People tab selectable")
+	await get_tree().process_frame
+	var people_content := _find_named_descendant(phone, "PeopleContent")
+	_check(people_content != null, "phone People content exists")
+	_check(_descendant_text_contains(people_content, "dating you"), "People tab shows dating status")
+	_check(_descendant_text_contains(people_content, "Gossip:"), "People tab shows gossip")
 
 
 func _close_phone_open_inventory() -> void:
@@ -234,6 +257,16 @@ func _find_named_descendant(node: Node, node_name: String) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+func _descendant_text_contains(node: Node, text: String) -> bool:
+	var value = node.get("text")
+	if value != null and str(value).contains(text):
+		return true
+	for child in node.get_children():
+		if _descendant_text_contains(child, text):
+			return true
+	return false
 
 
 func _exterior_facade_count() -> int:

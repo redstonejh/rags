@@ -11,6 +11,7 @@ const MODAL_ID := "phone"
 var _tabs: TabContainer
 var _jobs_box: VBoxContainer
 var _home_box: VBoxContainer
+var _people_box: VBoxContainer
 var _bank_box: VBoxContainer
 var _mickey_box: VBoxContainer
 var _health_box: VBoxContainer
@@ -56,6 +57,16 @@ func _close() -> void:
 		visible = false
 
 
+func open_tab(tab_name: String) -> bool:
+	if _tabs == null:
+		return false
+	for i in _tabs.get_tab_count():
+		if _tabs.get_tab_title(i) == tab_name:
+			_tabs.current_tab = i
+			return true
+	return false
+
+
 func _ui_stack() -> Node:
 	return get_parent().get_node_or_null("UIStack") if get_parent() != null else null
 
@@ -94,6 +105,7 @@ func _build_ui() -> void:
 
 	_jobs_box = _make_tab("Jobs")
 	_home_box = _make_tab("Home")
+	_people_box = _make_tab("People")
 	_bank_box = _make_tab("Bank")
 	_mickey_box = _make_tab("Mickey")
 	_health_box = _make_tab("Health")
@@ -106,6 +118,7 @@ func _make_tab(tab_name: String) -> VBoxContainer:
 	scroll.name = tab_name
 	_tabs.add_child(scroll)
 	var box := VBoxContainer.new()
+	box.name = "%sContent" % tab_name
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 8)
@@ -116,6 +129,7 @@ func _make_tab(tab_name: String) -> VBoxContainer:
 func _refresh_all() -> void:
 	_refresh_jobs()
 	_refresh_home()
+	_refresh_people()
 	_refresh_bank()
 	_refresh_mickey()
 	_refresh_health()
@@ -308,6 +322,164 @@ func _refresh_home() -> void:
 				EventBus.toast.emit("Delivered: %s. Home gains a personality." % f.display_name)
 				_refresh_home())
 		row.add_child(btn)
+
+
+# ----------------------------------------------------------------- people
+
+func _refresh_people() -> void:
+	_clear(_people_box)
+	var people: Array = []
+	for candidate in WorldState.npcs.values():
+		var npc: NPCRecord = candidate
+		if npc != null and npc.alive:
+			people.append(npc)
+	people.sort_custom(func(a: NPCRecord, b: NPCRecord) -> bool:
+		var score_a := _people_sort_score(a)
+		var score_b := _people_sort_score(b)
+		if not is_equal_approx(score_a, score_b):
+			return score_a > score_b
+		return a.display_name.to_lower() < b.display_name.to_lower())
+
+	var header := Label.new()
+	header.name = "PeopleHeader"
+	header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	header.text = "PEOPLE - %d living records, %d with history on you" % [
+		people.size(), _people_known_count(people)]
+	header.add_theme_font_size_override("font_size", 13)
+	_people_box.add_child(header)
+
+	if people.is_empty():
+		var empty := Label.new()
+		empty.text = "Nobody in town. Even the gossip gave up."
+		_people_box.add_child(empty)
+		return
+
+	for i in mini(people.size(), 40):
+		var npc: NPCRecord = people[i]
+		var row := VBoxContainer.new()
+		row.name = "PeopleRow"
+		row.add_theme_constant_override("separation", 2)
+		_people_box.add_child(row)
+
+		var title := Label.new()
+		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		title.add_theme_font_size_override("font_size", 13)
+		title.text = "%s - %s%s" % [
+			npc.display_name,
+			_people_rel_text(npc.rel("player")),
+			" - dating you" if npc.flags.get("dating_player", false) else ""]
+		row.add_child(title)
+
+		var details := Label.new()
+		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		details.add_theme_font_size_override("font_size", 11)
+		details.add_theme_color_override("font_color", Color(0.72, 0.72, 0.78))
+		details.text = "%s at %s - %s\n%s" % [
+			_people_role(npc),
+			Locations.display_name(npc.current_location_id),
+			_people_connections_text(npc),
+			_people_gossip_text(npc)]
+		row.add_child(details)
+
+
+func _people_sort_score(npc: NPCRecord) -> float:
+	var score := absf(npc.rel("player"))
+	if npc.flags.get("dating_player", false):
+		score += 75.0
+	if npc.flags.get("married_to_player", false):
+		score += 100.0
+	for memory in npc.memories:
+		if memory.get("subject", "") == "player":
+			score += float(memory.get("salience", 0.0))
+	return score
+
+
+func _people_known_count(people: Array) -> int:
+	var count := 0
+	for npc: NPCRecord in people:
+		if absf(npc.rel("player")) > 0.01 or npc.flags.get("dating_player", false):
+			count += 1
+			continue
+		for memory in npc.memories:
+			if memory.get("subject", "") == "player":
+				count += 1
+				break
+	return count
+
+
+func _people_rel_text(value: float) -> String:
+	var label := "neutral"
+	if value >= 75.0:
+		label = "devoted"
+	elif value >= 40.0:
+		label = "friendly"
+	elif value >= 15.0:
+		label = "warm"
+	elif value <= -75.0:
+		label = "enemy"
+	elif value <= -40.0:
+		label = "hostile"
+	elif value <= -15.0:
+		label = "sour"
+	return "%s (%s)" % [label, _signed_int(value)]
+
+
+func _people_role(npc: NPCRecord) -> String:
+	var archetype := npc.archetype()
+	return archetype.display_name if archetype != null else npc.archetype_id.capitalize()
+
+
+func _people_connections_text(npc: NPCRecord) -> String:
+	var parts: Array[String] = []
+	if npc.flags.get("married_to_player", false):
+		parts.append("married to you")
+	elif npc.flags.get("dating_player", false):
+		parts.append("dating you")
+
+	var best_id := ""
+	var best_rel := 35.0
+	var worst_id := ""
+	var worst_rel := -35.0
+	for other_id in npc.relationships:
+		if str(other_id) == "player":
+			continue
+		var value := float(npc.relationships[other_id])
+		if value >= best_rel:
+			best_rel = value
+			best_id = str(other_id)
+		if value <= worst_rel:
+			worst_rel = value
+			worst_id = str(other_id)
+	if best_id != "":
+		parts.append("close to %s (%s)" % [_npc_name(best_id), _signed_int(best_rel)])
+	if worst_id != "":
+		parts.append("feuding with %s (%s)" % [_npc_name(worst_id), _signed_int(worst_rel)])
+	return "Status: %s" % ("; ".join(parts) if not parts.is_empty() else "no public entanglements")
+
+
+func _people_gossip_text(npc: NPCRecord) -> String:
+	var story := npc.top_gossip(3.0)
+	if story.is_empty():
+		return "Gossip: nothing useful yet."
+	var source := "heard" if story.get("secondhand", false) else "remembers"
+	var subject := _npc_name(str(story.get("subject", "")))
+	return "Gossip: %s %s %s (day %d)" % [
+		npc.display_name.get_slice(" ", 0),
+		source,
+		"%s %s" % [subject, str(story.get("text", "did something"))],
+		int(story.get("day", 0))]
+
+
+func _npc_name(npc_id: String) -> String:
+	if npc_id == "player":
+		return "you"
+	var npc: NPCRecord = WorldState.npcs.get(npc_id)
+	return npc.display_name if npc != null else npc_id
+
+
+func _signed_int(value: float) -> String:
+	var rounded := roundi(value)
+	return "+%d" % rounded if rounded > 0 else str(rounded)
 
 
 # ------------------------------------------------------------------- bank

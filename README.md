@@ -28,7 +28,7 @@ Generate art assets: `python tools/artgen/generate_assets.py`
 
 ## Controls
 
-WASD move; click ground to walk; E interact; **Tab phone** (jobs, housing, bank, Mickey, health, paths, the Gazette); **I inventory**; Space pause; 1/2/3 speed; F3 debug overlay; Esc menu
+WASD move; click ground to walk; E interact; **Tab phone** (jobs, housing, people, bank, Mickey, health, paths, the Gazette); **I inventory**; Space pause; 1/2/3 speed; F3 debug overlay; Esc menu
 
 ## Status - systems prototype, not yet a playable game
 
