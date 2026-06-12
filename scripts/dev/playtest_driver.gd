@@ -341,6 +341,8 @@ func _close_phone_open_inventory() -> void:
 	_check(use_button != null, "inventory exposes consumable use button")
 	if use_button != null:
 		use_button.pressed.emit()
+		_check(not _descendant_text_contains(inventory, "ChocoLode Bar"),
+				"inventory refresh removes consumed rows synchronously")
 		await get_tree().process_frame
 	_check(WorldState.player_sheet.needs.get_value("hunger") > 20.0,
 			"inventory Use restores hunger")

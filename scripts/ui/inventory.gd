@@ -83,6 +83,7 @@ func _build_ui() -> void:
 
 func _refresh() -> void:
 	for child in _rows_box.get_children():
+		_rows_box.remove_child(child)
 		child.queue_free()
 	var sheet: CharacterSheet = WorldState.player_sheet
 	if sheet.inventory.is_empty():
