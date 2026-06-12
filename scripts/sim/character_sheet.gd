@@ -271,6 +271,11 @@ func add_dirty_cash(delta_cents: int) -> void:
 	EventBus.money_changed.emit(cash_cents)
 
 
+func add_mickey_debt(delta_cents: int) -> void:
+	mickey_debt_cents = maxi(mickey_debt_cents + delta_cents, 0)
+	EventBus.money_changed.emit(cash_cents)
+
+
 func has_tag(tag: String) -> bool:
 	var origin := ContentDB.get_origin(origin_id)
 	if origin and tag in origin.tags:

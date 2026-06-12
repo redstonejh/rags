@@ -38,8 +38,7 @@ func _ready() -> void:
 	EventBus.time_scale_changed.connect(_on_time_scale_changed)
 	EventBus.player_need_changed.connect(_on_need_changed)
 	EventBus.money_changed.connect(func(_c: int) -> void:
-		_update_money()
-		_update_objective_label())
+		_update_slow_labels())
 	EventBus.interact_target_changed.connect(_set_prompt)
 	EventBus.player_job_changed.connect(func(_id: String) -> void:
 		_update_job_label()

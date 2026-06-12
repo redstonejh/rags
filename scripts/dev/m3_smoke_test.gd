@@ -44,6 +44,16 @@ func _check(ok: bool, what: String) -> void:
 		printerr("  FAIL: %s" % what)
 
 
+func _count_money_updates(action: Callable) -> int:
+	var events := {"count": 0}
+	var signal_handler := func(_cash_cents: int) -> void:
+		events["count"] = int(events.count) + 1
+	EventBus.money_changed.connect(signal_handler)
+	action.call()
+	EventBus.money_changed.disconnect(signal_handler)
+	return int(events.count)
+
+
 func _new_world() -> CharacterSheet:
 	var sheet := CharacterSheet.new()
 	sheet.char_name = "Test Subject"
@@ -159,8 +169,10 @@ func _test_mickey() -> void:
 	print("[EconomySystem: Big Mickey]")
 	var sheet := WorldState.player_sheet
 	sheet.mickey_debt_cents = 100000
-	EventBus.day_passed.emit(42) # Monday
+	var interest_events := _count_money_updates(func() -> void:
+		EventBus.day_passed.emit(42)) # Monday
 	_check(sheet.mickey_debt_cents == 120000, "20%% weekly interest compounds")
+	_check(interest_events > 0, "Mickey interest refreshes money-dependent UI")
 	sheet.needs.values["energy"] = 100.0
 	sheet.mickey_debt_cents = 200000
 	EventBus.day_passed.emit(49)

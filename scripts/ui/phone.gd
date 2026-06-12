@@ -741,7 +741,7 @@ func _refresh_mickey() -> void:
 func _borrow(amount_cents: int) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	sheet.add_cash(amount_cents)
-	sheet.mickey_debt_cents += amount_cents
+	sheet.add_mickey_debt(amount_cents)
 	EventBus.toast.emit("Mickey peels off $%d like it's nothing. For him it is. For you it's 20%% a week." % (amount_cents / 100))
 	_refresh_mickey()
 
@@ -752,7 +752,7 @@ func _repay() -> void:
 	if payment <= 0:
 		return
 	sheet.add_cash(-payment)
-	sheet.mickey_debt_cents -= payment
+	sheet.add_mickey_debt(-payment)
 	EventBus.toast.emit("Paid Mickey $%.2f. %s" % [payment / 100.0,
 			"The ledger closes. He looks almost disappointed." if sheet.mickey_debt_cents == 0
 			else "The ledger remembers the rest."])

@@ -106,7 +106,8 @@ func _collect_rent(sheet: CharacterSheet) -> void:
 func _mickey_tick(sheet: CharacterSheet) -> void:
 	if sheet.mickey_debt_cents <= 0:
 		return
-	sheet.mickey_debt_cents = int(sheet.mickey_debt_cents * (1.0 + MICKEY_WEEKLY_INTEREST))
+	var new_total := int(sheet.mickey_debt_cents * (1.0 + MICKEY_WEEKLY_INTEREST))
+	sheet.add_mickey_debt(new_total - sheet.mickey_debt_cents)
 	EventBus.toast.emit("Mickey's ledger grew: you owe $%.2f. Interest never sleeps." % (sheet.mickey_debt_cents / 100.0))
 	if sheet.mickey_debt_cents > MICKEY_BEATING_THRESHOLD_CENTS:
 		sheet.needs.change("energy", -40.0)
