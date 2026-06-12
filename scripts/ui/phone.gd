@@ -28,7 +28,7 @@ func _ready() -> void:
 			call_deferred("_refresh_current_tab"))
 	EventBus.path_updated.connect(func() -> void:
 		if visible:
-			_refresh_paths())
+			call_deferred("_refresh_current_tab"))
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -173,6 +173,7 @@ func _wear(item_id: String) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	sheet.flags["outfit"] = item_id
 	var item := ContentDB.get_item(item_id)
+	EventBus.path_updated.emit()
 	EventBus.toast.emit("Wearing the %s now. Status tier %d. The town notices clothes." % [
 			item.display_name if item else item_id, sheet.outfit_tier()])
 	_refresh()

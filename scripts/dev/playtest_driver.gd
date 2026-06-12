@@ -241,6 +241,29 @@ func _verify_phone_tab_refresh(phone: CanvasLayer) -> void:
 	_check(not sheet.furniture.is_empty(), "Home furniture purchase delivers an item")
 	_check(int(furniture_events.path) > 0,
 			"Home furniture purchase refreshes comfort-dependent status")
+	sheet.flags.erase("outfit")
+	sheet.inventory = _without_clothing(sheet.inventory)
+	if "thrift_blazer" not in sheet.inventory:
+		sheet.inventory.append("thrift_blazer")
+	phone.call("open_tab", "Home")
+	await _ui_frames(2)
+	home_content = _find_named_descendant(phone, "HomeContent")
+	_check(home_content != null and _descendant_text_contains(home_content, "Outfit tier: 0"),
+			"Home tab shows current outfit tier before changing clothes")
+	var inventory: CanvasLayer = _main.get_node("Inventory")
+	inventory._unhandled_input(_action("inventory"))
+	await _ui_frames(2)
+	var wear := _find_button_with_text(inventory, "Wear")
+	_check(wear != null and not wear.disabled, "Inventory exposes clothing Wear action")
+	if wear != null:
+		wear.pressed.emit()
+	await _ui_frames(4)
+	if inventory.visible:
+		inventory._unhandled_input(_action("inventory"))
+	await _ui_frames(4)
+	home_content = _find_named_descendant(phone, "HomeContent")
+	_check(home_content != null and _descendant_text_contains(home_content, "Outfit tier: 1"),
+			"Phone Home tab refreshes status after wearing clothing")
 
 
 func _verify_date_scene_ui() -> void:
@@ -524,6 +547,15 @@ func _without_hunger_consumables(inventory: Array) -> Array:
 		var item := ContentDB.get_item(str(item_id))
 		if item == null or "consumable" not in item.tags \
 				or float(item.need_effects.get("hunger", 0.0)) <= 0.0:
+			kept.append(item_id)
+	return kept
+
+
+func _without_clothing(inventory: Array) -> Array:
+	var kept: Array = []
+	for item_id in inventory:
+		var item := ContentDB.get_item(str(item_id))
+		if item == null or "clothing" not in item.tags:
 			kept.append(item_id)
 	return kept
 
