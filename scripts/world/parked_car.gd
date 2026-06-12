@@ -9,8 +9,15 @@ const CHOP_MIN_CENTS := 15000
 const CHOP_MAX_CENTS := 30000
 const OCCUPIED_CHANCE := 0.3
 const CAR_TEXTURE_PATH := "res://assets/props/parked_car.png"
+const CAR_COLORS := [
+	Color(0.75, 0.32, 0.32),
+	Color(0.32, 0.42, 0.72),
+	Color(0.8, 0.8, 0.82),
+	Color(0.36, 0.55, 0.36),
+]
 
 var occupied_chance := OCCUPIED_CHANCE
+var _paint_nodes: Array = []
 
 
 func _init() -> void:
@@ -21,21 +28,36 @@ func _init() -> void:
 	rect.size = Vector2(52, 30)
 	shape.shape = rect
 	add_child(shape)
-	var color = [Color(0.75, 0.32, 0.32), Color(0.32, 0.42, 0.72),
-			Color(0.8, 0.8, 0.82), Color(0.36, 0.55, 0.36)].pick_random()
+	var color: Color = CAR_COLORS[0]
 	var texture: Texture2D = load(CAR_TEXTURE_PATH)
 	if texture:
 		var sprite := Sprite2D.new()
 		sprite.texture = texture
 		sprite.texture_filter = 1
 		sprite.modulate = color
+		_paint_nodes.append(sprite)
 		add_child(sprite)
 	else:
 		var body := Polygon2D.new()
 		body.polygon = PackedVector2Array([
 			Vector2(-24, -10), Vector2(24, -10), Vector2(24, 10), Vector2(-24, 10)])
 		body.color = color
+		_paint_nodes.append(body)
 		add_child(body)
+
+
+func _ready() -> void:
+	_apply_stable_color()
+
+
+func _apply_stable_color() -> void:
+	var key := "%d:%d" % [roundi(global_position.x), roundi(global_position.y)]
+	var color: Color = CAR_COLORS[absi(hash(key)) % CAR_COLORS.size()]
+	for node in _paint_nodes:
+		if node is Sprite2D:
+			node.modulate = color
+		elif node is Polygon2D:
+			node.color = color
 
 
 func interact(_actor: Node) -> void:
