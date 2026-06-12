@@ -5,12 +5,16 @@ extends Node
 ## save/load round trip. Prints PASS/FAIL lines and exits nonzero on failure.
 
 var failures: int = 0
+var _save_guard := SaveSlotGuard.new()
 
 
 func _ready() -> void:
+	_save_guard.backup()
 	_test_content_db()
 	_test_coherence()
 	_test_save_roundtrip()
+	SaveManager.set_in_game(false)
+	_save_guard.restore()
 	print("M1 smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 

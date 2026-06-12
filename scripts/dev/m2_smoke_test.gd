@@ -6,9 +6,11 @@ extends Node
 ## saves round-trip the whole population.
 
 var failures: int = 0
+var _save_guard := SaveSlotGuard.new()
 
 
 func _ready() -> void:
+	_save_guard.backup()
 	# A town must exist so doors register their positions.
 	var town: Node2D = load("res://scenes/world/Town.tscn").instantiate()
 	add_child(town)
@@ -17,6 +19,8 @@ func _ready() -> void:
 	_test_schedule_day()
 	_test_save_roundtrip()
 	_test_embodiment_sets()
+	SaveManager.set_in_game(false)
+	_save_guard.restore()
 	print("M2 smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 

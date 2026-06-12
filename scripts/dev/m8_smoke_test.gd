@@ -10,9 +10,11 @@ extends Node
 var failures: int = 0
 var _town_life: TownLife
 var _economy: EconomySystem
+var _save_guard := SaveSlotGuard.new()
 
 
 func _ready() -> void:
+	_save_guard.backup()
 	var town: Node2D = load("res://scenes/world/Town.tscn").instantiate()
 	add_child(town)
 	_town_life = TownLife.new()
@@ -39,6 +41,8 @@ func _ready() -> void:
 	_test_perks()
 	_test_holidays()
 	_test_save_roundtrip()
+	SaveManager.set_in_game(false)
+	_save_guard.restore()
 	print("M8 smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 

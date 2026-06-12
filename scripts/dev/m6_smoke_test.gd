@@ -7,9 +7,11 @@ extends Node
 ## as status and disguise, and the save round trip.
 
 var failures: int = 0
+var _save_guard := SaveSlotGuard.new()
 
 
 func _ready() -> void:
+	_save_guard.backup()
 	var town: Node2D = load("res://scenes/world/Town.tscn").instantiate()
 	add_child(town)
 	add_child(EconomySystem.new())
@@ -27,6 +29,8 @@ func _ready() -> void:
 	_test_furniture_and_mood()
 	_test_clothing()
 	_test_save_roundtrip()
+	SaveManager.set_in_game(false)
+	_save_guard.restore()
 	print("M6 smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
