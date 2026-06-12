@@ -365,9 +365,9 @@ func _verify_hud_objective_tracker() -> void:
 	WorldState.player_sheet.job_id = "dishwasher"
 	EventBus.player_job_changed.emit("dishwasher")
 	await get_tree().process_frame
-	_check(objective != null and "Education" in objective.text \
-			and "Enroll" in objective.text,
-			"HUD objective advances after first-week work blocker clears")
+	_check(objective != null and "First Week" in objective.text \
+			and "first Dishwasher shift" in objective.text,
+			"HUD objective advances from hiring to the first shift")
 
 
 func _verify_social_playthrough() -> void:

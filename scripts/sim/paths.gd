@@ -25,6 +25,7 @@ static func evaluate(sheet: CharacterSheet) -> Array:
 static func _first_week(sheet: CharacterSheet) -> Dictionary:
 	var housing := ContentDB.get_housing(sheet.housing_id)
 	var rent := housing.weekly_rent_cents if housing else 0
+	var job := sheet.job()
 	var has_food_buffer := sheet.needs.get_value("hunger") >= 45.0 \
 			or sheet.inventory.any(func(item_id: String) -> bool:
 				var item := ContentDB.get_item(item_id)
@@ -33,8 +34,13 @@ static func _first_week(sheet: CharacterSheet) -> Dictionary:
 	var rent_label := "Keep Monday rent ready"
 	if rent > 0:
 		rent_label = "Keep $%d for Monday rent" % (rent / 100)
+	var first_shift_label := "Work your first shift"
+	if job != null:
+		first_shift_label = "Work your first %s shift at %s (%d:00)" % [
+			job.display_name, Locations.display_name(job.workplace_id), job.shift_start_hour]
 	var steps: Array = [
 		{"label": "Get hired from the phone Jobs tab", "done": sheet.job_id != ""},
+		{"label": first_shift_label, "done": sheet.shifts_worked > 0},
 		{"label": rent_label, "done": rent <= 0 or sheet.cash_cents >= rent},
 		{"label": "Stay fed enough to make the next shift", "done": has_food_buffer},
 	]

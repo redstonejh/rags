@@ -196,6 +196,17 @@ func _test_paths() -> void:
 	var none := _fresh_sheet("off_the_bus")
 	_check(_find_path(LifePaths.evaluate(none), "Getting Off the Street").is_empty(),
 			"papered origins see no ID path")
+	var first_week := _find_path(LifePaths.evaluate(none), "First Week")
+	_check(not first_week.is_empty() and first_week.steps[0].current,
+			"fresh papered origin starts First Week on getting hired")
+	none.job_id = "dishwasher"
+	first_week = _find_path(LifePaths.evaluate(none), "First Week")
+	_check(first_week.steps[1].current and "Dishwasher" in str(first_week.steps[1].label),
+			"First Week points hired players to their first shift")
+	none.shifts_worked = 1
+	first_week = _find_path(LifePaths.evaluate(none), "First Week")
+	_check(not first_week.steps[1].current,
+			"First Week first-shift blocker clears after working")
 
 
 func _find_path(paths: Array, name_part: String) -> Dictionary:
