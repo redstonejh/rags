@@ -91,11 +91,13 @@ func _open(stock: Array) -> void:
 		info.add_theme_font_size_override("font_size", 12)
 		row.add_child(info)
 		var btn := Button.new()
+		btn.name = "Buy_%s" % item.id
 		btn.text = "Buy"
 		btn.custom_minimum_size = Vector2(70, 0)
 		btn.pressed.connect(_buy.bind(item))
 		row.add_child(btn)
 		var pocket := Button.new()
+		pocket.name = "Pocket_%s" % item.id
 		pocket.text = "Pocket"
 		pocket.tooltip_text = "Five-finger discount. The camera is fake. Probably."
 		pocket.custom_minimum_size = Vector2(70, 0)

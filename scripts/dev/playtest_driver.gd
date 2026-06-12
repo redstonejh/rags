@@ -258,6 +258,17 @@ func _open_shop_from_counter() -> void:
 	await get_tree().process_frame
 	var shop: CanvasLayer = _main.get_node("Shop")
 	_check(shop.visible and GameClock.paused, "shop opened from interact input")
+	var buy_noodles := _find_named_descendant(shop, "Buy_instant_noodles") as Button
+	_check(buy_noodles != null and not buy_noodles.disabled,
+			"shop exposes a named food purchase button")
+	if buy_noodles != null:
+		var cash_before := WorldState.player_sheet.cash_cents
+		buy_noodles.pressed.emit()
+		await get_tree().process_frame
+		_check(WorldState.player_sheet.cash_cents < cash_before,
+				"shop purchase spends cash")
+		_check("instant_noodles" in WorldState.player_sheet.inventory,
+				"shop purchase adds food to inventory")
 
 
 func _open_pause_menu() -> void:
