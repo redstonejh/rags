@@ -26,7 +26,7 @@ UI/modal regression: `godot --headless --path . res://scenes/dev/UIStackSmokeTes
 
 ## Controls
 
-WASD move · E interact · **Tab phone** (jobs, housing, bank, Mickey, health, paths, the Gazette) · **I inventory** · Space pause · 1/2/3 speed · F3 debug overlay · Esc menu
+WASD move · click ground to walk · E interact · **Tab phone** (jobs, housing, bank, Mickey, health, paths, the Gazette) · **I inventory** · Space pause · 1/2/3 speed · F3 debug overlay · Esc menu
 
 ## Status — systems prototype, not yet a playable game
 

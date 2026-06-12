@@ -1,5 +1,5 @@
 extends Node
-## Regression coverage for Phase 0 modal/pause ownership.
+## Regression coverage for Phase 0 modal/pause ownership and player control.
 ## Run headless:
 ##   godot --headless --path <repo> res://scenes/dev/UIStackSmokeTest.tscn
 
@@ -7,6 +7,7 @@ const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
 
 var failures: int = 0
 var _main: Node = null
+var _player: Node = null
 
 
 func _ready() -> void:
@@ -15,6 +16,8 @@ func _ready() -> void:
 	_test_pause_locks()
 	_test_panel_overlap()
 	_test_escape_pause_menu()
+	await _test_click_move()
+	await _test_wasd_cancels_click_move()
 	print("UIStack smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -35,6 +38,8 @@ func _instantiate_main() -> void:
 	add_child(_main)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	await get_tree().physics_frame
+	_player = _main.get_node("Player")
 
 
 func _test_pause_locks() -> void:
@@ -83,6 +88,33 @@ func _test_escape_pause_menu() -> void:
 	_check(stack.call("is_modal_open", "pause_menu") and GameClock.paused, "Esc opens pause menu")
 	_main._unhandled_input(_action("ui_cancel"))
 	_check(not stack.call("is_modal_open", "pause_menu") and not GameClock.paused, "Esc closes pause menu")
+
+
+func _test_click_move() -> void:
+	print("[Click-to-move]")
+	GameClock.clear_pause_locks()
+	GameClock.set_manual_paused(false)
+	var start: Vector2 = _player.get("global_position")
+	_player.call("set_move_target", start + Vector2(160, 0))
+	await _physics_frames(30)
+	var current: Vector2 = _player.get("global_position")
+	_check(current.distance_to(start) > 24.0, "click target moves the player")
+	_check(_player.call("has_click_target"), "path remains active before arrival")
+
+
+func _test_wasd_cancels_click_move() -> void:
+	print("[Manual control priority]")
+	var current: Vector2 = _player.get("global_position")
+	_player.call("set_move_target", current + Vector2(160, 0))
+	Input.action_press("move_left")
+	await get_tree().physics_frame
+	Input.action_release("move_left")
+	_check(not _player.call("has_click_target"), "WASD cancels click path")
+
+
+func _physics_frames(count: int) -> void:
+	for _i in count:
+		await get_tree().physics_frame
 
 
 func _action(name: String) -> InputEventAction:
