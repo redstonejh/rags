@@ -14,6 +14,15 @@ const ODDS_SPREAD := 140.0
 ## Perceived >= this, true <= that, and a failure = a Reality Check moment.
 const RC_PERCEIVED_FLOOR := 0.70
 const RC_TRUE_CEILING := 0.35
+const PICKPOCKET_DISTRACTION_BONUS := 0.08
+const PICKPOCKET_SLEEPING_BONUS := 0.20
+const PICKPOCKET_FOUNDER_DAY_BONUS := 0.10
+const PICKPOCKET_EYE_PENALTY := 0.03
+const PICKPOCKET_COP_EYE_PENALTY := 0.08
+const PICKPOCKET_MAX_EYE_PENALTY := 0.18
+const PICKPOCKET_DISTRACTED_ACTIVITIES := [
+	"shopping", "drinking", "eating", "loitering", "wandering", "working", "date",
+]
 
 const ACTIONS := {
 	"chat": {"label": "Chat", "roll": false},
@@ -112,7 +121,41 @@ static func _chance(sheet: CharacterSheet, npc: NPCRecord, action: String, def_s
 		def += float(npc.personality.get("bravery", 50)) * 0.4
 	var rel_bonus := npc.rel("player") * 0.002
 	var perk_bonus := 0.05 if sheet.has_perk("silver_tongue") else 0.0
-	return clampf(0.5 + (atk - def) / ODDS_SPREAD + rel_bonus + perk_bonus, 0.05, 0.95)
+	var context_bonus := pickpocket_context_modifier(npc) if action == "pickpocket" else 0.0
+	return clampf(0.5 + (atk - def) / ODDS_SPREAD + rel_bonus + perk_bonus + context_bonus,
+			0.05, 0.95)
+
+
+static func pickpocket_context_modifier(npc: NPCRecord) -> float:
+	var modifier := 0.0
+	if npc.current_activity == "sleeping":
+		modifier += PICKPOCKET_SLEEPING_BONUS
+	elif npc.current_activity in PICKPOCKET_DISTRACTED_ACTIVITIES:
+		modifier += PICKPOCKET_DISTRACTION_BONUS
+	if TownLife.holiday_today() == "FOUNDER'S DAY":
+		modifier += PICKPOCKET_FOUNDER_DAY_BONUS
+	var witnesses := _pickpocket_nearby_eyes(npc)
+	var eye_penalty := 0.0
+	for witness in witnesses:
+		eye_penalty += PICKPOCKET_COP_EYE_PENALTY if witness.is_cop() else PICKPOCKET_EYE_PENALTY
+	modifier -= minf(eye_penalty, PICKPOCKET_MAX_EYE_PENALTY)
+	return modifier
+
+
+static func _pickpocket_nearby_eyes(target: NPCRecord) -> Array:
+	var out: Array = []
+	var now := GameClock.total_minutes
+	var scene := target.abstract_position(now)
+	for npc in WorldState.npcs.values():
+		if npc == target or not npc.alive or npc.current_activity == "sleeping":
+			continue
+		if npc.current_location_id != target.current_location_id:
+			continue
+		if target.current_location_id == "exterior" \
+				and npc.abstract_position(now).distance_to(scene) > CrimeSystem.EXTERIOR_WITNESS_RADIUS:
+			continue
+		out.append(npc)
+	return out
 
 
 ## Perform an action. forced_roll in [0,1) makes tests deterministic.

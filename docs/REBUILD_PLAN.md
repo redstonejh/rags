@@ -127,6 +127,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 
 ### Phase 3 — Crime + police to 100%
 - In-world verbs: pickpocket (proximity/behind), shoplifting under clerk sightlines, street carjacks; fence/dealer as scenes.
+  - Continued 2026-06-12: pickpocket odds now include context: distracted/sleeping targets are easier, nearby eyes make the lift harder, cops are worse than bystanders, and Founder's Day gives the fairground pickpocket boost from the design doc.
   - Continued 2026-06-12: shoplifting catch risk now reads the actual witness pool: empty stores reduce risk, bystanders add pressure, clerks matter more, and cops create instant warrants. The shop UI surfaces the current risk source in Pocket tooltips, and M5 covers the risk ladder plus anonymous/reported case outcomes.
   - Continued 2026-06-12: register robbery now uses a dedicated armed-robbery helper so the QuikStop register can never be quietly robbed off-camera; it forces warrant-grade evidence, infamy, a Gazette entry, and a possible three-minute silent-alarm arrest response if the player stays at the scene.
 - Cops visibly patrol; wanted = embodied pursuit (chase AI) → arrest confrontation; jail becomes a real interior with a daily event loop (yard / library / kitchen) instead of a toast.

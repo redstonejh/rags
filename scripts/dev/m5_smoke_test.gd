@@ -565,6 +565,44 @@ func _test_pickpocket() -> void:
 	var cases_before := WorldState.crime_cases.size()
 	Social.interact(sheet, mark, "pickpocket", 0.999)
 	_check(WorldState.crime_cases.size() == cases_before + 1, "getting caught makes a case")
+	var saved_minutes := GameClock.total_minutes
+	GameClock.total_minutes = 4 * GameClock.MINUTES_PER_DAY + 12 * 60
+	var alert := _mk_npc("w_pick_alert", "loc_pick_alert", 50)
+	alert.current_activity = "idle"
+	var distracted := _mk_npc("w_pick_distracted", "loc_pick_distracted", 50)
+	distracted.current_activity = "shopping"
+	var watched := _mk_npc("w_pick_watched", "loc_pick_watched", 50)
+	watched.current_activity = "shopping"
+	_mk_npc("w_pick_eye", "loc_pick_watched", 50)
+	var cop_watched := _mk_npc("w_pick_cop_target", "loc_pick_cop", 50)
+	cop_watched.current_activity = "shopping"
+	_mk_npc("w_pick_cop_eye", "loc_pick_cop", 100, 10, 80, "cop")
+	var alert_chance := Social.true_chance(sheet, alert, "pickpocket")
+	var distracted_chance := Social.true_chance(sheet, distracted, "pickpocket")
+	var watched_chance := Social.true_chance(sheet, watched, "pickpocket")
+	var cop_watched_chance := Social.true_chance(sheet, cop_watched, "pickpocket")
+	_check(distracted_chance > alert_chance,
+			"distracted targets are easier to pickpocket (%.0f%% -> %.0f%%)" % [
+				alert_chance * 100.0, distracted_chance * 100.0])
+	_check(watched_chance < distracted_chance,
+			"nearby eyes make pickpocketing harder")
+	_check(cop_watched_chance < watched_chance,
+			"cop eyes punish pickpocketing more than bystanders")
+	GameClock.total_minutes = 10 * GameClock.MINUTES_PER_DAY + 12 * 60
+	var fair_mark := _mk_npc("w_pick_fair", "loc_pick_fair", 50)
+	fair_mark.current_activity = "shopping"
+	var fair_chance := Social.true_chance(sheet, fair_mark, "pickpocket")
+	_check(fair_chance > distracted_chance,
+			"FOUNDER'S DAY is a pickpocket paradise")
+	WorldState.world_seed = 612030
+	WorldState.reset_crime_rng()
+	WorldState.town_fear = 50.0
+	var before_crime_rng := WorldState.crime_rng_state
+	Social.true_chance(sheet, fair_mark, "pickpocket")
+	_check(WorldState.crime_rng_state == before_crime_rng,
+			"rendering pickpocket odds does not advance crime RNG")
+	WorldState.town_fear = 0.0
+	GameClock.total_minutes = saved_minutes
 	CrimeSystem._close_warrants()
 
 
