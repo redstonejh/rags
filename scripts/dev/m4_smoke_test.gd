@@ -8,6 +8,7 @@ extends Node
 
 var failures: int = 0
 var _rc_fired: Array = []
+var _travel_requests: Array[String] = []
 
 
 func _ready() -> void:
@@ -16,6 +17,8 @@ func _ready() -> void:
 	add_child(GossipSystem.new())
 	EventBus.reality_check.connect(func(p: float, a: float, npc_id: String) -> void:
 		_rc_fired.append([p, a, npc_id]))
+	EventBus.travel_requested.connect(func(location_id: String) -> void:
+		_travel_requests.append(location_id))
 
 	var sheet := CharacterSheet.new()
 	sheet.char_name = "Test Subject"
@@ -198,8 +201,11 @@ func _test_dating() -> void:
 	_check("date_mels" in actions and "date_anchor" in actions and "ask_out" not in actions,
 			"dating swaps ask-out for named date activities")
 	var before := mark.rel("player")
+	WorldState.player_location_id = "exterior"
+	_travel_requests.clear()
 	Social.interact(viewer, mark, "date_mels")
 	_check(mark.rel("player") > before, "date activity compounds the relationship")
+	_check(_travel_requests == ["loc_diner"], "date activity requests venue travel")
 	_check(WorldState.player_location_id == "loc_diner" and mark.current_location_id == "loc_diner",
 			"date activity moves the couple to the venue")
 	_check(mark.memories.any(func(m: Dictionary) -> bool:

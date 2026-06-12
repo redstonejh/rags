@@ -265,6 +265,8 @@ static func _apply(sheet: CharacterSheet, npc: NPCRecord, success: bool,
 static func _date_activity(sheet: CharacterSheet, npc: NPCRecord, location_id: String,
 		minutes: int, rel_gain: float, social_gain: float, fun_gain: float,
 		memory_text: String, result_text: String) -> String:
+	if WorldState.player_location_id != location_id:
+		EventBus.travel_requested.emit(location_id)
 	GameClock.skip_minutes(minutes)
 	WorldState.player_location_id = location_id
 	npc.current_location_id = location_id
