@@ -21,6 +21,7 @@ func _ready() -> void:
 
 	_test_consume_item()
 	_test_shift_pay()
+	_test_shift_rng_save_roundtrip()
 	_test_skill_refresh()
 	_test_work_spot()
 	_test_promotion()
@@ -106,6 +107,44 @@ func _test_shift_pay() -> void:
 			== "$30.37 - docked 25%% for strolling in late (25%% garnished. Forever.)",
 			"paycheck summary reports dock and garnishment")
 	sheet.origin_id = "off_the_bus"
+
+
+func _test_shift_rng_save_roundtrip() -> void:
+	print("[Save round trip: shift dilemma RNG]")
+	var sheet := _fresh_sheet("off_the_bus")
+	sheet.job_id = "dishwasher"
+	sheet.cash_cents = 0
+	sheet.shifts_worked = 0
+	WorldState.world_seed = 612027
+	WorldState.reset_shift_rng()
+	var job := ContentDB.get_job("dishwasher")
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with shift RNG state")
+	var expected := _shift_sequence_signature(job, 16)
+	WorldState.player_sheet = null
+	WorldState.shift_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores shift RNG state")
+	var actual := _shift_sequence_signature(job, 16)
+	_check(actual == expected, "loaded shift RNG repeats dilemma sequence")
+	_check(not Array(expected.get("dilemmas", [])).is_empty(),
+			"seeded shift sequence includes at least one dilemma")
+	SaveManager.set_in_game(false)
+
+
+func _shift_sequence_signature(job: JobDef, count: int) -> Dictionary:
+	var dilemmas: Array = []
+	var handler := func(dilemma: Dictionary) -> void:
+		dilemmas.append(str(dilemma.get("text", "")))
+	EventBus.shift_dilemma.connect(handler)
+	for _i in count:
+		EventBus.shift_finished.emit(job, 0)
+	EventBus.shift_dilemma.disconnect(handler)
+	return {
+		"cash": WorldState.player_sheet.cash_cents,
+		"shifts": WorldState.player_sheet.shifts_worked,
+		"dilemmas": dilemmas,
+		"shift_rng_state": str(WorldState.shift_rng_state),
+	}
 
 
 func _test_skill_refresh() -> void:

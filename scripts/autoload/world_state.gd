@@ -19,6 +19,8 @@ var gossip_rng_seed: int = 0
 var gossip_rng_state: int = 0
 var body_rng_seed: int = 0
 var body_rng_state: int = 0
+var shift_rng_seed: int = 0
+var shift_rng_state: int = 0
 var npcs: Dictionary = {} # id -> NPCRecord
 ## True once a town has been generated; survives the player's death.
 var world_exists: bool = false
@@ -99,6 +101,7 @@ func new_world(sheet: CharacterSheet) -> void:
 	reset_crime_rng()
 	reset_gossip_rng()
 	reset_body_rng()
+	reset_shift_rng()
 	npcs = WorldGen.generate(world_seed)
 	crime_cases = {}
 	_case_serial = 0
@@ -175,6 +178,13 @@ func reset_body_rng() -> void:
 	body_rng_state = rng.state
 
 
+func reset_shift_rng() -> void:
+	shift_rng_seed = int(world_seed) + 6000003
+	var rng := RandomNumberGenerator.new()
+	rng.seed = shift_rng_seed
+	shift_rng_state = rng.state
+
+
 ## Lets Main.tscn run standalone from the editor (F5 on the scene) without
 ## going through the menu — creates a debug drifter in a generated town.
 func ensure_player_sheet() -> void:
@@ -208,6 +218,8 @@ func to_dict() -> Dictionary:
 		"gossip_rng_state": str(gossip_rng_state),
 		"body_rng_seed": str(body_rng_seed),
 		"body_rng_state": str(body_rng_state),
+		"shift_rng_seed": str(shift_rng_seed),
+		"shift_rng_state": str(shift_rng_state),
 		"world_exists": world_exists,
 		"npcs": npc_dicts,
 		"crime_cases": case_dicts,
@@ -260,6 +272,13 @@ func load_dict(d: Dictionary) -> void:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = body_rng_seed
 		body_rng_state = rng.state
+	shift_rng_seed = _saved_int(d.get("shift_rng_seed", int(world_seed) + 6000003),
+			int(world_seed) + 6000003)
+	shift_rng_state = _saved_int(d.get("shift_rng_state", 0), 0)
+	if shift_rng_state == 0:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = shift_rng_seed
+		shift_rng_state = rng.state
 	npcs.clear()
 	var npc_dicts: Dictionary = d.get("npcs", {})
 	for id in npc_dicts:

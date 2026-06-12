@@ -90,8 +90,9 @@ func _on_shift_finished(job: JobDef, late_minutes: int) -> void:
 		sheet.add_skill_xp(job.trains_skill, job.skill_xp_per_shift)
 	EventBus.toast.emit("Clocked out. %s" % paycheck_summary(paycheck))
 	_check_promotion(sheet, job)
-	if randf() < DILEMMA_CHANCE:
-		EventBus.shift_dilemma.emit(DILEMMAS.pick_random())
+	var dilemma := _roll_dilemma()
+	if not dilemma.is_empty():
+		EventBus.shift_dilemma.emit(dilemma)
 
 
 ## Shifts >= minimum and the next rung's skill bar met -> the boss mentions it.
@@ -110,3 +111,38 @@ func _check_promotion(sheet: CharacterSheet, job: JobDef) -> void:
 		return
 	sheet.flags[flag] = true
 	EventBus.toast.emit("The boss pulls you aside: \"%s. Interested?\" (Apply on your phone.)" % next.display_name)
+
+
+static func _roll_dilemma() -> Dictionary:
+	if _randf() >= DILEMMA_CHANCE:
+		return {}
+	return DILEMMAS[_randi_index(DILEMMAS.size())].duplicate(true)
+
+
+static func _randf() -> float:
+	var rng := _shift_rng()
+	var value := rng.randf()
+	_store_shift_rng(rng)
+	return value
+
+
+static func _randi_index(size: int) -> int:
+	if size <= 0:
+		return 0
+	var rng := _shift_rng()
+	var value := rng.randi_range(0, size - 1)
+	_store_shift_rng(rng)
+	return value
+
+
+static func _shift_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	if WorldState.shift_rng_state == 0:
+		WorldState.reset_shift_rng()
+	rng.seed = WorldState.shift_rng_seed
+	rng.state = WorldState.shift_rng_state
+	return rng
+
+
+static func _store_shift_rng(rng: RandomNumberGenerator) -> void:
+	WorldState.shift_rng_state = rng.state
