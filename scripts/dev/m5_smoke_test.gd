@@ -715,6 +715,8 @@ func _test_pickpocket() -> void:
 	_check(lift.success and sheet.dirty_cents > 0 and mark.money_cents < money_before,
 			"clean lift: dirty cash, no case")
 	var cases_before := WorldState.crime_cases.size()
+	GameClock.total_minutes = int(mark.flags.get(
+			"player_social_roll_cooldown_until", GameClock.total_minutes))
 	Social.interact(sheet, mark, "pickpocket", 0.999)
 	_check(WorldState.crime_cases.size() == cases_before + 1, "getting caught makes a case")
 	var saved_minutes := GameClock.total_minutes

@@ -72,6 +72,13 @@ func _test_embodied_cop_starts_arrest() -> void:
 	GameClock.total_minutes = _next_cop_check_minute()
 	EventBus.minute_passed.emit(GameClock.total_minutes)
 	await get_tree().process_frame
+	_check(_current_world_has_node("PoliceResponseCar"),
+			"wanted stop brings a visible police car into the scene")
+	var camera := (_main.get_node_or_null("Player") as Node2D).get_node_or_null("Camera2D")
+	_check(camera != null and int(camera.get_meta("police_response_arrivals", 0)) > 0 \
+			and str(camera.get_meta("last_police_response_kind", "")) == "patrol",
+			"police response records the visible patrol arrival")
+	await get_tree().create_timer(0.8).timeout
 	var confrontation: CanvasLayer = _main.get_node("Confrontation")
 	_check(confrontation.visible and GameClock.paused,
 			"cop patrol opens the arrest confrontation")

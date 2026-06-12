@@ -41,5 +41,6 @@ signal crime_witnessed(npc_id: String, case_id: String)
 signal warrant_issued(case_id: String)
 signal wanted_changed(stars: int)
 signal arrest_made(sentence_days: int)
+signal police_response_requested(payload: Dictionary) # visual arrival, then confrontation
 signal confrontation_started(payload: Dictionary)   # {kind, npc_id, text}
 signal npc_died(npc_id: String, cause: String)

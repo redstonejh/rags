@@ -4,15 +4,19 @@ extends Node2D
 
 const TOWN_SCENE := preload("res://scenes/world/Town.tscn")
 const REALITY_STING_PATH := "res://assets/audio/reality_check.wav"
+const POLICE_CAR_TEXTURE_PATH := "res://assets/props/police_car.png"
 const REALITY_CAMERA_ZOOM_MULT := 1.12
 const REALITY_CAMERA_OFFSET_MAX := 36.0
 const REALITY_CAMERA_IN_TIME := 0.08
 const REALITY_CAMERA_HOLD_TIME := 0.10
 const REALITY_CAMERA_OUT_TIME := 0.22
+const POLICE_RESPONSE_TRAVEL_TIME := 0.65
+const POLICE_RESPONSE_HOLD_TIME := 0.35
 
 var current_world: Node2D = null
 var _reality_camera_tween: Tween = null
 var _reality_sting_player: AudioStreamPlayer = null
+var _police_response_car: Node2D = null
 
 @onready var world_root: Node2D = $WorldRoot
 @onready var player: Player = $Player
@@ -25,6 +29,7 @@ func _ready() -> void:
 	EventBus.travel_requested.connect(_travel_to)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.reality_check.connect(_on_reality_check)
+	EventBus.police_response_requested.connect(_on_police_response_requested)
 	SimEngine.player_node = player
 	# Resume wherever the save says the player was; new games start outside.
 	_enter_location(WorldState.player_location_id, true)
@@ -35,6 +40,8 @@ func _exit_tree() -> void:
 	if _reality_sting_player != null:
 		_reality_sting_player.stop()
 		_reality_sting_player.stream = null
+	if _police_response_car != null and is_instance_valid(_police_response_car):
+		_police_response_car.queue_free()
 	SimEngine.spawn_host = null
 	SimEngine.player_node = null
 
@@ -200,6 +207,79 @@ func _play_reality_check_sting(npc_id: String) -> void:
 	_reality_sting_player.stop()
 	if DisplayServer.get_name() != "headless":
 		_reality_sting_player.play()
+
+
+# -------------------------------------------------------- Police Response
+
+func _on_police_response_requested(payload: Dictionary) -> void:
+	if WorldState.player_location_id != "exterior" or current_world == null:
+		EventBus.confrontation_started.emit(payload)
+		return
+	if _police_response_car != null and is_instance_valid(_police_response_car):
+		_police_response_car.queue_free()
+	_police_response_car = _build_police_response_car()
+	current_world.add_child(_police_response_car)
+
+	var end := player.global_position + Vector2(-72, 18)
+	var start := _police_response_start(end)
+	_police_response_car.global_position = start
+	var sprite := _police_response_car.get_node_or_null("Sprite") as Sprite2D
+	if sprite != null:
+		sprite.flip_h = start.x > end.x
+
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera != null:
+		camera.set_meta("police_response_arrivals",
+				int(camera.get_meta("police_response_arrivals", 0)) + 1)
+		camera.set_meta("last_police_response_kind", str(payload.get("response_kind", "")))
+
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(_police_response_car, "global_position", end,
+			POLICE_RESPONSE_TRAVEL_TIME)
+	tween.tween_callback(func() -> void:
+		if _police_response_car != null and is_instance_valid(_police_response_car):
+			_police_response_car.set_meta("arrived", true)
+		EventBus.confrontation_started.emit(payload))
+	tween.tween_interval(POLICE_RESPONSE_HOLD_TIME)
+	tween.tween_callback(func() -> void:
+		if _police_response_car != null and is_instance_valid(_police_response_car):
+			_police_response_car.queue_free()
+		_police_response_car = null)
+
+
+func _build_police_response_car() -> Node2D:
+	var car := Node2D.new()
+	car.name = "PoliceResponseCar"
+	car.z_index = 80
+	var texture: Texture2D = load(POLICE_CAR_TEXTURE_PATH)
+	if texture != null:
+		var sprite := Sprite2D.new()
+		sprite.name = "Sprite"
+		sprite.texture = texture
+		sprite.texture_filter = 1
+		car.add_child(sprite)
+	else:
+		var fallback := Polygon2D.new()
+		fallback.name = "Sprite"
+		fallback.color = Color(0.16, 0.18, 0.24)
+		fallback.polygon = PackedVector2Array([
+			Vector2(-36, -14), Vector2(36, -14), Vector2(36, 14), Vector2(-36, 14)])
+		car.add_child(fallback)
+	return car
+
+
+func _police_response_start(end: Vector2) -> Vector2:
+	var ground: TileMapLayer = current_world.get("ground") if current_world != null else null
+	if ground == null:
+		return end + Vector2(-560, 0)
+	var used := ground.get_used_rect()
+	var left := used.position.x * TileWorld.TILE - 96.0
+	var right := (used.position.x + used.size.x) * TileWorld.TILE + 96.0
+	var map_mid := (left + right) * 0.5
+	var start_x := left if end.x > map_mid else right
+	return Vector2(start_x, end.y)
 
 
 # ---------------------------------------------------------------- death

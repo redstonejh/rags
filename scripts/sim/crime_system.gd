@@ -407,10 +407,10 @@ func _on_minute_passed(total: int) -> void:
 	_arrest_cooldown_until = total + cooldown
 	sheet.flags.erase("arrest_escape_retry_minute")
 	sheet.flags.erase("arrest_escape_cop_id")
-	EventBus.confrontation_started.emit({
-		"kind": "arrest", "npc_id": cop.id,
-		"text": "Officer %s squares up: \"Stop right there. We've been looking for you.\"" % cop.display_name,
-	})
+	_start_arrest_response(cop,
+			"Officer %s squares up: \"Stop right there. We've been looking for you.\""
+					% cop.display_name,
+			"patrol")
 
 
 func _arrest_cooldown_blocks(total: int, sheet: CharacterSheet) -> bool:
@@ -470,12 +470,30 @@ func _maybe_trigger_silent_alarm(total: int) -> bool:
 	if cop == null:
 		return false
 	_arrest_cooldown_until = total + ARREST_COOLDOWN_MINUTES
-	EventBus.confrontation_started.emit({
-		"kind": "arrest", "npc_id": cop.id,
-		"text": "Sirens hit the curb. Officer %s comes through the door: \"Register alarm. Hands.\""
-				% cop.display_name,
-	})
+	_start_arrest_response(cop,
+			"Sirens hit the curb. Officer %s comes through the door: \"Register alarm. Hands.\""
+					% cop.display_name,
+			"silent_alarm")
 	return true
+
+
+func _start_arrest_response(cop: NPCRecord, text: String, response_kind: String) -> void:
+	var payload := {
+		"kind": "arrest",
+		"npc_id": cop.id,
+		"text": text,
+		"response_kind": response_kind,
+	}
+	if _can_show_police_response():
+		EventBus.police_response_requested.emit(payload)
+	else:
+		EventBus.confrontation_started.emit(payload)
+
+
+func _can_show_police_response() -> bool:
+	return WorldState.player_location_id == "exterior" \
+			and SimEngine.player_node != null \
+			and is_instance_valid(SimEngine.player_node)
 
 
 func _responding_cop(location_id: String) -> NPCRecord:

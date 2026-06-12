@@ -37,6 +37,7 @@ PLAYER_CLOTHING_WALK_PATHS = {
 DOOR_PATH = PROPS_DIR / "door.png"
 SHOP_COUNTER_PATH = PROPS_DIR / "shop_counter.png"
 PARKED_CAR_PATH = PROPS_DIR / "parked_car.png"
+POLICE_CAR_PATH = PROPS_DIR / "police_car.png"
 FRIDGE_PATH = PROPS_DIR / "fridge.png"
 BED_PATH = PROPS_DIR / "bed.png"
 SHOWER_PATH = PROPS_DIR / "shower.png"
@@ -424,6 +425,31 @@ def draw_parked_car() -> None:
     print(f"wrote {PARKED_CAR_PATH.relative_to(ROOT)}")
 
 
+def draw_police_car() -> None:
+    img = Image.new("RGBA", (72, 42), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    # Long side profile, readable at gameplay zoom.
+    draw.rectangle((7, 13, 65, 30), fill=(28, 34, 48, 255))
+    draw.rectangle((13, 9, 59, 20), fill=(238, 238, 224, 255))
+    draw.rectangle((16, 11, 29, 19), fill=(52, 74, 92, 255))
+    draw.rectangle((43, 11, 56, 19), fill=(52, 74, 92, 255))
+    draw.rectangle((31, 9, 41, 20), fill=(28, 34, 48, 255))
+    draw.rectangle((27, 5, 35, 9), fill=(190, 37, 47, 255))
+    draw.rectangle((36, 5, 44, 9), fill=(38, 84, 205, 255))
+    draw.rectangle((11, 25, 20, 34), fill=(25, 25, 27, 255))
+    draw.rectangle((52, 25, 61, 34), fill=(25, 25, 27, 255))
+    draw.rectangle((13, 27, 18, 32), fill=(74, 76, 80, 255))
+    draw.rectangle((54, 27, 59, 32), fill=(74, 76, 80, 255))
+    draw.rectangle((5, 17, 8, 24), fill=(230, 206, 92, 255))
+    draw.rectangle((64, 17, 67, 24), fill=(180, 50, 48, 255))
+    draw.rectangle((26, 22, 46, 28), fill=(238, 238, 224, 255))
+    font = ImageFont.load_default()
+    draw.text((27, 19), "POL", font=font, fill=(28, 34, 48, 255))
+    POLICE_CAR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    img.save(POLICE_CAR_PATH)
+    print(f"wrote {POLICE_CAR_PATH.relative_to(ROOT)}")
+
+
 def draw_fridge() -> None:
     img = Image.new("RGBA", (32, 44), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -721,6 +747,7 @@ def generate_props() -> None:
     draw_door()
     draw_shop_counter()
     draw_parked_car()
+    draw_police_car()
     draw_fridge()
     draw_bed()
     draw_shower()
