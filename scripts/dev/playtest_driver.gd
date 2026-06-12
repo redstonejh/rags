@@ -416,6 +416,10 @@ func _open_shop_from_counter() -> void:
 				"shop purchase adds food to inventory")
 		_check(objective != null and not ("Stay fed" in objective.text),
 				"shop purchase refreshes HUD objective after adding food")
+		EventBus.shop_opened.emit(["candy_bar"])
+		_check(_descendant_text_contains(shop, "ChocoLode Bar") \
+				and not _descendant_text_contains(shop, "Instant Noodles"),
+				"shop refresh replaces stock rows synchronously")
 
 
 func _open_pause_menu() -> void:

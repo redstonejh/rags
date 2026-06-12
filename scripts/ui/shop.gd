@@ -76,6 +76,7 @@ func _build_ui() -> void:
 
 func _open(stock: Array) -> void:
 	for child in _rows_box.get_children():
+		_rows_box.remove_child(child)
 		child.queue_free()
 	for item_id in stock:
 		var item := ContentDB.get_item(item_id)
