@@ -208,6 +208,9 @@ const MENTAL_SKILLS := ["education", "business", "medicine", "gambling"]
 
 
 func add_skill_xp(skill: String, amount: float) -> void:
+	if is_zero_approx(amount):
+		return
+	var before_level := skill_level(skill)
 	var fast := 1.3 if has_tag("fast_learner") else 1.0
 	var hard := 1.1 if has_tag("hardworking") else 1.0
 	skills[skill] = float(skills.get(skill, 0.0)) + amount * fast * hard
@@ -216,6 +219,8 @@ func add_skill_xp(skill: String, amount: float) -> void:
 		flags["drift_phys"] = float(flags.get("drift_phys", 0.0)) + amount
 	elif skill in MENTAL_SKILLS:
 		flags["drift_mind"] = float(flags.get("drift_mind", 0.0)) + amount
+	if skill_level(skill) != before_level:
+		EventBus.path_updated.emit()
 
 
 ## Character XP: levels at 100, 200, 300... A perk point on every even level.

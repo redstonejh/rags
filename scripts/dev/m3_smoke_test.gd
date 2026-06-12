@@ -21,6 +21,7 @@ func _ready() -> void:
 
 	_test_consume_item()
 	_test_shift_pay()
+	_test_skill_refresh()
 	_test_work_spot()
 	_test_promotion()
 	_test_rent_and_eviction()
@@ -105,6 +106,23 @@ func _test_shift_pay() -> void:
 			== "$30.37 - docked 25%% for strolling in late (25%% garnished. Forever.)",
 			"paycheck summary reports dock and garnishment")
 	sheet.origin_id = "off_the_bus"
+
+
+func _test_skill_refresh() -> void:
+	print("[CharacterSheet: skill gates refresh]")
+	var sheet := WorldState.player_sheet
+	sheet.skills["cooking"] = 9.5
+	var path_events := {"count": 0}
+	var on_path := func() -> void:
+		path_events["count"] = int(path_events.count) + 1
+	EventBus.path_updated.connect(on_path)
+	sheet.add_skill_xp("cooking", 1.0)
+	_check(sheet.skill_level("cooking") >= 1, "skill XP crosses a visible level")
+	_check(int(path_events.count) > 0, "skill level-up refreshes path/job UI")
+	path_events["count"] = 0
+	sheet.add_skill_xp("cooking", 0.1)
+	_check(int(path_events.count) == 0, "sub-level skill XP does not spam path refreshes")
+	EventBus.path_updated.disconnect(on_path)
 
 
 func _test_work_spot() -> void:
