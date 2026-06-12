@@ -440,6 +440,12 @@ func _verify_hud_objective_tracker() -> void:
 	_check(objective != null and "First Week" in objective.text \
 			and "first Dishwasher shift" in objective.text,
 			"HUD objective advances from hiring to the first shift")
+	WorldState.player_sheet.shifts_worked = 1
+	WorldState.player_sheet.needs.change("hunger", -80.0)
+	await get_tree().process_frame
+	_check(objective != null and "First Week" in objective.text \
+			and "Stay fed" in objective.text,
+			"HUD objective refreshes from need changes")
 
 
 func _verify_social_playthrough() -> void:

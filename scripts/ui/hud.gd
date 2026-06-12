@@ -94,6 +94,7 @@ func _on_need_changed(need_id: String, value: float) -> void:
 		if fill:
 			var base: Color = BAR_COLORS.get(need_id, Color(0.6, 0.6, 0.6))
 			fill.bg_color = base if value > 25.0 else base.lerp(Color(0.9, 0.15, 0.1), 0.6)
+	_update_objective_label()
 
 
 func _style_bar(bar: ProgressBar, color: Color) -> void:
