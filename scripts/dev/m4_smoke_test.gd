@@ -10,13 +10,15 @@ var failures: int = 0
 var _rc_fired: Array = []
 var _travel_requests: Array[String] = []
 var _save_guard := SaveSlotGuard.new()
+var _gossip: GossipSystem = null
 
 
 func _ready() -> void:
 	_save_guard.backup()
 	var town: Node2D = load("res://scenes/world/Town.tscn").instantiate()
 	add_child(town)
-	add_child(GossipSystem.new())
+	_gossip = GossipSystem.new()
+	add_child(_gossip)
 	EventBus.reality_check.connect(func(p: float, a: float, npc_id: String) -> void:
 		_rc_fired.append([p, a, npc_id]))
 	EventBus.travel_requested.connect(func(location_id: String) -> void:
@@ -33,6 +35,7 @@ func _ready() -> void:
 	_test_relationship_deltas()
 	_test_social_odds_balance()
 	_test_gossip()
+	_test_gossip_rng_save_roundtrip()
 	_test_memory_hygiene()
 	_test_dating()
 	_test_save_roundtrip()
@@ -222,6 +225,87 @@ func _test_gossip() -> void:
 	_check(fresh.memories.any(func(m: Dictionary) -> bool: return m.get("secondhand", false)),
 			"hourly tick propagates gossip between co-located NPCs")
 	_check(fresh.rel(quiet.id) != 0.0, "talking builds familiarity (drift %.1f)" % fresh.rel(quiet.id))
+
+
+func _test_gossip_rng_save_roundtrip() -> void:
+	print("[Save round trip: gossip RNG]")
+	_fresh_viewer()
+	WorldState.world_seed = 777321
+	WorldState.reset_gossip_rng()
+	for id in WorldState.npcs.keys():
+		if str(id).begins_with("g_rng_"):
+			WorldState.npcs.erase(id)
+	var speaker := _mk_npc("g_rng_speaker", "loc_gossip_rng", ["plain"], 8, 50, 95)
+	var listener := _mk_npc("g_rng_listener", "loc_gossip_rng", ["plain"], 8, 50, 20)
+	var extra := _mk_npc("g_rng_extra", "loc_gossip_rng", ["plain"], 8, 50, 10)
+	speaker.add_memory("witnessed", "player", "saw a deterministic scandal", -0.6, 12.0)
+	var room := [speaker, listener, extra]
+	var before_state := WorldState.gossip_rng_state
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with gossip RNG state")
+	_gossip._exchange(room)
+	var expected := _gossip_signature()
+	_check(WorldState.gossip_rng_state != before_state,
+			"gossip exchange advances saved RNG state")
+	WorldState.player_sheet = null
+	WorldState.npcs.clear()
+	WorldState.gossip_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores gossip RNG state")
+	var loaded_room := [
+		WorldState.npcs["g_rng_speaker"],
+		WorldState.npcs["g_rng_listener"],
+		WorldState.npcs["g_rng_extra"],
+	]
+	_gossip._exchange(loaded_room)
+	_check(_gossip_signature() == expected,
+			"loaded gossip RNG repeats the same exchange result")
+	SaveManager.set_in_game(false)
+
+
+func _gossip_signature() -> String:
+	var ids := WorldState.npcs.keys()
+	ids.sort()
+	var rows := []
+	for id in ids:
+		if not str(id).begins_with("g_rng_"):
+			continue
+		var npc: NPCRecord = WorldState.npcs[id]
+		rows.append([
+			npc.id,
+			_sorted_dict_entries(npc.relationships),
+			_memory_rows(npc.memories),
+		])
+	return JSON.stringify({
+		"gossip_rng_state": str(WorldState.gossip_rng_state),
+		"npcs": rows,
+	})
+
+
+func _sorted_dict_entries(dict: Dictionary) -> Array:
+	var keys := dict.keys()
+	keys.sort()
+	var out := []
+	for key in keys:
+		out.append([str(key), float(dict[key])])
+	return out
+
+
+func _memory_rows(memories: Array) -> Array:
+	var out := []
+	for memory in memories:
+		out.append([
+			str(memory.get("kind", "")),
+			str(memory.get("subject", "")),
+			str(memory.get("text", "")),
+			float(memory.get("tone", 0.0)),
+			float(memory.get("salience", 0.0)),
+			int(memory.get("day", 0)),
+			bool(memory.get("secondhand", false)),
+			str(memory.get("source_id", "")),
+			str(memory.get("previous_source_id", "")),
+			str(memory.get("case_id", "")),
+		])
+	return out
 
 
 func _test_memory_hygiene() -> void:

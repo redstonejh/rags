@@ -13,6 +13,8 @@ const FORGET_BELOW := 1.5
 const FAMILIARITY_DRIFT := 0.5     # talking to someone warms you to them
 const REL_PER_TONE := 3.0          # how much a juicy story moves opinions
 
+var _rng := RandomNumberGenerator.new()
+
 
 func _ready() -> void:
 	EventBus.hour_passed.connect(_on_hour_passed)
@@ -38,17 +40,20 @@ func _on_hour_passed(_hour: int) -> void:
 
 
 func _exchange(room: Array) -> void:
+	_load_rng_state()
 	var speaker: NPCRecord = _weighted_by_chattiness(room)
-	var listener: NPCRecord = room.pick_random()
+	var listener: NPCRecord = _pick(room)
 	if listener == speaker:
+		_store_rng_state()
 		return
 	# Familiarity: just talking warms people up — and the jealous sour fast.
 	var drift := FAMILIARITY_DRIFT
-	if int(speaker.personality.get("jealousy", 50)) > 75 and randf() < 0.15:
+	if int(speaker.personality.get("jealousy", 50)) > 75 and _rng.randf() < 0.15:
 		drift = -2.0
 	speaker.change_rel(listener.id, drift)
 	listener.change_rel(speaker.id, drift)
 	share(speaker, listener)
+	_store_rng_state()
 
 
 ## One unit of gossip: speaker's juiciest memory -> listener, degraded.
@@ -79,12 +84,27 @@ func _weighted_by_chattiness(room: Array) -> NPCRecord:
 	var total := 0.0
 	for npc in room:
 		total += float(npc.personality.get("chattiness", 50))
-	var roll := randf() * total
+	var roll := _rng.randf() * total
 	for npc in room:
 		roll -= float(npc.personality.get("chattiness", 50))
 		if roll <= 0.0:
 			return npc
 	return room.back()
+
+
+func _load_rng_state() -> void:
+	if WorldState.gossip_rng_state == 0:
+		WorldState.reset_gossip_rng()
+	_rng.seed = WorldState.gossip_rng_seed
+	_rng.state = WorldState.gossip_rng_state
+
+
+func _store_rng_state() -> void:
+	WorldState.gossip_rng_state = _rng.state
+
+
+func _pick(values: Array):
+	return values[_rng.randi() % values.size()]
 
 
 func _on_day_passed(_day: int) -> void:
