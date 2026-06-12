@@ -20,7 +20,7 @@ var _tween: Tween = null
 
 
 func _ready() -> void:
-	layer = 15
+	layer = 8
 	_build_ui()
 	visible = false
 	EventBus.survival_feedback.connect(_show)

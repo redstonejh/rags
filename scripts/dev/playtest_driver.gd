@@ -234,6 +234,8 @@ func _close_phone_open_inventory() -> void:
 	_check(_survival_feedback_detail().contains("Hunger +") \
 			and _survival_feedback_detail().contains("kcal logged"),
 			"inventory Use vignette reports food effects")
+	_check(_survival_feedback_layer() < inventory.layer,
+			"survival feedback stays behind the inventory modal")
 
 
 func _enter_store_move_to_counter() -> void:
@@ -265,6 +267,8 @@ func _open_shop_from_counter() -> void:
 	await get_tree().process_frame
 	var shop: CanvasLayer = _main.get_node("Shop")
 	_check(shop.visible and GameClock.paused, "shop opened from interact input")
+	_check(_survival_feedback_layer() < shop.layer,
+			"survival feedback stays behind the shop modal")
 	var buy_noodles := _find_named_descendant(shop, "Buy_instant_noodles") as Button
 	_check(buy_noodles != null and not buy_noodles.disabled,
 			"shop exposes a named food purchase button")
@@ -526,6 +530,11 @@ func _survival_feedback_kind() -> String:
 func _survival_feedback_detail() -> String:
 	var feedback := _main.get_node_or_null("SurvivalFeedback")
 	return str(feedback.get_meta("last_survival_detail", "")) if feedback != null else ""
+
+
+func _survival_feedback_layer() -> int:
+	var feedback := _main.get_node_or_null("SurvivalFeedback") as CanvasLayer
+	return feedback.layer if feedback != null else 0
 
 
 func _find_button_with_text(node: Node, text: String) -> Button:

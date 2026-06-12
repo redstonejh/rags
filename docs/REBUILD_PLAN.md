@@ -110,6 +110,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: rest amenities now report concrete time/need results. `RestAmenitySmokeTest.tscn` covers a real bed interaction through player input and verifies sleep reaches 7 AM without pause leaks.
   - Continued 2026-06-12: work spots now announce the shift fast-forward duration and end time before clock-out, with HUD-toast coverage in the real work-shift smoke test. Full montage staging remains.
   - Continued 2026-06-12: survival actions now share a short vignette/fade overlay for work, sleep, eating, showering, and TV time, with real-scene coverage for work/rest/eating. The vignettes now report concrete pay, need, and calorie deltas; full workplace montage composition remains.
+  - Continued 2026-06-12: the survival overlay now renders below phone/shop/inventory modals, so lingering fades cannot obscure transactional UI during fast playtest flows.
 - Balance via a headless bot-week telemetry run tuned to DESIGN.md §6.7: the dishwasher week is survivable but tight.
   - Started 2026-06-12: `EconomyTelemetrySmokeTest.tscn` now guards the dishwasher-week baseline with production shift pay, food spending, Monday rent, and a bounded weekly margin.
   - Continued 2026-06-12: `DishwasherWeekSmokeTest.tscn` now proves a production-scene dishwasher week across real work spots, shop purchases, eating, sleep, and Monday rent. Human pacing and screenshot review still remain before Phase 2 DoD.
