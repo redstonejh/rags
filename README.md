@@ -28,6 +28,7 @@ Real save/load regression: `godot --headless --path . res://scenes/dev/RealSaveL
 Long-session regression: `godot --headless --path . res://scenes/dev/LongSessionSmokeTest.tscn`
 Save-slot regressions touch the same protected ironman files; run them serially, not in parallel.
 Economy telemetry regression: `godot --headless --path . res://scenes/dev/EconomyTelemetrySmokeTest.tscn`
+Dishwasher week regression: `godot --headless --path . res://scenes/dev/DishwasherWeekSmokeTest.tscn`
 Work shift regression: `godot --headless --path . res://scenes/dev/WorkShiftSmokeTest.tscn`
 Rest amenity regression: `godot --headless --path . res://scenes/dev/RestAmenitySmokeTest.tscn`
 Opening beat regression: `godot --headless --path . res://scenes/dev/OpeningBeatSmokeTest.tscn`

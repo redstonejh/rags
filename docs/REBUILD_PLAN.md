@@ -110,6 +110,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: work spots now announce the shift fast-forward duration and end time before clock-out, with HUD-toast coverage in the real work-shift smoke test. Full montage staging remains.
 - Balance via a headless bot-week telemetry run tuned to DESIGN.md §6.7: the dishwasher week is survivable but tight.
   - Started 2026-06-12: `EconomyTelemetrySmokeTest.tscn` now guards the dishwasher-week baseline with production shift pay, food spending, Monday rent, and a bounded weekly margin.
+  - Continued 2026-06-12: `DishwasherWeekSmokeTest.tscn` now proves a production-scene dishwasher week across real work spots, shop purchases, eating, sleep, and Monday rent. Human pacing and screenshot review still remain before Phase 2 DoD.
 - **DoD:** "survive a week as a dishwasher" is genuinely playable and paced.
 
 ### Phase 3 — Crime + police to 100%
