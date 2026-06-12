@@ -71,6 +71,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
   - Started 2026-06-12: `Perception.read_line()` now gives People Reader a true-stat readout (`STR/DEX/CON/INT/WIS/CHA`) in dialogue, with M4 coverage for the visible text. Full social odds balance remains.
 - **DoD:** scripted playthrough covering chat → flirt → reality check → hearing about it from a stranger later.
+  - Started 2026-06-12: `PlaytestDriver.tscn` now drives chat -> flirt -> forced Reality Check -> sourced gossip from a stranger through the real dialogue UI. Full balance and human play checkpoint remain.
 
 ### Phase 2 — Survival loop to 100%
 - Origin opening beats (arrive by bus / wake behind the gas station…), HUD goal tracker fed by the existing `LifePaths`, tutorialized first day.

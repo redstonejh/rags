@@ -77,7 +77,7 @@ func _instantiate_main() -> void:
 	_player = _main.get_node("Player")
 	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
 	await _verify_player_outfit_switch()
-	await _verify_dialogue_portrait()
+	await _verify_social_playthrough()
 	_check(_exterior_ground_tile_count(Vector2i(5, 0)) > 0, "exterior sidewalks spawned")
 	_check(_exterior_ground_tile_count(Vector2i(6, 0)) > 0, "exterior dirt lots spawned")
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
@@ -237,16 +237,31 @@ func _verify_player_outfit_switch() -> void:
 			"player outfit sprite follows worn clothing")
 
 
-func _verify_dialogue_portrait() -> void:
+func _verify_social_playthrough() -> void:
 	var npcs: Array = WorldState.npcs.values()
-	var npc: NPCRecord = npcs[2] if npcs.size() > 2 else npcs.front()
-	_prepare_reality_check_target(npc)
-	EventBus.dialogue_requested.emit(npc.id)
+	if npcs.size() < 5:
+		_check(false, "social playthrough has enough NPCs")
+		return
+	var target: NPCRecord = npcs[2]
+	var witness: NPCRecord = npcs[3]
+	var stranger: NPCRecord = npcs[4]
+	_prepare_social_playthrough_records(target, witness, stranger)
+
+	EventBus.dialogue_requested.emit(target.id)
 	await get_tree().process_frame
 	var dialogue: CanvasLayer = _main.get_node("Dialogue")
 	var portrait := _find_named_descendant(dialogue, "Portrait")
 	_check(dialogue.visible and portrait is TextureRect and portrait.texture != null,
 			"dialogue opens with NPC portrait")
+	dialogue.call("_do_action_with_roll", "chat")
+	await get_tree().process_frame
+	_check(_dialogue_result_has_text(dialogue), "dialogue chat produces a response")
+	var before_flirt := target.rel("player")
+	dialogue.call("_do_action_with_roll", "flirt", 0.0)
+	await get_tree().process_frame
+	_check(target.rel("player") > before_flirt, "dialogue flirt changes relationship")
+	target.relationships["player"] = 0.0
+	_place_social_playtest_records(target, witness, stranger)
 	dialogue.call("_do_action_with_roll", "threaten", 0.99)
 	await get_tree().process_frame
 	var collapse := _find_named_descendant(dialogue, "RealityCheckLabel")
@@ -257,19 +272,58 @@ func _verify_dialogue_portrait() -> void:
 	dialogue._unhandled_input(_action("ui_cancel"))
 	await get_tree().process_frame
 
+	_check(witness.memories.any(func(m: Dictionary) -> bool:
+		return m.get("subject", "") == "player" and "misjudge" in str(m.get("text", ""))),
+			"Reality Check witness records the public miss")
+	_check(GossipSystem.share(witness, stranger), "witness can pass the Reality Check story")
+	EventBus.dialogue_requested.emit(stranger.id)
+	await get_tree().process_frame
+	dialogue.call("_do_action_with_roll", "chat")
+	await get_tree().process_frame
+	var result := _find_named_descendant(dialogue, "DialogueResult")
+	_check(result is Label and witness.display_name in str(result.text),
+			"stranger repeats sourced gossip in dialogue")
+	dialogue._unhandled_input(_action("ui_cancel"))
+	await get_tree().process_frame
 
-func _prepare_reality_check_target(npc: NPCRecord) -> void:
+
+func _prepare_social_playthrough_records(target: NPCRecord, witness: NPCRecord, stranger: NPCRecord) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	sheet.base_stats["STR"] = 13
+	sheet.base_stats["CHA"] = 13
 	sheet.skills["streetwise"] = 10.0
+	sheet.skills["persuasion"] = 80.0
 	sheet.flags["drunk_minutes"] = 60
-	npc.appearance_tags = ["plain"]
-	npc.relationships["player"] = 0.0
-	npc.flags.erase("dating_player")
+	_place_social_playtest_records(target, witness, stranger)
+	target.appearance_tags = ["plain"]
+	target.relationships["player"] = 20.0
+	target.flags.erase("dating_player")
 	for stat in CharacterSheet.STAT_IDS:
-		npc.stats[stat] = 8
-	npc.stats["STR"] = 15
-	npc.personality["bravery"] = 50
+		target.stats[stat] = 8
+	target.stats["STR"] = 15
+	target.personality["bravery"] = 50
+	witness.memories.clear()
+	stranger.memories.clear()
+	witness.relationships[stranger.id] = 45.0
+	stranger.relationships[witness.id] = 45.0
+
+
+func _place_social_playtest_records(target: NPCRecord, witness: NPCRecord, stranger: NPCRecord) -> void:
+	var scene_id := "loc_social_playtest"
+	for npc in [target, witness]:
+		npc.current_location_id = scene_id
+		npc.current_activity = "idle"
+		npc.traveling = false
+		npc.travel_to_id = ""
+	stranger.current_location_id = "loc_bar"
+	stranger.current_activity = "idle"
+	stranger.traveling = false
+	stranger.travel_to_id = ""
+
+
+func _dialogue_result_has_text(dialogue: Node) -> bool:
+	var result := _find_named_descendant(dialogue, "DialogueResult")
+	return result is Label and str(result.text).strip_edges() != ""
 
 
 func _find_named_descendant(node: Node, node_name: String) -> Node:
