@@ -81,8 +81,10 @@ func _origin_start_summary(origin: OriginDef) -> String:
 	var start_name := Locations.display_name(origin.starting_location_id)
 	var housing_name := _housing_name(origin.starting_housing_id)
 	var gear := _item_names(origin.starting_items)
-	return "[b]Start:[/b] %s\n[b]Housing:[/b] %s\n[b]Starting cash:[/b] $%.2f\n[b]Gear:[/b] %s" % [
-		start_name, housing_name, origin.starting_cash_cents / 100.0, gear]
+	var papers := "No ID - legal jobs, banking, and leases start blocked" \
+			if origin.tags.has("no_papers") else "Has ID"
+	return "[b]Start:[/b] %s\n[b]Housing:[/b] %s\n[b]Starting cash:[/b] $%.2f\n[b]Legal ID:[/b] %s\n[b]Gear:[/b] %s" % [
+		start_name, housing_name, origin.starting_cash_cents / 100.0, papers, gear]
 
 
 func _housing_name(housing_id: String) -> String:

@@ -45,7 +45,7 @@ func _test_character_creation_rejoins_existing_town() -> void:
 	_check(header != null and "Life #%d" % (previous_life_number + 1) in header.text \
 			and "Rust Harbor" in header.text,
 			"character creation labels the next life in the same town")
-	_test_origin_detail_summary(creation)
+	await _test_origin_detail_summary(creation)
 
 	var name_edit := creation.get_node("%NameEdit") as LineEdit
 	var start_button := creation.get_node("%StartButton") as Button
@@ -65,15 +65,24 @@ func _test_character_creation_rejoins_existing_town() -> void:
 
 
 func _test_origin_detail_summary(creation: Control) -> void:
-	var origin := ContentDB.get_origin(str(creation.get("origin_id")))
+	for origin in ContentDB.all_origins():
+		creation.call("_select_origin", origin.id)
+		await get_tree().process_frame
+		_check_origin_detail_summary(creation, origin)
+
+
+func _check_origin_detail_summary(creation: Control, origin: OriginDef) -> void:
 	var info := creation.get_node("%OriginInfo") as RichTextLabel
 	var text := info.text if info else ""
-	var start_name := Locations.display_name(origin.starting_location_id) if origin else ""
-	_check(origin != null and origin.opening_line in text,
-			"origin details show the authored arrival beat")
-	_check(origin != null and "[b]Start:[/b] %s" % start_name in text \
+	var start_name := Locations.display_name(origin.starting_location_id)
+	var id_text := "No ID" if origin.tags.has("no_papers") else "Has ID"
+	_check(origin.opening_line in text,
+			"%s details show the authored arrival beat" % origin.id)
+	_check("[b]Start:[/b] %s" % start_name in text \
 			and "[b]Housing:[/b]" in text and "[b]Gear:[/b]" in text,
-			"origin details summarize start location, housing, and gear")
+			"%s details summarize start location, housing, and gear" % origin.id)
+	_check("[b]Legal ID:[/b]" in text and id_text in text,
+			"%s details summarize legal ID status" % origin.id)
 
 
 func _check(ok: bool, what: String) -> void:
