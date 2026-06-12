@@ -65,6 +65,32 @@ func interact(_actor: Node) -> void:
 		return
 	var late_by := maxi(0, now_min - start)
 	var minutes_left := end - now_min
+	EventBus.toast.emit("Clocking in: %s. %s until %s.%s" % [
+		job.display_name,
+		_duration_label(minutes_left),
+		_time_label(end),
+		" Late by %s." % _duration_label(late_by) if late_by > 0 else ""])
 	EventBus.shift_started.emit(job, late_by)
 	GameClock.skip_minutes(minutes_left)
 	EventBus.shift_finished.emit(job, late_by)
+
+
+func _duration_label(minutes: int) -> String:
+	var clamped := maxi(minutes, 0)
+	var hours := clamped / 60
+	var mins := clamped % 60
+	if hours > 0 and mins > 0:
+		return "%dh %02dm" % [hours, mins]
+	if hours > 0:
+		return "%dh" % hours
+	return "%dm" % mins
+
+
+func _time_label(day_minutes: int) -> String:
+	var wrapped := posmod(day_minutes, GameClock.MINUTES_PER_DAY)
+	var hour := wrapped / 60
+	var minute := wrapped % 60
+	var h12 := hour % 12
+	if h12 == 0:
+		h12 = 12
+	return "%d:%02d %s" % [h12, minute, "AM" if hour < 12 else "PM"]

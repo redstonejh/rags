@@ -104,6 +104,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: inventory food use now reports concrete need gains and calories logged, with scripted playtest coverage for pressing the real Use button and consuming a food item.
   - Continued 2026-06-12: the scripted playtest now buys food through the real shop UI, verifying the store path spends cash and delivers inventory before survival balance relies on that loop.
   - Continued 2026-06-12: rest amenities now report concrete time/need results. `RestAmenitySmokeTest.tscn` covers a real bed interaction through player input and verifies sleep reaches 7 AM without pause leaks.
+  - Continued 2026-06-12: work spots now announce the shift fast-forward duration and end time before clock-out, with HUD-toast coverage in the real work-shift smoke test. Full montage staging remains.
 - Balance via a headless bot-week telemetry run tuned to DESIGN.md §6.7: the dishwasher week is survivable but tight.
   - Started 2026-06-12: `EconomyTelemetrySmokeTest.tscn` now guards the dishwasher-week baseline with production shift pay, food spending, Monday rent, and a bounded weekly margin.
 - **DoD:** "survive a week as a dishwasher" is genuinely playable and paced.

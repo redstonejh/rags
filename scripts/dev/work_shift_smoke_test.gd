@@ -64,6 +64,12 @@ func _test_diner_shift_interaction() -> void:
 	_player.call("_unhandled_input", _action("interact"))
 	await get_tree().process_frame
 
+	_check(_hud_has_toast("Clocking in: Dishwasher"),
+			"work interaction shows a clock-in cue")
+	_check(_hud_has_toast("6h 30m until 10:00 PM"),
+			"clock-in cue reports the fast-forward duration")
+	_check(_hud_has_toast("Clocked out."),
+			"work interaction shows a paycheck cue")
 	_check(GameClock.day == day_before and GameClock.hour == 22 and GameClock.minute == 0,
 			"work interaction fast-forwards to shift end")
 	_check(sheet.cash_cents == cash_before + job.wage_cents_per_shift,
@@ -110,6 +116,25 @@ func _find_enabled_button(node: Node) -> Button:
 		if found != null:
 			return found
 	return null
+
+
+func _hud_has_toast(needle: String) -> bool:
+	var hud := _main.get_node_or_null("HUD")
+	if hud == null:
+		return false
+	var toast_box := hud.get_node_or_null("%ToastBox")
+	if toast_box == null:
+		return false
+	return _node_tree_has_label_text(toast_box, needle)
+
+
+func _node_tree_has_label_text(node: Node, needle: String) -> bool:
+	if node is Label and str(node.text).contains(needle):
+		return true
+	for child in node.get_children():
+		if _node_tree_has_label_text(child, needle):
+			return true
+	return false
 
 
 func _action(name: String) -> InputEventAction:
