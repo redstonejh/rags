@@ -77,6 +77,7 @@ func _seed_people_app_state() -> void:
 			"born_day": GameClock.day - 12,
 			"traits": ["observant"],
 		}]
+		rival.memories.back()["previous_source_id"] = spouse.id
 
 
 func _instantiate_main() -> void:
@@ -135,6 +136,8 @@ func _open_phone() -> void:
 	_check(_descendant_text_contains(people_content, "dating you"), "People tab shows dating status")
 	_check(_descendant_text_contains(people_content, "Family: spouse; 1 child"),
 			"People tab shows family status")
+	_check(_descendant_text_contains(people_content, " via "),
+			"People tab shows gossip source chains")
 	_check(_descendant_text_contains(people_content, "Gossip:"), "People tab shows gossip")
 
 

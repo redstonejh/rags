@@ -186,6 +186,19 @@ func _test_gossip() -> void:
 	_check(str(heard.get("source_id", "")) == witness.id, "secondhand gossip records who said it")
 	_check(float(heard.get("salience", 0)) < 10.0, "gossip arrives degraded")
 	_check(stranger.rel("player") < 0.0, "stranger's opinion moved by a story alone")
+	var relay := _mk_npc("npc_chain", "loc_test_room", ["plain"], 8, 50, 50)
+	_check(GossipSystem.share(stranger, relay), "secondhand gossip can travel another hop")
+	var relayed: Dictionary = {}
+	for m in relay.memories:
+		if m.get("secondhand", false) and m.get("subject", "") == "player":
+			relayed = m
+	_check(str(relayed.get("source_id", "")) == stranger.id \
+			and str(relayed.get("previous_source_id", "")) == witness.id,
+			"gossip keeps a short source chain")
+	var chain_viewer := _fresh_viewer()
+	var relay_chat: Dictionary = Social.interact(chain_viewer, relay, "chat")
+	_check(stranger.display_name in str(relay_chat.text) and witness.display_name in str(relay_chat.text),
+			"two-hop gossip names both sources in chat")
 	# Two days pass; the story survives decay and comes up in conversation.
 	GossipSystem.decay_memories(stranger)
 	GossipSystem.decay_memories(stranger)

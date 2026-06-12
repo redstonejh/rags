@@ -285,8 +285,8 @@ static func _chat(sheet: CharacterSheet, npc: NPCRecord) -> String:
 	for m in npc.memories:
 		if m.get("subject", "") == "player" and m.get("secondhand", false) \
 				and float(m.get("salience", 0.0)) >= 3.0:
-			return "\"So... %s said you %s. %s\"" % [
-				_gossip_source_name(str(m.get("source_id", ""))),
+			return "\"So... %s that you %s. %s\"" % [
+				_gossip_source_chain(m),
 				str(m.get("text", "did something")),
 				_gossip_source_flavor(npc, str(m.get("source_id", "")))]
 	var lines := [
@@ -300,6 +300,16 @@ static func _chat(sheet: CharacterSheet, npc: NPCRecord) -> String:
 static func _gossip_source_name(source_id: String) -> String:
 	var source: NPCRecord = WorldState.npcs.get(source_id)
 	return source.display_name if source != null else "someone"
+
+
+static func _gossip_source_chain(memory: Dictionary) -> String:
+	var source_id := str(memory.get("source_id", ""))
+	var previous_id := str(memory.get("previous_source_id", ""))
+	if previous_id != "" and previous_id != source_id:
+		return "%s heard from %s" % [
+			_gossip_source_name(source_id),
+			_gossip_source_name(previous_id)]
+	return "%s said" % _gossip_source_name(source_id)
 
 
 static func _gossip_source_flavor(listener: NPCRecord, source_id: String) -> String:

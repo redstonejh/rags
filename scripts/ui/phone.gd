@@ -508,7 +508,7 @@ func _people_gossip_text(npc: NPCRecord) -> String:
 	if story.get("secondhand", false):
 		return "Gossip: %s heard from %s that %s %s - D%d" % [
 			npc.display_name.get_slice(" ", 0),
-			_npc_name(str(story.get("source_id", ""))),
+			_people_gossip_source_chain(story),
 			subject,
 			str(story.get("text", "did something")),
 			int(story.get("day", 0))]
@@ -517,6 +517,14 @@ func _people_gossip_text(npc: NPCRecord) -> String:
 		subject,
 		str(story.get("text", "did something")),
 		int(story.get("day", 0))]
+
+
+func _people_gossip_source_chain(story: Dictionary) -> String:
+	var source_id := str(story.get("source_id", ""))
+	var previous_id := str(story.get("previous_source_id", ""))
+	if previous_id != "" and previous_id != source_id:
+		return "%s via %s" % [_npc_name(source_id), _npc_name(previous_id)]
+	return _npc_name(source_id)
 
 
 func _npc_name(npc_id: String) -> String:
