@@ -190,6 +190,7 @@ func consume_item(item_id: String) -> bool:
 	if "booze" in item.tags and item.substance_id == "":
 		flags["drunk_minutes"] = mini(int(flags.get("drunk_minutes", 0)) + 90, 240)
 	inventory.erase(item_id)
+	EventBus.path_updated.emit()
 	return true
 
 

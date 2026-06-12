@@ -233,9 +233,18 @@ func _verify_date_scene_ui() -> void:
 func _close_phone_open_inventory() -> void:
 	var phone: CanvasLayer = _main.get_node("Phone")
 	var inventory: CanvasLayer = _main.get_node("Inventory")
-	WorldState.player_sheet.needs.values["hunger"] = 40.0
-	WorldState.player_sheet.inventory.append("instant_noodles")
-	WorldState.player_sheet.flags["calories_today"] = 0
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var objective := _main.get_node_or_null("HUD/TopLeft/VBox/ObjectiveLabel") as Label
+	sheet.job_id = "dishwasher"
+	sheet.shifts_worked = 1
+	sheet.needs.change("hunger", 20.0 - sheet.needs.get_value("hunger"))
+	sheet.inventory = _without_hunger_consumables(sheet.inventory)
+	sheet.inventory.append("candy_bar")
+	sheet.flags["calories_today"] = 0
+	EventBus.path_updated.emit()
+	await get_tree().process_frame
+	_check(objective != null and not ("Stay fed" in objective.text),
+			"HUD objective treats carried food as a short-term buffer")
 	phone._unhandled_input(_action("phone"))
 	inventory._unhandled_input(_action("inventory"))
 	await get_tree().process_frame
@@ -245,12 +254,14 @@ func _close_phone_open_inventory() -> void:
 	if use_button != null:
 		use_button.pressed.emit()
 		await get_tree().process_frame
-	_check(WorldState.player_sheet.needs.get_value("hunger") > 40.0,
+	_check(WorldState.player_sheet.needs.get_value("hunger") > 20.0,
 			"inventory Use restores hunger")
-	_check(int(WorldState.player_sheet.flags.get("calories_today", 0)) > 0,
+	_check(int(sheet.flags.get("calories_today", 0)) > 0,
 			"inventory Use logs calories")
-	_check("instant_noodles" not in WorldState.player_sheet.inventory,
+	_check("candy_bar" not in sheet.inventory,
 			"inventory Use removes one consumed item")
+	_check(objective != null and "Stay fed" in objective.text,
+			"HUD objective refreshes after consuming the last insufficient food")
 	_check(_survival_feedback_kind() == "eat",
 			"inventory Use shows the survival feedback vignette")
 	_check(_survival_feedback_detail().contains("Hunger +") \
@@ -459,14 +470,18 @@ func _force_first_week_food_blocker() -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	sheet.job_id = "dishwasher"
 	sheet.shifts_worked = 1
-	var non_food: Array = []
-	for item_id in sheet.inventory:
+	sheet.inventory = _without_hunger_consumables(sheet.inventory)
+	sheet.needs.change("hunger", 20.0 - sheet.needs.get_value("hunger"))
+
+
+func _without_hunger_consumables(inventory: Array) -> Array:
+	var kept: Array = []
+	for item_id in inventory:
 		var item := ContentDB.get_item(str(item_id))
 		if item == null or "consumable" not in item.tags \
 				or float(item.need_effects.get("hunger", 0.0)) <= 0.0:
-			non_food.append(item_id)
-	sheet.inventory = non_food
-	sheet.needs.change("hunger", 20.0 - sheet.needs.get_value("hunger"))
+			kept.append(item_id)
+	return kept
 
 
 func _verify_social_playthrough() -> void:
