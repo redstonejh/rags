@@ -67,6 +67,16 @@ func _seed_people_app_state() -> void:
 	rival.relationships[date.id] = -45.0
 	rival.add_memory("witnessed", "player", "were seen arguing outside Mel's", -0.4, 5.0, true)
 	rival.memories.back()["source_id"] = date.id
+	if people.size() >= 6:
+		var spouse: NPCRecord = people[5]
+		spouse.relationships["player"] = 82.0
+		spouse.flags["married_to_player"] = true
+		WorldState.player_sheet.flags["spouse_id"] = spouse.id
+		WorldState.player_sheet.children = [{
+			"name": "Dot",
+			"born_day": GameClock.day - 12,
+			"traits": ["observant"],
+		}]
 
 
 func _instantiate_main() -> void:
@@ -123,6 +133,8 @@ func _open_phone() -> void:
 	_check(_descendant_text_contains(people_content, "known contacts"),
 			"People tab hides unknown townsfolk")
 	_check(_descendant_text_contains(people_content, "dating you"), "People tab shows dating status")
+	_check(_descendant_text_contains(people_content, "Family: spouse; 1 child"),
+			"People tab shows family status")
 	_check(_descendant_text_contains(people_content, "Gossip:"), "People tab shows gossip")
 
 

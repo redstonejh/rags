@@ -375,18 +375,24 @@ func _refresh_people() -> void:
 		title.text = "%s - %s%s" % [
 			npc.display_name,
 			_people_rel_text(npc.rel("player")),
-			" - dating you" if npc.flags.get("dating_player", false) else ""]
+			_people_partner_suffix(npc)]
 		row.add_child(title)
 
 		var details := Label.new()
 		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		details.add_theme_font_size_override("font_size", 11)
 		details.add_theme_color_override("font_color", Color(0.72, 0.72, 0.78))
-		details.text = "%s at %s - %s\n%s" % [
-			_people_role(npc),
-			Locations.display_name(npc.current_location_id),
-			_people_connections_text(npc),
-			_people_gossip_text(npc)]
+		var detail_lines: Array[String] = [
+			"%s at %s - %s" % [
+				_people_role(npc),
+				Locations.display_name(npc.current_location_id),
+				_people_connections_text(npc)],
+		]
+		var family := _people_family_text(npc)
+		if family != "":
+			detail_lines.append(family)
+		detail_lines.append(_people_gossip_text(npc))
+		details.text = "\n".join(detail_lines)
 		row.add_child(details)
 
 
@@ -435,6 +441,14 @@ func _people_rel_text(value: float) -> String:
 	return "%s (%s)" % [label, _signed_int(value)]
 
 
+func _people_partner_suffix(npc: NPCRecord) -> String:
+	if _people_is_player_spouse(npc):
+		return " - married to you"
+	if npc.flags.get("dating_player", false):
+		return " - dating you"
+	return ""
+
+
 func _people_role(npc: NPCRecord) -> String:
 	var archetype := npc.archetype()
 	return archetype.display_name if archetype != null else npc.archetype_id.capitalize()
@@ -468,6 +482,24 @@ func _people_connections_text(npc: NPCRecord) -> String:
 	return "Status: %s" % ("; ".join(parts) if not parts.is_empty() else "no public entanglements")
 
 
+func _people_family_text(npc: NPCRecord) -> String:
+	var parts: Array[String] = []
+	if _people_is_player_spouse(npc):
+		parts.append("spouse")
+		var sheet: CharacterSheet = WorldState.player_sheet
+		if sheet != null and not sheet.children.is_empty():
+			parts.append("%d child%s" % [
+				sheet.children.size(),
+				"" if sheet.children.size() == 1 else "ren"])
+	var spouse_id := str(npc.flags.get("spouse_id", ""))
+	if spouse_id != "" and spouse_id != "player":
+		parts.append("married to %s" % _npc_name(spouse_id))
+	var child_count := int(npc.flags.get("children_count", 0))
+	if child_count > 0:
+		parts.append("%d child%s" % [child_count, "" if child_count == 1 else "ren"])
+	return ("Family: %s" % "; ".join(parts)) if not parts.is_empty() else ""
+
+
 func _people_gossip_text(npc: NPCRecord) -> String:
 	var story := npc.top_gossip(3.0)
 	if story.is_empty():
@@ -494,6 +526,12 @@ func _npc_name(npc_id: String) -> String:
 		return "you"
 	var npc: NPCRecord = WorldState.npcs.get(npc_id)
 	return npc.display_name if npc != null else npc_id
+
+
+func _people_is_player_spouse(npc: NPCRecord) -> bool:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	return npc.flags.get("married_to_player", false) \
+			or (sheet != null and str(sheet.flags.get("spouse_id", "")) == npc.id)
 
 
 func _signed_int(value: float) -> String:
