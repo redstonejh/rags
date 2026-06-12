@@ -154,7 +154,7 @@ func _walk_away() -> void:
 		return
 	close_all()
 	EventBus.toast.emit("%s's life goes on without you at the wheel." % npc.display_name)
-	GameFlow.to_character_creation()
+	GameFlow.call_deferred("to_character_creation")
 
 
 func _quit_to_menu() -> void:

@@ -936,7 +936,7 @@ func _refresh_paths() -> void:
 		if npc != null:
 			_close()
 			EventBus.toast.emit("%s's life goes on without you at the wheel." % npc.display_name)
-			GameFlow.to_character_creation())
+			GameFlow.call_deferred("to_character_creation"))
 	_paths_box.add_child(walk)
 	var paths := LifePaths.evaluate(sheet)
 	if paths.is_empty():

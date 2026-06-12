@@ -20,6 +20,7 @@ func _ready() -> void:
 	await _test_click_move()
 	await _test_wasd_cancels_click_move()
 	_test_click_move_interacts()
+	_test_pause_menu_walk_away()
 	print("UIStack smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -132,6 +133,27 @@ func _test_click_move_interacts() -> void:
 	_check(not _player.call("has_click_target"), "click path clears after interaction")
 
 
+func _test_pause_menu_walk_away() -> void:
+	print("[Pause menu Walk Away]")
+	GameClock.clear_pause_locks()
+	GameClock.set_manual_paused(false)
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var expected_npc_id := "npc_walked_%02d" % sheet.lives_lived
+	var stack: Node = _main.get_node("UIStack")
+	_main._unhandled_input(_action("ui_cancel"))
+	var walk_button := _find_button_with_text(stack, "Walk Away")
+	_check(walk_button != null and stack.call("is_modal_open", "pause_menu"),
+			"pause menu exposes Walk Away")
+	if walk_button == null:
+		return
+	walk_button.pressed.emit()
+	var old_self: NPCRecord = WorldState.npcs.get(expected_npc_id)
+	_check(not sheet.alive, "Walk Away ends the controlled life")
+	_check(old_self != null and old_self.display_name == "Modal Tester" \
+			and old_self.flags.get("was_player_life", -1) == sheet.lives_lived,
+			"Walk Away turns the player into a persistent NPC")
+
+
 func _find_exterior_door(location_id: String) -> Node:
 	var world_root: Node = _main.get_node("WorldRoot")
 	if world_root.get_child_count() == 0:
@@ -140,6 +162,16 @@ func _find_exterior_door(location_id: String) -> Node:
 	for child in town.get_children():
 		if child.get("target_location_id") == location_id:
 			return child
+	return null
+
+
+func _find_button_with_text(node: Node, text: String) -> Button:
+	if node is Button and str(node.text) == text:
+		return node
+	for child in node.get_children():
+		var found := _find_button_with_text(child, text)
+		if found != null:
+			return found
 	return null
 
 
