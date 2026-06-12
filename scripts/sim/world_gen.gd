@@ -14,6 +14,7 @@ static func generate(seed_value: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var npcs: Dictionary = {}
+	var used_names := {}
 	var serial := 0
 
 	for arch in ContentDB.archetypes.values():
@@ -21,7 +22,7 @@ static func generate(seed_value: int) -> Dictionary:
 			serial += 1
 			var n := NPCRecord.new()
 			n.id = "npc_%04d" % serial
-			n.display_name = Coherence.random_name(rng)
+			n.display_name = _unique_name(rng, used_names, serial)
 			n.archetype_id = arch.id
 			n.appearance_tags = Coherence.random_appearance(rng, arch.stat_bias)
 			n.is_subversion = rng.randf() < SUBVERSION_RATE
@@ -58,6 +59,17 @@ static func generate(seed_value: int) -> Dictionary:
 			npcs[n.id] = n
 
 	return npcs
+
+
+static func _unique_name(rng: RandomNumberGenerator, used_names: Dictionary, serial: int) -> String:
+	for _attempt in 20:
+		var candidate := Coherence.random_name(rng)
+		if not used_names.has(candidate):
+			used_names[candidate] = true
+			return candidate
+	var fallback := "%s #%03d" % [Coherence.random_name(rng), serial]
+	used_names[fallback] = true
+	return fallback
 
 
 static func _roll_stat(rng: RandomNumberGenerator) -> int:

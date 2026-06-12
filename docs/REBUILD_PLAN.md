@@ -73,6 +73,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Continued 2026-06-12: secondhand gossip now records the NPC source, and both chat lines and the phone People tab name who passed the story along with relationship-flavored skepticism/trust. Player-knowledge gating remains.
   - Continued 2026-06-12: two-hop gossip now shows a compact source chain in chat and the People tab, so players can see when a story came through another NPC. Longer archive/history views remain.
   - Continued 2026-06-12: People rows now include a compact recent-stories line with multiple salient memories, including source-chain flavor. Longer archive/history views remain.
+  - Continued 2026-06-12: new-world generation now enforces unique NPC display names, so People rows, gossip lines, and playtest screenshots do not collapse distinct townsfolk into duplicate names.
   - Continued 2026-06-12: the People tab now shows known contacts only and hides unknown townsfolk until relationship, dating, or memory state gives the player a reason to know them. Broader NPC family records remain.
   - Continued 2026-06-12: known spouses now show family context in People, including player children when the spouse is listed. Broader NPC family networks remain.
 - Dating becomes activities (a drink at the Anchor, a meal at Mel's — short scenes with choices), not a button.

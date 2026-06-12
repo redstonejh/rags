@@ -43,15 +43,18 @@ func _test_world_gen() -> void:
 	_check(n >= 150 and n <= 250, "population in range (%d)" % n)
 	var bad := 0
 	var subversions := 0
+	var names := {}
 	for npc in WorldState.npcs.values():
 		if npc.archetype() == null or not Locations.defs.has(npc.home_id):
 			bad += 1
+		names[npc.display_name] = true
 		if npc.is_subversion:
 			subversions += 1
 		for s in CharacterSheet.STAT_IDS:
 			if not npc.stats.has(s):
 				bad += 1
 	_check(bad == 0, "all NPCs have valid archetype/home/stats")
+	_check(names.size() == n, "generated NPC display names are unique")
 	_check(subversions > 5 and subversions < n / 4,
 			"subversion rate sane (%d/%d)" % [subversions, n])
 	var doors := Locations.door_positions.size()
