@@ -237,16 +237,38 @@ func _verify_player_outfit_switch() -> void:
 
 
 func _verify_dialogue_portrait() -> void:
-	var npc: NPCRecord = WorldState.npcs.values().front()
+	var npcs: Array = WorldState.npcs.values()
+	var npc: NPCRecord = npcs[2] if npcs.size() > 2 else npcs.front()
+	_prepare_reality_check_target(npc)
 	EventBus.dialogue_requested.emit(npc.id)
 	await get_tree().process_frame
 	var dialogue: CanvasLayer = _main.get_node("Dialogue")
 	var portrait := _find_named_descendant(dialogue, "Portrait")
 	_check(dialogue.visible and portrait is TextureRect and portrait.texture != null,
 			"dialogue opens with NPC portrait")
+	dialogue.call("_do_action_with_roll", "threaten", 0.99)
+	await get_tree().process_frame
+	var collapse := _find_named_descendant(dialogue, "RealityCheckLabel")
+	_check(collapse is Label and collapse.visible and str(collapse.text).contains("REALITY CHECK") \
+			and str(collapse.text).contains("->"),
+			"dialogue shows Reality Check odds collapse")
 	await _checkpoint("00_dialogue")
 	dialogue._unhandled_input(_action("ui_cancel"))
 	await get_tree().process_frame
+
+
+func _prepare_reality_check_target(npc: NPCRecord) -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	sheet.base_stats["STR"] = 13
+	sheet.skills["streetwise"] = 10.0
+	sheet.flags["drunk_minutes"] = 60
+	npc.appearance_tags = ["plain"]
+	npc.relationships["player"] = 0.0
+	npc.flags.erase("dating_player")
+	for stat in CharacterSheet.STAT_IDS:
+		npc.stats[stat] = 8
+	npc.stats["STR"] = 15
+	npc.personality["bravery"] = 50
 
 
 func _find_named_descendant(node: Node, node_name: String) -> Node:

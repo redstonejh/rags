@@ -7,10 +7,14 @@ var _panel: PanelContainer
 var _name_label: Label
 var _rel_label: Label
 var _read_label: Label
+var _reality_label: Label
 var _result_label: Label
-var _actions_box: VBoxContainer
+var _actions_box: GridContainer
 var _portrait: TextureRect
 var _npc: NPCRecord = null
+var _revealed_action: String = ""
+var _revealed_perceived: float = -1.0
+var _revealed_actual: float = -1.0
 const MODAL_ID := "dialogue"
 const PORTRAIT_DIR := "res://assets/portraits/"
 
@@ -77,13 +81,24 @@ func _build_ui() -> void:
 	_read_label.add_theme_color_override("font_color", Color(0.7, 0.68, 0.55))
 	vbox.add_child(_read_label)
 
+	_reality_label = Label.new()
+	_reality_label.name = "RealityCheckLabel"
+	_reality_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reality_label.visible = false
+	_reality_label.add_theme_font_size_override("font_size", 14)
+	_reality_label.add_theme_color_override("font_color", Color(0.95, 0.35, 0.25))
+	vbox.add_child(_reality_label)
+
 	_result_label = Label.new()
+	_result_label.name = "DialogueResult"
 	_result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_result_label.custom_minimum_size = Vector2(540, 0)
 	vbox.add_child(_result_label)
 
-	_actions_box = VBoxContainer.new()
-	_actions_box.add_theme_constant_override("separation", 4)
+	_actions_box = GridContainer.new()
+	_actions_box.columns = 2
+	_actions_box.add_theme_constant_override("h_separation", 6)
+	_actions_box.add_theme_constant_override("v_separation", 4)
 	vbox.add_child(_actions_box)
 
 
@@ -92,6 +107,7 @@ func _open(npc_id: String) -> void:
 	if _npc == null:
 		return
 	_result_label.text = ""
+	_clear_reality_check()
 	_set_portrait(_npc)
 	_read_label.text = "( %s )" % Perception.read_line(WorldState.player_sheet, _npc)
 	_refresh()
@@ -128,12 +144,20 @@ func _refresh() -> void:
 	for action_id in Social.available_actions(sheet, _npc):
 		var def: Dictionary = Social.ACTIONS.get(action_id, {"label": "Spend time together", "roll": false})
 		var btn := Button.new()
+		btn.name = "Action_%s" % action_id
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.custom_minimum_size = Vector2(260, 0)
 		if def.get("roll", false):
 			var shown := Social.perceived_chance(sheet, _npc, action_id)
 			btn.text = "%s  —  %d%%" % [def.label, roundi(shown * 100)]
 		else:
 			btn.text = str(def.get("label", action_id))
+		if action_id == _revealed_action:
+			btn.text = "%s  -  %d%% -> %d%%" % [
+				def.get("label", action_id),
+				roundi(_revealed_perceived * 100),
+				roundi(_revealed_actual * 100)]
+			btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
 		btn.pressed.connect(_do_action.bind(action_id))
 		_actions_box.add_child(btn)
 
@@ -149,6 +173,8 @@ func _set_portrait(npc: NPCRecord) -> void:
 
 
 func _do_action(action_id: String) -> void:
+	_do_action_with_roll(action_id)
+	return
 	if _npc == null:
 		return
 	var result := Social.interact(WorldState.player_sheet, _npc, action_id)
@@ -162,6 +188,36 @@ func _do_action(action_id: String) -> void:
 		_result_label.add_theme_color_override("font_color",
 				Color(0.8, 0.9, 0.75) if result.success else Color(0.8, 0.7, 0.6))
 	_refresh()
+
+
+func _do_action_with_roll(action_id: String, forced_roll := -1.0) -> void:
+	if _npc == null:
+		return
+	var result := Social.interact(WorldState.player_sheet, _npc, action_id, forced_roll)
+	if result.reality_check:
+		_revealed_action = action_id
+		_revealed_perceived = float(result.perceived)
+		_revealed_actual = float(result.actual)
+		_reality_label.text = "REALITY CHECK: %d%% -> %d%%\nThe read collapses in public. Heads turn. This story can travel." % [
+			roundi(result.perceived * 100), roundi(result.actual * 100)]
+		_reality_label.visible = true
+		_result_label.text = result.text
+		_result_label.add_theme_color_override("font_color", Color(0.9, 0.35, 0.3))
+	else:
+		_clear_reality_check()
+		_result_label.text = result.text
+		_result_label.add_theme_color_override("font_color",
+				Color(0.8, 0.9, 0.75) if result.success else Color(0.8, 0.7, 0.6))
+	_refresh()
+
+
+func _clear_reality_check() -> void:
+	_revealed_action = ""
+	_revealed_perceived = -1.0
+	_revealed_actual = -1.0
+	if _reality_label != null:
+		_reality_label.text = ""
+		_reality_label.visible = false
 
 
 func _rel_text(value: float) -> String:
