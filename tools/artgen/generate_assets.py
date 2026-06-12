@@ -23,6 +23,12 @@ NPC_OUTFIT_PATH = CHARS_DIR / "outfit_npc.png"
 BODY_WALK_PATH = CHARS_DIR / "body_base_walk.png"
 PLAYER_OUTFIT_WALK_PATH = CHARS_DIR / "outfit_player_walk.png"
 NPC_OUTFIT_WALK_PATH = CHARS_DIR / "outfit_npc_walk.png"
+PLAYER_CLOTHING_WALK_PATHS = {
+    "hoodie": CHARS_DIR / "outfit_hoodie_walk.png",
+    "thrift_blazer": CHARS_DIR / "outfit_thrift_blazer_walk.png",
+    "nice_suit": CHARS_DIR / "outfit_nice_suit_walk.png",
+    "ski_mask": CHARS_DIR / "outfit_ski_mask_walk.png",
+}
 DOOR_PATH = PROPS_DIR / "door.png"
 SHOP_COUNTER_PATH = PROPS_DIR / "shop_counter.png"
 PARKED_CAR_PATH = PROPS_DIR / "parked_car.png"
@@ -221,7 +227,8 @@ def draw_body_base() -> None:
 
 
 def draw_outfit_frame(draw: ImageDraw.ImageDraw, ox: int, oy: int, direction: int, frame: int,
-                      color: tuple[int, int, int], trim: tuple[int, int, int]) -> None:
+                      color: tuple[int, int, int], trim: tuple[int, int, int],
+                      mask: bool = False) -> None:
     main = (*color, 255)
     dark = (*tuple(max(0, c - 38) for c in color), 255)
     trim_rgba = (*trim, 255)
@@ -247,6 +254,18 @@ def draw_outfit_frame(draw: ImageDraw.ImageDraw, ox: int, oy: int, direction: in
     draw.rectangle((ox + 17 + foot_shift, oy + 31, ox + 22 + foot_shift, oy + 42), fill=(45, 47, 54, 255))
     draw.rectangle((ox + 9 - foot_shift, oy + 42, ox + 15 - foot_shift, oy + 44), fill=(28, 25, 24, 255))
     draw.rectangle((ox + 17 + foot_shift, oy + 42, ox + 23 + foot_shift, oy + 44), fill=(28, 25, 24, 255))
+    if mask:
+        mask_color = (28, 30, 32, 255)
+        eye = (216, 202, 164, 255)
+        draw.rectangle((ox + 10, oy + 4 + bob, ox + 22, oy + 16 + bob), fill=mask_color)
+        if direction == 2:
+            draw.rectangle((ox + 11, oy + 15 + bob, ox + 21, oy + 18 + bob), fill=mask_color)
+        elif direction == 1:
+            draw.rectangle((ox + 17, oy + 9 + bob, ox + 21, oy + 11 + bob), fill=eye)
+        elif direction == 3:
+            draw.rectangle((ox + 11, oy + 9 + bob, ox + 15, oy + 11 + bob), fill=eye)
+        else:
+            draw.rectangle((ox + 12, oy + 9 + bob, ox + 20, oy + 11 + bob), fill=eye)
 
 
 def draw_outfit(path: Path, color: tuple[int, int, int], trim: tuple[int, int, int]) -> None:
@@ -268,12 +287,13 @@ def draw_body_walk_sheet() -> None:
     print(f"wrote {BODY_WALK_PATH.relative_to(ROOT)}")
 
 
-def draw_outfit_walk_sheet(path: Path, color: tuple[int, int, int], trim: tuple[int, int, int]) -> None:
+def draw_outfit_walk_sheet(path: Path, color: tuple[int, int, int], trim: tuple[int, int, int],
+                           mask: bool = False) -> None:
     img = Image.new("RGBA", (32 * 4, 48 * 4), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     for direction in range(4):
         for frame in range(4):
-            draw_outfit_frame(draw, frame * 32, direction * 48, direction, frame, color, trim)
+            draw_outfit_frame(draw, frame * 32, direction * 48, direction, frame, color, trim, mask)
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
     print(f"wrote {path.relative_to(ROOT)}")
@@ -286,6 +306,10 @@ def generate_characters() -> None:
     draw_body_walk_sheet()
     draw_outfit_walk_sheet(PLAYER_OUTFIT_WALK_PATH, (64, 98, 178), (211, 218, 235))
     draw_outfit_walk_sheet(NPC_OUTFIT_WALK_PATH, (210, 210, 210), (250, 250, 250))
+    draw_outfit_walk_sheet(PLAYER_CLOTHING_WALK_PATHS["hoodie"], (92, 98, 105), (180, 186, 190))
+    draw_outfit_walk_sheet(PLAYER_CLOTHING_WALK_PATHS["thrift_blazer"], (96, 80, 62), (212, 197, 163))
+    draw_outfit_walk_sheet(PLAYER_CLOTHING_WALK_PATHS["nice_suit"], (34, 42, 58), (232, 232, 222))
+    draw_outfit_walk_sheet(PLAYER_CLOTHING_WALK_PATHS["ski_mask"], (48, 50, 52), (120, 126, 130), True)
 
 
 def draw_door() -> None:

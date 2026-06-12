@@ -13,6 +13,13 @@ const DIR_DOWN := 0
 const DIR_RIGHT := 1
 const DIR_UP := 2
 const DIR_LEFT := 3
+const DEFAULT_OUTFIT_TEXTURE_PATH := "res://assets/chars/outfit_player_walk.png"
+const OUTFIT_TEXTURES := {
+	"hoodie": "res://assets/chars/outfit_hoodie_walk.png",
+	"thrift_blazer": "res://assets/chars/outfit_thrift_blazer_walk.png",
+	"nice_suit": "res://assets/chars/outfit_nice_suit_walk.png",
+	"ski_mask": "res://assets/chars/outfit_ski_mask_walk.png",
+}
 
 ## Owned by the CharacterSheet in WorldState — the player node is a view.
 var needs: Needs
@@ -22,6 +29,7 @@ var _click_move_active := false
 var _click_interact_target: Interactable = null
 var _anim_time := 0.0
 var _facing_dir := DIR_DOWN
+var _current_outfit_visual_id := ""
 
 @onready var interact_area: Area2D = $InteractArea
 @onready var nav_agent: NavigationAgent2D = $NavigationAgent2D
@@ -37,6 +45,7 @@ func _ready() -> void:
 	# Deferred so the HUD (added after the player) is connected before the
 	# initial values arrive.
 	_emit_all_needs.call_deferred()
+	_sync_outfit_texture()
 
 
 func _physics_process(delta: float) -> void:
@@ -50,6 +59,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
+	_sync_outfit_texture()
 	_update_sprite_animation(velocity, delta)
 	_update_interact_target()
 	_try_click_interaction()
@@ -121,6 +131,19 @@ func _direction_from_velocity(move_velocity: Vector2) -> int:
 	if absf(move_velocity.x) > absf(move_velocity.y):
 		return DIR_RIGHT if move_velocity.x > 0.0 else DIR_LEFT
 	return DIR_DOWN if move_velocity.y > 0.0 else DIR_UP
+
+
+func _sync_outfit_texture() -> void:
+	var outfit_id := str(WorldState.player_sheet.flags.get("outfit", ""))
+	if outfit_id == _current_outfit_visual_id:
+		return
+	_current_outfit_visual_id = outfit_id
+	var texture_path: String = OUTFIT_TEXTURES.get(outfit_id, DEFAULT_OUTFIT_TEXTURE_PATH)
+	var texture: Texture2D = load(texture_path)
+	if texture == null:
+		texture = load(DEFAULT_OUTFIT_TEXTURE_PATH)
+	if texture != null:
+		outfit_sprite.texture = texture
 
 
 func _click_move_velocity(speed: float) -> Vector2:

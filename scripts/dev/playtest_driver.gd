@@ -58,6 +58,7 @@ func _instantiate_main() -> void:
 	await get_tree().physics_frame
 	_player = _main.get_node("Player")
 	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
+	await _verify_player_outfit_switch()
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
 	_check(_exterior_street_prop_count() > 0, "exterior street props spawned")
 
@@ -197,6 +198,16 @@ func _player_has_walk_sheets() -> bool:
 	var outfit: Sprite2D = _player.get_node("OutfitSprite")
 	return body.hframes == 4 and body.vframes == 4 \
 			and outfit.hframes == 4 and outfit.vframes == 4
+
+
+func _verify_player_outfit_switch() -> void:
+	WorldState.player_sheet.inventory.append("nice_suit")
+	WorldState.player_sheet.flags["outfit"] = "nice_suit"
+	await get_tree().physics_frame
+	var outfit: Sprite2D = _player.get_node("OutfitSprite")
+	_check(outfit.texture != null \
+			and outfit.texture.resource_path.ends_with("outfit_nice_suit_walk.png"),
+			"player outfit sprite follows worn clothing")
 
 
 func _exterior_facade_count() -> int:
