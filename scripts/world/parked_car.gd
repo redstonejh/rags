@@ -10,6 +10,8 @@ const CHOP_MAX_CENTS := 30000
 const OCCUPIED_CHANCE := 0.3
 const CAR_TEXTURE_PATH := "res://assets/props/parked_car.png"
 
+var occupied_chance := OCCUPIED_CHANCE
+
 
 func _init() -> void:
 	verb = "Jack"
@@ -37,7 +39,7 @@ func _init() -> void:
 
 
 func interact(_actor: Node) -> void:
-	if randf() < OCCUPIED_CHANCE:
+	if randf() < occupied_chance:
 		var occupant := _pick_occupant()
 		if occupant != null:
 			EventBus.confrontation_started.emit({
@@ -49,6 +51,12 @@ func interact(_actor: Node) -> void:
 	WorldState.player_sheet.add_dirty_cash(loot)
 	CrimeSystem.commit("car_theft", "exterior", null, global_position)
 	EventBus.toast.emit("Empty. Twenty minutes later it's $%.2f at the chop shop. Beater rates." % (loot / 100.0))
+	EventBus.interact_target_changed.emit("")
+	monitoring = false
+	monitorable = false
+	var parent := get_parent()
+	if parent != null:
+		parent.remove_child(self)
 	queue_free()
 
 

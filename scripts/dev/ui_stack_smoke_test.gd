@@ -19,6 +19,7 @@ func _ready() -> void:
 	_test_escape_pause_menu()
 	await _test_click_move()
 	await _test_wasd_cancels_click_move()
+	_test_empty_carjack_removes_car()
 	_test_click_move_interacts()
 	_test_pause_menu_walk_away()
 	print("UIStack smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
@@ -115,6 +116,28 @@ func _test_wasd_cancels_click_move() -> void:
 	_check(not _player.call("has_click_target"), "WASD cancels click path")
 
 
+func _test_empty_carjack_removes_car() -> void:
+	print("[Empty carjack]")
+	GameClock.clear_pause_locks()
+	GameClock.set_manual_paused(false)
+	var car := _find_descendant_of_type(_main.get("current_world"), ParkedCar) as ParkedCar
+	_check(car != null, "parked car exists")
+	if car == null:
+		return
+	var parent := car.get_parent()
+	var dirty_before: int = WorldState.player_sheet.dirty_cents
+	var cases_before: int = WorldState.crime_cases.size()
+	car.occupied_chance = 0.0
+	car.interact(_player)
+	_check(parent != null and not parent.get_children().has(car),
+			"empty carjack removes the car synchronously")
+	_check(WorldState.player_sheet.dirty_cents > dirty_before,
+			"empty carjack pays dirty cash")
+	_check(WorldState.crime_cases.size() == cases_before + 1,
+			"empty carjack creates a car-theft case")
+	_check(not GameClock.paused, "empty carjack leaves control unpaused")
+
+
 func _test_click_move_interacts() -> void:
 	print("[Click-to-interact]")
 	GameClock.clear_pause_locks()
@@ -152,6 +175,18 @@ func _test_pause_menu_walk_away() -> void:
 	_check(old_self != null and old_self.display_name == "Modal Tester" \
 			and old_self.flags.get("was_player_life", -1) == sheet.lives_lived,
 			"Walk Away turns the player into a persistent NPC")
+
+
+func _find_descendant_of_type(node: Node, type) -> Node:
+	if node == null:
+		return null
+	if is_instance_of(node, type):
+		return node
+	for child in node.get_children():
+		var found := _find_descendant_of_type(child, type)
+		if found != null:
+			return found
+	return null
 
 
 func _find_exterior_door(location_id: String) -> Node:
