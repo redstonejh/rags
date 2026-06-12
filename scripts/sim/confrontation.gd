@@ -66,7 +66,8 @@ static func true_fight_chance(sheet: CharacterSheet, npc: NPCRecord) -> float:
 	var atk := sheet.get_stat("STR") * 6.0 + sheet.skill_level("fighting") * 8.0
 	var def := float(npc.stats.get("STR", 8)) * 6.0 \
 			+ float(npc.personality.get("bravery", 50)) * 0.2
-	return clampf(0.5 + (atk - def) / 120.0, 0.05, 0.95)
+	var perk_bonus := 0.08 if sheet.has_perk("brawler") else 0.0
+	return clampf(0.5 + (atk - def) / 120.0 + perk_bonus, 0.05, 0.95)
 
 
 static func _perceived_fight_chance(sheet: CharacterSheet, npc: NPCRecord) -> float:

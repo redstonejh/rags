@@ -23,13 +23,24 @@ godot --path .
 
 Dev smoke tests: `godot --headless res://scenes/dev/M1SmokeTest.tscn`
 
-## Status
+## Controls
+
+WASD move · E interact · **Tab phone** (jobs, housing, bank, Mickey, health, paths, the Gazette) · **I inventory** · Space pause · 1/2/3 speed · F3 debug overlay · Esc menu
+
+## Status — all milestones shipped
 
 | Milestone | State |
 |---|---|
 | M0 walking skeleton | ✅ |
-| M1 character creation + data pipeline | ✅ |
-| M2 living NPCs (200 simulated) | in progress |
-| M3–M8 economy → crime → housing → family → living town | planned |
+| M1 character creation + data pipeline ("Deal Me a Life") | ✅ |
+| M2 living NPCs (190 simulated, schedules, embodiment LOD) | ✅ |
+| M3 survival economy (jobs, rent, Mickey, body sim, death → next life) | ✅ |
+| M4 social + perception (Reality Check, gossip, memories, dating) | ✅ |
+| M5 crime + police (witnesses, warrants, confrontations, jail, the fence) | ✅ |
+| M6 housing + status (T0–T5, credit, furniture, clothing & disguise) | ✅ |
+| M7 body/substances/family/aging (8 drugs, wounds, marriage → heirs, Walk Away) | ✅ |
+| M8 the living town (Gazette, town fear, elections, laundering, perks, 6 origins) | ✅ |
 
-Design bible: `docs/DESIGN.md`
+Each milestone has a headless smoke suite: `godot --headless res://scenes/dev/M8SmokeTest.tscn` (M1–M8, ~250 checks total).
+
+Design bible: `docs/DESIGN.md` · Build log: `docs/PROGRESS.md`

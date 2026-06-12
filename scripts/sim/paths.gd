@@ -15,8 +15,25 @@ static func evaluate(sheet: CharacterSheet) -> Array:
 	var worst := Body.worst_addiction(sheet)
 	if float(worst.addiction) > 0.05 or int(worst.clean_days) > 0:
 		paths.append(_recovery(worst))
+	if sheet.has_tag("the_record"):
+		paths.append(_going_straight(sheet))
 	paths.append(_education(sheet))
 	return paths
+
+
+## The Ex-Con's road: most players won't make it.
+static func _going_straight(sheet: CharacterSheet) -> Dictionary:
+	var sealed: bool = sheet.flags.get("record_sealed", false)
+	var last := maxi(int(sheet.flags.get("last_warrant_day", 0)),
+			int(sheet.flags.get("parole_start_day", 0)))
+	var clean := GameClock.day - last
+	var steps: Array = [
+		{"label": "Walk out the gate. Done — that part's behind you.", "done": true},
+		{"label": "Stay warrant-free (day %d of 14)" % clampi(clean, 0, 14),
+			"done": sealed or clean >= 14},
+		{"label": "The Record seals — background checks come back boring", "done": sealed},
+	]
+	return _mark_current({"name": "Going Straight", "steps": steps})
 
 
 ## Generalizes the Tweaker's arc to every substance: clean days are the

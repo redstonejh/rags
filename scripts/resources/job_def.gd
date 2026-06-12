@@ -14,6 +14,8 @@ extends Resource
 ## Days of week worked, 0 = Monday ... 6 = Sunday.
 @export var work_days: Array = [0, 1, 2, 3, 4]
 @export var requires_id: bool = true
+## Background check: rejects "the_record" origins until the record seals.
+@export var requires_clean_record: bool = false
 ## skill -> min level, e.g. {"cooking": 2}
 @export var skill_reqs: Dictionary = {}
 @export var min_shifts_for_promotion: int = 10

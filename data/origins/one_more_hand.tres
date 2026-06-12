@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="OriginDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/origin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "one_more_hand"
+display_name = "The Gambler"
+title = "One More Hand"
+blurb = "You were up $40K at 2 AM. You remember that part very clearly.
+
++ Luck is REAL for you alone: every roll in your life quietly rolls twice and keeps the better one. Card skill pays.
+- $150 a week to Big Mickey says you owe him $15,000, and Mickey employs two large opinions about late payments.
+
+The casino gave you a chip for the bus. You kept it."
+difficulty = 3
+starting_cash_cents = 15000
+starting_items = ["thrift_blazer"]
+starting_location_id = "loc_bus_stop"
+starting_housing_id = "weekly_motel"
+starting_flags = {
+"mickey_debt": 1500000
+}
+stat_mods = {
+"DEX": 1,
+"WIS": -1
+}
+stat_bias = {
+"CHA": 2.0,
+"DEX": 1.5
+}
+skill_seeds = {
+"gambling": 6,
+"persuasion": 2
+}
+free_traits = []
+locked_traits = []
+bonus_trait_points = 0
+tags = ["luck", "the_itch", "mickey_marked"]

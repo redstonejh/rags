@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PerkDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/perk_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "people_reader"
+display_name = "People Reader"
+description = "The top of the perception tree: you see TRUE stats. The librarian's knuckles were always right there."
+min_level = 6
+origin_line = ""
+requires_perks = []
+tags = ["people_reader"]

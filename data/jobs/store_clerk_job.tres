@@ -14,6 +14,7 @@ shift_start_hour = 9
 shift_len_hours = 8
 work_days = [0, 1, 2, 3, 4]
 requires_id = true
+requires_clean_record = true
 skill_reqs = {"charisma": 2}
 min_shifts_for_promotion = 20
 next_job_id = ""

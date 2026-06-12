@@ -76,7 +76,13 @@ static func commit(crime_id: String, location_id: String, target: NPCRecord = nu
 	case.evidence = clampf(case.evidence, 0.0, 100.0)
 	if case.evidence >= CrimeCase.WARRANT_EVIDENCE and case.suspect_id == "player":
 		case.status = CrimeCase.WARRANT
+		sheet.infamy = clampf(sheet.infamy + def.severity, 0.0, 100.0)
+		sheet.flags["last_warrant_day"] = GameClock.day
 		EventBus.warrant_issued.emit(case.id)
+
+	# Witnessed crime feeds town fear; the town responds like a town would.
+	if not case.witness_ids.is_empty():
+		WorldState.town_fear = minf(WorldState.town_fear + def.severity * 0.8, 100.0)
 
 	WorldState.crime_cases[case.id] = case
 	EventBus.crime_committed.emit(case.id)
@@ -85,6 +91,8 @@ static func commit(crime_id: String, location_id: String, target: NPCRecord = nu
 
 
 ## Everyone awake and alive who shares the scene (or is close, outside).
+## At fear 40+ the streets empty out — the careful killer's perverse
+## advantage, on purpose.
 static func witnesses_at(location_id: String, world_pos := Vector2.INF,
 		exclude: NPCRecord = null) -> Array:
 	var out: Array = []
@@ -97,6 +105,8 @@ static func witnesses_at(location_id: String, world_pos := Vector2.INF,
 		if location_id == "exterior" and world_pos != Vector2.INF \
 				and npc.abstract_position(now).distance_to(world_pos) > EXTERIOR_WITNESS_RADIUS:
 			continue
+		if WorldState.town_fear >= 40.0 and randf() < 0.3:
+			continue # fewer people out; fewer eyes
 		out.append(npc)
 	return out
 
@@ -111,16 +121,23 @@ static func id_confidence(witness: NPCRecord, sheet: CharacterSheet) -> float:
 	var outfit := ContentDB.get_item(str(sheet.flags.get("outfit", "")))
 	if outfit and "disguise" in outfit.tags:
 		conf *= 0.3 # the mask works; wearing one on the street is its own problem
+	if TownLife.holiday_today() == "ALL HALLOWS":
+		conf *= 0.5 # masks are normal for one night — crime spree night
+	conf += sheet.fame * 0.002 # fame kills anonymity ("wait, aren't you—?")
 	return clampf(conf, 0.0, 1.0)
 
 
-## Civic duty, minus friendship, minus fear, plus being the victim.
+## Civic duty, minus friendship, minus fear (yours specifically, or the
+## general kind your infamy radiates), plus being the victim.
 static func decides_to_report(witness: NPCRecord, is_victim: bool) -> bool:
 	var score := float(witness.personality.get("civic_duty", 50))
 	if witness.rel("player") >= 30.0:
 		score -= 50.0
 	if int(witness.flags.get("scared_of_player_until_day", -1)) >= GameClock.day:
 		score -= 30.0
+	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet != null:
+		score -= sheet.infamy * 0.3 # infamy terrifies witnesses...
 	if is_victim:
 		score += 40.0
 	return score > 50.0
@@ -139,6 +156,33 @@ static func wanted_stars() -> int:
 func _on_day_passed(_day: int) -> void:
 	_decay_evidence()
 	_process_cop_gossip()
+	_bodies_and_detectives()
+
+
+## Bodies surface; detectives canvass. Murder cases never expire — they
+## only march toward you, faster if your name is already in the paper.
+static func _bodies_and_detectives() -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	for case in WorldState.crime_cases.values():
+		if case.crime_id != "murder":
+			continue
+		if case.status == CrimeCase.UNREPORTED:
+			if randf() < 0.25: # discovery roll: traffic, smell, a dog
+				case.status = CrimeCase.OPEN
+				case.suspect_id = "player"
+				case.evidence = clampf(case.evidence + 20.0, 0.0, 100.0)
+				WorldState.town_fear = minf(WorldState.town_fear + 4.0, 100.0)
+				WorldState.add_news("BODY DISCOVERED. The Gazette has run out of synonyms for 'grim'.")
+		elif case.status == CrimeCase.OPEN:
+			var canvass := 3.0 + (sheet.infamy * 0.05 if sheet else 0.0)
+			case.evidence = clampf(case.evidence + canvass, 0.0, 100.0)
+			if case.evidence >= CrimeCase.WARRANT_EVIDENCE and case.suspect_id == "player":
+				case.status = CrimeCase.WARRANT
+				if sheet:
+					sheet.infamy = clampf(sheet.infamy + 10.0, 0.0, 100.0)
+					sheet.flags["last_warrant_day"] = GameClock.day
+				EventBus.warrant_issued.emit(case.id)
+				EventBus.wanted_changed.emit(wanted_stars())
 
 
 static func _decay_evidence() -> void:
@@ -183,10 +227,15 @@ func _on_minute_passed(total: int) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	if sheet == null or not sheet.alive or wanted_stars() == 0:
 		return
+	if sheet.flags.get("jailed", false):
+		return # you're already exactly where they want you
 	var cop := _cop_who_spots_player()
 	if cop == null:
 		return
-	_arrest_cooldown_until = total + ARREST_COOLDOWN_MINUTES
+	var cooldown := ARREST_COOLDOWN_MINUTES
+	if sheet.flags.get("police_budget_low", false):
+		cooldown *= 3 # the mayor gutted patrols. The mayor is you.
+	_arrest_cooldown_until = total + cooldown
 	EventBus.confrontation_started.emit({
 		"kind": "arrest", "npc_id": cop.id,
 		"text": "Officer %s squares up: \"Stop right there. We've been looking for you.\"" % cop.display_name,

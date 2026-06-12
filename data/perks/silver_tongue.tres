@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PerkDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/perk_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "silver_tongue"
+display_name = "Silver Tongue"
+description = "Words come out arranged in your favor. +5% on every social roll."
+min_level = 2
+origin_line = ""
+requires_perks = []
+tags = ["silver_tongue"]

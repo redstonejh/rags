@@ -6,8 +6,11 @@ extends RefCounted
 ## your INT and Streetwise, inflated by your state (drunk = confident).
 ## Outcomes always resolve against the truth. The gap is the comedy engine.
 
-## How much of the truth bleeds into the guess: 0.15 (oblivious) - 0.85 (sharp).
+## How much of the truth bleeds into the guess: 0.15 (oblivious) - 0.85
+## (sharp). People Reader, the top of the tree, simply sees.
 static func accuracy(sheet: CharacterSheet) -> float:
+	if sheet.has_perk("people_reader"):
+		return 1.0
 	var a := 0.10 + sheet.get_stat("INT") * 0.02 + sheet.skill_level("streetwise") * 0.06
 	return clampf(a, 0.15, 0.85)
 

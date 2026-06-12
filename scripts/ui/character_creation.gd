@@ -254,4 +254,10 @@ func _on_start_pressed() -> void:
 	sheet.housing_id = origin.starting_housing_id
 	for flag in origin.starting_flags:
 		sheet.flags[flag] = origin.starting_flags[flag]
+	# Tag-driven origin baggage (never `if origin == x`):
+	if sheet.flags.has("mickey_debt"): # the Gambler's $15k
+		sheet.mickey_debt_cents = int(sheet.flags.mickey_debt)
+		sheet.flags.erase("mickey_debt")
+	if sheet.has_tag("pill_problem"): # the Doctor's quiet oxy habit
+		Body.substance_state(sheet, "oxy").addiction = 0.4
 	GameFlow.start_new_game(sheet)

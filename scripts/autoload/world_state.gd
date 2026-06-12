@@ -17,6 +17,18 @@ var _case_serial: int = 0
 ## Every finished life leaves one paragraph behind. The next character
 ## reads about the last one — the archive IS the legacy record.
 var obituaries: Array = []
+## The Rust Harbor Gazette: the town narrating itself. [{day, text}], capped.
+var gazette: Array = []
+## Murder-hobo equilibrium: 0-100, crimes raise it, time lowers it.
+var town_fear: float = 0.0
+
+const GAZETTE_CAP := 60
+
+
+func add_news(text: String) -> void:
+	gazette.append({"day": GameClock.day, "text": text})
+	while gazette.size() > GAZETTE_CAP:
+		gazette.pop_front()
 
 
 func next_case_serial() -> int:
@@ -68,12 +80,15 @@ func walk_away() -> NPCRecord:
 func new_world(sheet: CharacterSheet) -> void:
 	player_sheet = sheet
 	sheet.rebuild_needs_multipliers()
+	_start_origin_clocks(sheet)
 	player_location_id = "exterior"
 	world_seed = randi()
 	npcs = WorldGen.generate(world_seed)
 	crime_cases = {}
 	_case_serial = 0
 	obituaries = []
+	gazette = []
+	town_fear = 0.0
 	world_exists = true
 	GameClock.total_minutes = GameClock.MINUTES_PER_DAY + 7 * 60 # day 1, 7 AM
 
@@ -84,7 +99,14 @@ func start_life(sheet: CharacterSheet) -> void:
 	sheet.lives_lived = prev_lives + 1
 	player_sheet = sheet
 	sheet.rebuild_needs_multipliers()
+	_start_origin_clocks(sheet)
 	player_location_id = "exterior"
+
+
+## Origin timers that must start ticking at world time, not menu time.
+func _start_origin_clocks(sheet: CharacterSheet) -> void:
+	if sheet.has_tag("parole") and not sheet.flags.has("parole_start_day"):
+		sheet.flags["parole_start_day"] = GameClock.day
 
 
 ## Back-compat alias (M1/M2 tests and tools call this).
@@ -120,6 +142,8 @@ func to_dict() -> Dictionary:
 		"crime_cases": case_dicts,
 		"case_serial": _case_serial,
 		"obituaries": obituaries.duplicate(),
+		"gazette": gazette.duplicate(true),
+		"town_fear": town_fear,
 	}
 
 
@@ -141,3 +165,5 @@ func load_dict(d: Dictionary) -> void:
 		crime_cases[id] = CrimeCase.from_dict(case_dicts[id])
 	_case_serial = int(d.get("case_serial", crime_cases.size()))
 	obituaries = d.get("obituaries", []).duplicate()
+	gazette = d.get("gazette", []).duplicate(true)
+	town_fear = float(d.get("town_fear", 0.0))

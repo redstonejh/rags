@@ -44,6 +44,8 @@ var substances: Dictionary = {}  # substance_id -> {tolerance, addiction, last_u
 var wounds: Array = []           # [{kind, days_left, treated}]
 var age_years: float = 25.0      # 5 game days = 1 year; elders die
 var children: Array = []         # [{name, born_day, traits}]
+var fame: float = 0.0            # opens doors, kills anonymity
+var infamy: float = 0.0          # terrifies witnesses, attracts detectives
 
 
 func _init() -> void:
@@ -200,10 +202,50 @@ func tick_minute() -> void:
 			flags[flag] = left - 1
 
 
-func add_skill_xp(skill: String, xp: float) -> void:
+const PHYSICAL_SKILLS := ["fitness", "fighting"]
+const MENTAL_SKILLS := ["education", "business", "medicine", "gambling"]
+
+
+func add_skill_xp(skill: String, amount: float) -> void:
 	var fast := 1.3 if has_tag("fast_learner") else 1.0
 	var hard := 1.1 if has_tag("hardworking") else 1.0
-	skills[skill] = float(skills.get(skill, 0.0)) + xp * fast * hard
+	skills[skill] = float(skills.get(skill, 0.0)) + amount * fast * hard
+	# Lifestyle drift accumulators: tunnel on the gym and INT pays for it.
+	if skill in PHYSICAL_SKILLS:
+		flags["drift_phys"] = float(flags.get("drift_phys", 0.0)) + amount
+	elif skill in MENTAL_SKILLS:
+		flags["drift_mind"] = float(flags.get("drift_mind", 0.0)) + amount
+
+
+## Character XP: levels at 100, 200, 300... A perk point on every even level.
+func add_xp(amount: int) -> void:
+	xp += amount
+	while xp >= level * 100:
+		xp -= level * 100
+		level += 1
+		if level % 2 == 0:
+			flags["perk_points"] = int(flags.get("perk_points", 0)) + 1
+			EventBus.toast.emit("Level %d. A perk is waiting on your phone (Paths)." % level)
+		else:
+			EventBus.toast.emit("Level %d. You feel marginally more like a protagonist." % level)
+
+
+func take_perk(perk_id: String) -> bool:
+	var perk := ContentDB.get_perk(perk_id)
+	if perk == null or perk_id in perk_ids:
+		return false
+	if int(flags.get("perk_points", 0)) <= 0 or level < perk.min_level:
+		return false
+	for req in perk.requires_perks:
+		if req not in perk_ids:
+			return false
+	perk_ids.append(perk_id)
+	flags["perk_points"] = int(flags.get("perk_points", 0)) - 1
+	return true
+
+
+func has_perk(perk_id: String) -> bool:
+	return perk_id in perk_ids
 
 
 func skill_level(skill: String) -> int:
@@ -264,6 +306,8 @@ func to_dict() -> Dictionary:
 		"wounds": wounds.duplicate(true),
 		"age_years": age_years,
 		"children": children.duplicate(true),
+		"fame": fame,
+		"infamy": infamy,
 		"flags": flags.duplicate(true),
 		"needs": needs.to_dict(),
 	}
@@ -301,6 +345,8 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 	sheet.wounds = d.get("wounds", []).duplicate(true)
 	sheet.age_years = float(d.get("age_years", 25.0))
 	sheet.children = d.get("children", []).duplicate(true)
+	sheet.fame = float(d.get("fame", 0.0))
+	sheet.infamy = float(d.get("infamy", 0.0))
 	sheet.flags = d.get("flags", {}).duplicate(true)
 	sheet.needs = Needs.from_dict(d.get("needs", {}))
 	return sheet

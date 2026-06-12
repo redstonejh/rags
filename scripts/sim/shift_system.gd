@@ -65,12 +65,17 @@ func _on_shift_finished(job: JobDef, late_minutes: int) -> void:
 	var docked := late_minutes > LATE_GRACE_MINUTES
 	if docked:
 		wage = int(wage * LATE_PENALTY_MULT)
+	var garnished := sheet.has_tag("garnished")
+	if garnished:
+		wage = int(wage * 0.75) # the student loans survived the scandal
 	sheet.add_cash(wage)
 	sheet.shifts_worked += 1
+	sheet.add_xp(10)
 	if job.trains_skill != "":
 		sheet.add_skill_xp(job.trains_skill, job.skill_xp_per_shift)
-	EventBus.toast.emit("Clocked out. $%.2f%s" % [
-		wage / 100.0, " — docked 25%% for strolling in late" if docked else ""])
+	EventBus.toast.emit("Clocked out. $%.2f%s%s" % [
+		wage / 100.0, " — docked 25%% for strolling in late" if docked else "",
+		" (25%% garnished. Forever.)" if garnished else ""])
 	_check_promotion(sheet, job)
 	if randf() < DILEMMA_CHANCE:
 		EventBus.shift_dilemma.emit(DILEMMAS.pick_random())

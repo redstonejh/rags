@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="OriginDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/origin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fresh_out"
+display_name = "The Ex-Con"
+title = "Fresh Out"
+blurb = "Eight years inside. The world got smartphones; you got a bus ticket and gate money.
+
++ Prison-yard physique: Fighting starts high, pain is a rumor. Yard Respect: the street trusts you on sight.
+- The Record: background checks bounce you from good jobs until you stay clean long enough to seal it. Everyone you knew is a felony waiting to reconnect.
+
+Going Straight is a real path. Most don't make it."
+difficulty = 3
+starting_cash_cents = 20000
+starting_items = ["hoodie"]
+starting_location_id = "loc_bus_stop"
+starting_housing_id = "shelter_cot"
+stat_mods = {
+"CHA": -1,
+"CON": 1,
+"STR": 2,
+"WIS": 1
+}
+stat_bias = {
+"CON": 1.5,
+"STR": 3.0
+}
+skill_seeds = {
+"fighting": 5,
+"streetwise": 3
+}
+free_traits = []
+locked_traits = []
+bonus_trait_points = 0
+tags = ["parole", "the_record", "yard_respect"]

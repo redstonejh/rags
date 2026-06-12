@@ -43,7 +43,8 @@ static func use_substance(sheet: CharacterSheet, id: String) -> String:
 			sheet.needs.add_optional("craving")
 			amount = float(def.need_effects[need_id]) # the Need is always fully fed
 		sheet.needs.change(need_id, amount)
-	state.tolerance = minf(float(state.tolerance) + def.tolerance_per_use, 1.0)
+	var liver := 0.5 if sheet.has_perk("iron_liver") else 1.0
+	state.tolerance = minf(float(state.tolerance) + def.tolerance_per_use * liver, 1.0)
 	state.addiction = minf(float(state.addiction) + def.addiction_per_use, 1.0)
 	state.last_use_day = GameClock.day
 	state.clean_days = 0
@@ -154,6 +155,13 @@ static func daily_tick(sheet: CharacterSheet) -> void:
 		if randf() < risk:
 			EventBus.player_died.emit("old age")
 			return
+	# Going Straight: stay warrant-free long enough and The Record seals.
+	if sheet.has_tag("the_record") and not sheet.flags.get("record_sealed", false):
+		var last := int(sheet.flags.get("last_warrant_day", int(sheet.flags.get("parole_start_day", 0))))
+		if GameClock.day - maxi(last, int(sheet.flags.get("parole_start_day", 0))) >= 14:
+			sheet.flags["record_sealed"] = true
+			EventBus.toast.emit("Fourteen clean days. The record is sealed. Background checks come back boring now.")
+			EventBus.path_updated.emit()
 	# Night school pays off, eventually.
 	if sheet.flags.has("ged_done_day") and GameClock.day >= int(sheet.flags.ged_done_day):
 		sheet.flags.erase("ged_done_day")

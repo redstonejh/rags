@@ -78,7 +78,8 @@ static func _chance(sheet: CharacterSheet, npc: NPCRecord, action: String, def_s
 	if a.get("def_bravery", false):
 		def += float(npc.personality.get("bravery", 50)) * 0.4
 	var rel_bonus := npc.rel("player") * 0.002
-	return clampf(0.5 + (atk - def) / 120.0 + rel_bonus, 0.05, 0.95)
+	var perk_bonus := 0.05 if sheet.has_perk("silver_tongue") else 0.0
+	return clampf(0.5 + (atk - def) / 120.0 + rel_bonus + perk_bonus, 0.05, 0.95)
 
 
 ## Perform an action. forced_roll in [0,1) makes tests deterministic.
@@ -87,7 +88,11 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 	var perceived := perceived_chance(sheet, npc, action)
 	var actual := true_chance(sheet, npc, action)
 	var roll := forced_roll if forced_roll >= 0.0 else randf()
+	if forced_roll < 0.0 and sheet.has_tag("luck"):
+		roll = minf(roll, randf()) # the Gambler's whole deal: roll twice, keep the better
 	var success := roll < actual
+	if success and ACTIONS.get(action, {}).get("roll", false):
+		sheet.add_xp(3)
 	var result := {"success": success, "reality_check": false,
 			"perceived": perceived, "actual": actual, "text": ""}
 

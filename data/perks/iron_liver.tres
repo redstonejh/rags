@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PerkDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/perk_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "iron_liver"
+display_name = "Iron Liver"
+description = "Your body files substances under 'weather'. Tolerance builds at half speed."
+min_level = 2
+origin_line = ""
+requires_perks = []
+tags = ["iron_liver"]

@@ -14,6 +14,7 @@ var _bank_box: VBoxContainer
 var _mickey_box: VBoxContainer
 var _health_box: VBoxContainer
 var _paths_box: VBoxContainer
+var _town_box: VBoxContainer
 
 
 func _ready() -> void:
@@ -74,6 +75,7 @@ func _build_ui() -> void:
 	_mickey_box = _make_tab("Mickey")
 	_health_box = _make_tab("Health")
 	_paths_box = _make_tab("Paths")
+	_town_box = _make_tab("Town")
 
 
 func _make_tab(tab_name: String) -> VBoxContainer:
@@ -95,6 +97,7 @@ func _refresh_all() -> void:
 	_refresh_mickey()
 	_refresh_health()
 	_refresh_paths()
+	_refresh_town()
 
 
 func _clear(box: VBoxContainer) -> void:
@@ -148,6 +151,9 @@ func _refresh_jobs() -> void:
 func _job_blocker(sheet: CharacterSheet, job: JobDef) -> String:
 	if job.requires_id and not sheet.flags.get("has_id", false):
 		return "needs ID"
+	if job.requires_clean_record and sheet.has_tag("the_record") \
+			and not sheet.flags.get("record_sealed", false):
+		return "background check"
 	for skill in job.skill_reqs:
 		if sheet.skill_level(skill) < int(job.skill_reqs[skill]):
 			return "needs %s %d" % [skill, int(job.skill_reqs[skill])]
@@ -422,12 +428,16 @@ func _refresh_health() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	_health_box.add_child(row)
-	_health_button(row, "County clinic ($150)", sheet.cash_cents >= 15000 and not sheet.wounds.is_empty(),
+	var is_doctor := sheet.has_tag("medical_training")
+	_health_button(row, "Treat yourself (free — you trained for this)" if is_doctor else "County clinic ($150)",
+		(is_doctor or sheet.cash_cents >= 15000) and not sheet.wounds.is_empty(),
 		func() -> void:
-			sheet.add_cash(-15000)
+			if not is_doctor:
+				sheet.add_cash(-15000)
 			var n := Body.treat_wounds(sheet)
-			GameClock.skip_minutes(180)
-			EventBus.toast.emit("%d wound%s set properly. The bill stings more than the sutures." % [n, "" if n == 1 else "s"])
+			GameClock.skip_minutes(60 if is_doctor else 180)
+			EventBus.toast.emit("%d wound%s set properly.%s" % [n, "" if n == 1 else "s",
+					" The hands still remember." if is_doctor else " The bill stings more than the sutures."])
 			_refresh_health())
 	_health_button(row, "Back-alley doc ($40)", sheet.cash_cents + sheet.dirty_cents >= 4000 and not sheet.wounds.is_empty(),
 		func() -> void:
@@ -475,6 +485,88 @@ func _health_button(parent: Node, label: String, enabled: bool, action: Callable
 	parent.add_child(btn)
 
 
+# -------------------------------------------------------------------- town
+
+func _refresh_town() -> void:
+	_clear(_town_box)
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var status := Label.new()
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.add_theme_font_size_override("font_size", 13)
+	status.text = "Town fear: %d/100%s    Fame %d · Infamy %d%s" % [
+		int(WorldState.town_fear),
+		"  (streets emptying)" if WorldState.town_fear >= 40.0 else "",
+		int(sheet.fame), int(sheet.infamy),
+		"\nYou are the MAYOR. Nobody audits the winner." if sheet.flags.get("is_mayor", false) else ""]
+	_town_box.add_child(status)
+
+	# Politics: buy in, or buy the office.
+	var politics := HBoxContainer.new()
+	politics.add_theme_constant_override("separation", 8)
+	_town_box.add_child(politics)
+	if sheet.flags.get("is_mayor", false):
+		var budget := Button.new()
+		budget.text = "Police budget: %s (toggle)" % ("GUTTED" if sheet.flags.get("police_budget_low", false) else "normal")
+		budget.pressed.connect(func() -> void:
+			sheet.flags["police_budget_low"] = not sheet.flags.get("police_budget_low", false)
+			EventBus.toast.emit("Patrols %s. The Gazette calls it 'fiscal discipline'." %
+					("thinned" if sheet.flags.police_budget_low else "restored"))
+			_refresh_town())
+		politics.add_child(budget)
+	else:
+		var run := Button.new()
+		var spend := int(sheet.flags.get("campaign_spend", 0))
+		run.text = "Donate $1,000 to your own campaign%s" % \
+				("" if spend == 0 else "  (spent: $%d, score %.0f)" % [spend / 100, TownLife.player_election_score(sheet)])
+		run.disabled = sheet.cash_cents + sheet.dirty_cents < 100000
+		run.tooltip_text = "Dirty money welcome. That's the whole point of local politics."
+		run.pressed.connect(func() -> void:
+			if TownLife.donate_to_campaign(sheet, 100000):
+				EventBus.toast.emit("Yard signs everywhere. Election is day %d." %
+						((GameClock.day / TownLife.ELECTION_PERIOD_DAYS + 1) * TownLife.ELECTION_PERIOD_DAYS))
+			_refresh_town())
+		politics.add_child(run)
+
+	# Business: the late-game engine. Buy the laundromat; learn why.
+	var biz_row := HBoxContainer.new()
+	biz_row.add_theme_constant_override("separation", 8)
+	_town_box.add_child(biz_row)
+	for biz_id in TownLife.BUSINESSES:
+		var biz: Dictionary = TownLife.BUSINESSES[biz_id]
+		var btn := Button.new()
+		if biz_id in sheet.flags.get("businesses", []):
+			btn.text = "%s ✓ ($%d/day)" % [biz.name, int(biz.net) / 100]
+			btn.disabled = true
+		else:
+			btn.text = "Buy %s ($%dk)" % [biz.name, int(biz.cost) / 100000]
+			btn.disabled = sheet.cash_cents < int(biz.cost)
+			btn.tooltip_text = "Nets $%d/day and washes $%d/day of dirty money at 80 cents on the dollar." % [
+					int(biz.net) / 100, int(biz.wash_cap) / 100]
+			btn.pressed.connect(func() -> void:
+				TownLife.buy_business(sheet, biz_id)
+				_refresh_town())
+		biz_row.add_child(btn)
+
+	var masthead := Label.new()
+	masthead.text = "— THE RUST HARBOR GAZETTE —"
+	masthead.add_theme_font_size_override("font_size", 12)
+	masthead.add_theme_color_override("font_color", Color(0.7, 0.68, 0.55))
+	_town_box.add_child(masthead)
+	var news: Array = WorldState.gazette.duplicate()
+	news.reverse()
+	for i in mini(news.size(), 15):
+		var item: Dictionary = news[i]
+		var line := Label.new()
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.add_theme_font_size_override("font_size", 12)
+		line.text = "Day %d — %s" % [int(item.day), str(item.text)]
+		_town_box.add_child(line)
+	if news.is_empty():
+		var quiet := Label.new()
+		quiet.text = "No news. In this town, that's the headline."
+		_town_box.add_child(quiet)
+
+
 # ------------------------------------------------------------------- paths
 
 func _refresh_paths() -> void:
@@ -492,6 +584,37 @@ func _refresh_paths() -> void:
 			EventBus.path_updated.emit()
 			_refresh_paths())
 		_paths_box.add_child(ged)
+	# Perks: a fork every two levels. New verbs over numbers.
+	var perk_points := int(sheet.flags.get("perk_points", 0))
+	var perk_header := Label.new()
+	perk_header.text = "— LEVEL %d · %d XP · %d perk point%s —" % [
+		sheet.level, sheet.xp, perk_points, "" if perk_points == 1 else "s"]
+	perk_header.add_theme_font_size_override("font_size", 11)
+	perk_header.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
+	_paths_box.add_child(perk_header)
+	for perk in ContentDB.perks.values():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		_paths_box.add_child(row)
+		var info := Label.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info.add_theme_font_size_override("font_size", 12)
+		info.text = "%s (lvl %d) — %s" % [perk.display_name, perk.min_level, perk.description]
+		row.add_child(info)
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(90, 0)
+		if sheet.has_perk(perk.id):
+			btn.text = "Taken ✓"
+			btn.disabled = true
+		else:
+			btn.text = "Take"
+			btn.disabled = perk_points <= 0 or sheet.level < perk.min_level
+			btn.pressed.connect(func() -> void:
+				if sheet.take_perk(perk.id):
+					EventBus.toast.emit("Perk: %s. A new verb unlocked." % perk.display_name)
+				_refresh_paths())
+		row.add_child(btn)
 	# Walking Away: retirement, the other way out. The sim takes the wheel.
 	var walk := Button.new()
 	walk.text = "Walk Away (retire this life — they become an NPC)"

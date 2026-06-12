@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="OriginDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/origin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "struck_off"
+display_name = "The Disgraced Doctor"
+title = "Struck Off"
+blurb = "Twelve years of training. One pill scandal. The license is gone; the hands still remember.
+
++ Medicine maxed: treat your own wounds free, forever. People trust a doctor's voice even now.
+- Wage garnishment takes 25% of every legal paycheck (the student loans survived the scandal). A quiet oxy problem that is not, currently, quiet.
+
+You sleep in a nice car. It's the last thing they couldn't take."
+difficulty = 3
+starting_cash_cents = 30000
+starting_items = ["oxy_pill", "oxy_pill"]
+starting_location_id = "loc_bus_stop"
+starting_flags = {
+"has_car": true
+}
+stat_mods = {
+"CON": -1,
+"INT": 2,
+"WIS": 1
+}
+stat_bias = {
+"INT": 3.0,
+"WIS": 1.5
+}
+skill_seeds = {
+"medicine": 10,
+"education": 6
+}
+free_traits = []
+locked_traits = []
+bonus_trait_points = 0
+tags = ["garnished", "medical_training", "pill_problem"]

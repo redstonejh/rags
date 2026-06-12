@@ -40,6 +40,26 @@ func _on_day_passed(day: int) -> void:
 			sheet.flags["weeks_employed"] = int(sheet.flags.get("weeks_employed", 0)) + 1
 		_collect_rent(sheet)
 		_mickey_tick(sheet)
+		_stat_drift(sheet)
+
+
+## Lifestyle drift: tunnel on one thing and it pulls the other down. Slow,
+## weekly, and always announced — "your jeans fit differently."
+func _stat_drift(sheet: CharacterSheet) -> void:
+	var phys := float(sheet.flags.get("drift_phys", 0.0))
+	var mind := float(sheet.flags.get("drift_mind", 0.0))
+	sheet.flags["drift_phys"] = 0.0
+	sheet.flags["drift_mind"] = 0.0
+	if phys >= 10.0 and phys >= mind * 2.0:
+		if int(sheet.base_stats["STR"]) < 16:
+			sheet.base_stats["STR"] = int(sheet.base_stats["STR"]) + 1
+			sheet.base_stats["INT"] = maxi(int(sheet.base_stats["INT"]) - 1, 4)
+			EventBus.toast.emit("Your jeans fit differently. STR +1, INT -1. You stopped reading.")
+	elif mind >= 10.0 and mind >= phys * 2.0:
+		if int(sheet.base_stats["INT"]) < 16:
+			sheet.base_stats["INT"] = int(sheet.base_stats["INT"]) + 1
+			sheet.base_stats["STR"] = maxi(int(sheet.base_stats["STR"]) - 1, 4)
+			EventBus.toast.emit("All those evenings studying. INT +1, STR -1. The jar lids win now.")
 
 
 # ---------------------------------------------------------------- housing

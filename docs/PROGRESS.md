@@ -1,38 +1,34 @@
 # RAGS — Build Progress
 
-*Last updated: 2026-06-11 (M7 complete). Repo: https://github.com/redstonejh/rags*
+*Last updated: 2026-06-11 — **ALL MILESTONES (M0–M8) COMPLETE.** Repo: https://github.com/redstonejh/rags*
 
 ## Done & verified
 
 | Milestone | State |
 |---|---|
 | M0 walking skeleton | ✅ town, player, clock, needs, day/night, fridge, HUD |
-| M1 character creation | ✅ ContentDB, 3 origins, 18 traits, stat point-buy, trait budget, Deal Me a Life (Coherence Engine), ironman saves, 16/16 smoke tests |
-| M2 living NPCs | ✅ 190 NPCs with schedules/personalities, SimEngine abstract tick + embodiment, 6 enterable-or-abstract buildings + door travel, F3 overlay, 15/15 smoke tests |
-| M3 survival economy | ✅ jobs/shifts/paychecks + dilemmas, Monday rent + eviction, Big Mickey, body sim v1 (weight/calories/starvation death), phone (Jobs/Bank/Mickey/Paths), shop + inventory UI, toasts, HUD v2, death → next life in the persistent town, ID-quest Life Path. 49/49 smoke tests |
-| M4 social + perception | ✅ Perception (perceived vs true stats via the Coherence table, drunk confidence inflation, streetwise reads), Social action resolver w/ visible odds + Reality Check moments, dialogue UI on every embodied NPC, memories w/ salience + decay + cap, GossipSystem (hourly propagation + familiarity drift), dating v1. 31/31 smoke tests |
-| M5 crime + police | ✅ CrimeDef catalog (8), CrimeCase records (UNREPORTED→OPEN→WARRANT→COLD, warrant @60), witness pipeline (id confidence × civic duty − friendship − fear + victimhood, forgettable_face halves), gossip→cop hearsay evidence, wanted stars + cop arrest confrontations, jail v1 (serve/bail/bribe-by-corruption), universal Confrontation (carjack gamble → fight/bluff/flee/beg → mercy/rob/kill), pickpocket/shoplift/register robbery, the fence, NPC death (permanent). 38/38 smoke tests |
-| M6 housing + status | ✅ HousingDef T0–T5 (poverty trap intact: motel > bricks rent), gates (ID/deposit/outfit tier/employment-or-clean-rent), credit score (on-time +1, miss −5, eviction −15), buying (credit + down payment, mortgage = rent with a deed), FurnitureDef (bed/tv quality + comfort → Mood), clothing as status (outfit_tier) + disguise (ski mask ×0.3 witness ID), phone Home app. 33/33 smoke tests |
-| M7 body/substances/family/aging | ✅ SubstanceDef ×8 (tolerance/addiction/craving/OD, xanax+alcohol lethality, meth teeth, LSD perception poetry), dealer full menu, Recovery + Education paths (GED), wounds heal-wrong (crooked arm forever) + clinic/back-alley/dentures/plastic surgery (phone Health app), aging 5d=1yr + elder deaths (player + NPC turnover), marriage→pregnancy→baby gauntlet→kid traits, heirs (continue as your kid, inherits estate), obituaries (Gazette archive), Walk Away (sheet→NPC), beater car. 45/45 smoke tests |
+| M1 character creation | ✅ ContentDB, origins, 18 traits, stat point-buy, trait budget, Deal Me a Life (Coherence Engine), ironman saves |
+| M2 living NPCs | ✅ 190 NPCs with schedules/personalities, SimEngine abstract tick + embodiment LOD, doors/interiors, F3 overlay |
+| M3 survival economy | ✅ jobs/shifts/paychecks + dilemmas, Monday rent + eviction, Big Mickey, body sim v1 (weight/calories/starvation), phone, shop/inventory, toasts, death → next life, ID-quest Life Path |
+| M4 social + perception | ✅ Perception (perceived vs true stats, drunk confidence, streetwise reads), Social resolver w/ visible odds + Reality Check, dialogue UI, memories + gossip propagation, dating |
+| M5 crime + police | ✅ crime catalog, CrimeCase pipeline (witnesses → reports → warrants @60), gossip→cop evidence, wanted stars, arrest/bail/bribe/jail, universal Confrontation (carjack → mercy/rob/kill), fence, permanent NPC death |
+| M6 housing + status | ✅ T0–T5 wealth curve w/ poverty trap, gates (ID/deposit/outfit/history), credit score, home buying, furniture → quality + Mood, clothing as status + disguise |
+| M7 body/substances/family/aging | ✅ 8-substance catalog (tolerance/addiction/OD/teeth/LSD), Recovery + Education paths, wounds that heal wrong, clinics + plastic surgery, aging (5d=1yr) + elder turnover, marriage → baby gauntlet → kid traits → heirs, obituaries, Walk Away, beater car |
+| M8 the living town | ✅ TownLife (autonomous NPC events + NPC crime), the Rust Harbor Gazette, town fear equilibrium, fame/infamy, bodies + detectives, elections (buyable, dirty money welcome) + mayor police-budget lever, businesses + laundering, lifestyle stat drift, 3 new origins (Ex-Con/Gambler/Doctor) with Going Straight path, perks (Silver Tongue/Iron Liver/Brawler/People Reader) |
 
-Run tests: `godot --headless res://scenes/dev/M1SmokeTest.tscn` (and M2/M3SmokeTest).
+Run tests: `godot --headless --path <abs> res://scenes/dev/M<N>SmokeTest.tscn` (N = 1..8; ~250 checks, all green).
 Godot exe: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_*\Godot_v4.6.3-stable_win64.exe`
+IMPORTANT (headless): run `godot --headless --path <abs> --import` after adding new class_name scripts, or scenes hang on parse errors with no visible output.
 
-## M3 system map (for whoever builds M4)
+## System map
 
-- `scripts/sim/shift_system.gd` + `economy_system.gd` — plain Nodes in Main.tscn (NOT autoloads), all EventBus-driven so headless tests can emit signals at them.
-- `scripts/sim/paths.gd` (`LifePaths.evaluate(sheet)`) — pure function, renders in the phone's Paths tab.
-- Phone = Tab, Inventory = I (input actions "phone"/"inventory" in project.godot).
-- `CharacterSheet.consume_item()` applies need effects + logs `flags.calories_today`; `Interactable.interact()` logs calories for fridge-style food too; `EconomySystem._body_tick()` turns calories into weight daily and kills below 45 kg.
-- Death: `EventBus.player_died` → WorldState writes `alive=false` + saves (ironman) → main.gd shows death screen → character creation header says "Life #N" → `GameFlow.start_new_game` routes to `WorldState.start_life()` (town persists) vs `new_world()` (first life). `GameFlow.continue_game()` routes dead saves back to creation.
-- Origins now carry `starting_housing_id` + `starting_flags` (exec: decent_apartment + 4 prepaid weeks).
+- **Autoloads (7, unchanged):** EventBus, GameClock, ContentDB, WorldState, SimEngine, SaveManager, GameFlow.
+- **Plain system Nodes in Main.tscn:** ShiftSystem, EconomySystem (drives Body daily ticks + stat drift), GossipSystem, CrimeSystem, TownLife. All EventBus-driven; headless tests instantiate them directly.
+- **Static libraries:** Perception, Social, Confrontation, Body, Housing, LifePaths, Coherence, WorldGen, Locations.
+- **Data (`data/**`, all .tres):** origins ×6, traits ×18, jobs ×8, items ×22, crimes ×8, housing ×6, furniture ×7, substances ×8, perks ×4, npc_archetypes ×11.
+- **UI:** HUD (dynamic bars, toasts, wanted stars), phone (Jobs/Home/Bank/Mickey/Health/Paths/Town), shop, inventory, dialogue, dilemma, confrontation, death screen (obituary + heir), character creation (Life #N).
+- **Saves:** versioned JSON, ironman; everything round-trips (sheet incl. substances/wounds/children/fame, NPCs incl. memories/age/alive, crime cases, gazette, town fear).
 
-## System map (for whoever builds M6+)
+## Future polish ideas (beyond the design doc's roadmap)
 
-- M4: `scripts/sim/perception.gd` (perceived vs true stats), `scripts/sim/social.gd` (action resolver, forced_roll for tests), `scripts/sim/gossip_system.gd` (Node in Main; hourly propagation, daily memory decay; `share()` static). NPCRecord: `rel/change_rel/add_memory/knows_memory/top_gossip`, memories = plain dicts, cap 24. Embodied NPCs carry `NPCInteractable` → dialogue UI.
-- M5: `scripts/sim/crime_system.gd` (commit/witness pipeline/warrants/jail, mostly static), `scripts/sim/crime_case.gd`, `scripts/sim/confrontation.gd` (standoff resolver; UIs in `scripts/ui/confrontation.gd`), `scripts/world/parked_car.gd` + `fence_spot.gd`. Crime memories carry `case_id`; gossip preserves it; cops convert hearsay to evidence daily. NPCRecord.alive — dead NPCs persist but stop ticking.
-- IMPORTANT (headless): run `godot --headless --path <abs> --import` after adding new class_name scripts, or scenes hang on parse errors with no output.
-
-**Standing instruction:** build ALL milestones (M6→M8 per docs/DESIGN.md roadmap), test headless each, commit+push each, infer answers from the design doc, don't stop. Don't add autoloads beyond the existing 7.
-
-## Next: M6 housing → M7 body/family/aging → M8 living town (see docs/DESIGN.md Part 5 roadmap and Parts 6–7 for economy/crime numbers).
+Real art/audio (radio DJ), driving physics, factions as systems, more interiors (courthouse/casino/hospital), Dialogic conversations, remaining 6 origins (Widow, Prepper, Athlete, Cult Escapee, Amnesiac, Trust-Fund), build/furnish grid mode, stocks-lite. The architecture (records + data-driven defs + EventBus) is ready for all of it.
