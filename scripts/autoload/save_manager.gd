@@ -66,19 +66,33 @@ func save_game() -> void:
 
 
 func load_game() -> bool:
-	if not has_save():
+	if not has_save() and not FileAccess.file_exists(SAVE_PATH + ".bak"):
 		return false
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if f == null:
+	var data := _read_save_file(SAVE_PATH)
+	if data.is_empty():
+		data = _read_save_file(SAVE_PATH + ".bak")
+	if data.is_empty():
+		push_error("SaveManager: no readable save file")
 		return false
-	var parsed = JSON.parse_string(f.get_as_text())
-	if parsed == null or typeof(parsed) != TYPE_DICTIONARY:
-		push_error("SaveManager: corrupt save file")
-		return false
-	var data: Dictionary = _migrate(parsed)
+	data = _migrate(data)
 	GameClock.load_dict(data.get("clock", {}))
 	WorldState.load_dict(data.get("world", {}))
 	return WorldState.player_sheet != null
+
+
+func _read_save_file(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return {}
+	var parser := JSON.new()
+	var err := parser.parse(f.get_as_text())
+	if err != OK or typeof(parser.data) != TYPE_DICTIONARY:
+		push_warning("SaveManager: cannot read %s (%s at line %d)" % [
+			path, parser.get_error_message(), parser.get_error_line()])
+		return {}
+	return parser.data
 
 
 ## Migration chain: each step upgrades one version. New fields should also

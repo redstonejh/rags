@@ -7,9 +7,11 @@ extends Node
 
 var failures: int = 0
 var _died_cause: String = ""
+var _save_guard := SaveSlotGuard.new()
 
 
 func _ready() -> void:
+	_save_guard.backup()
 	# A town must exist so doors register their positions.
 	var town: Node2D = load("res://scenes/world/Town.tscn").instantiate()
 	add_child(town)
@@ -28,6 +30,8 @@ func _ready() -> void:
 	_test_starvation()
 	_test_save_roundtrip()
 	_test_next_life()
+	SaveManager.set_in_game(false)
+	_save_guard.restore()
 	print("M3 smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 

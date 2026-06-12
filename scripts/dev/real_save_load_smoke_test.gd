@@ -29,7 +29,9 @@ func _test_real_scene_save_load() -> void:
 	await _travel_to_store()
 	_create_persistent_state()
 	await _save_through_pause_menu()
+	_corrupt_primary_save()
 	await _reload_from_disk()
+	_load_from_backup_without_primary()
 	await _instantiate_loaded_main()
 
 
@@ -102,6 +104,18 @@ func _save_through_pause_menu() -> void:
 	_check(_descendant_text_contains(stack, "Saved."), "pause menu confirms save")
 
 
+func _corrupt_primary_save() -> void:
+	var copied := DirAccess.copy_absolute(SaveManager.SAVE_PATH, SaveManager.SAVE_PATH + ".bak")
+	_check(copied == OK and FileAccess.file_exists(SaveManager.SAVE_PATH + ".bak"),
+			"test backup save exists before corruption")
+	var f := FileAccess.open(SaveManager.SAVE_PATH, FileAccess.WRITE)
+	_check(f != null, "test can corrupt the primary save")
+	if f == null:
+		return
+	f.store_string("{ this is not a save")
+	f.close()
+
+
 func _reload_from_disk() -> void:
 	_teardown_main()
 	await get_tree().process_frame
@@ -115,7 +129,7 @@ func _reload_from_disk() -> void:
 	GameClock.set_manual_paused(false)
 
 	var loaded := SaveManager.load_game()
-	_check(loaded, "load_game succeeds after live state is wiped")
+	_check(loaded, "load_game falls back to backup after primary corruption")
 	_check(WorldState.player_sheet != null and WorldState.player_sheet.char_name == "Save Walker",
 			"player sheet reloads from disk")
 	_check(WorldState.player_sheet != null and WorldState.player_sheet.cash_cents == 43210,
@@ -134,6 +148,17 @@ func _reload_from_disk() -> void:
 			"crime case and wanted stars reload")
 	_check(not WorldState.gazette.is_empty() and "SAVE TEST" in str(WorldState.gazette.back().get("text", "")),
 			"gazette history reloads")
+
+
+func _load_from_backup_without_primary() -> void:
+	DirAccess.remove_absolute(SaveManager.SAVE_PATH)
+	WorldState.player_sheet = null
+	WorldState.npcs.clear()
+	WorldState.crime_cases.clear()
+	var loaded := SaveManager.load_game()
+	_check(loaded, "load_game uses backup when primary is missing")
+	_check(WorldState.player_sheet != null and WorldState.player_sheet.char_name == "Save Walker",
+			"backup-only load restores the player")
 
 
 func _instantiate_loaded_main() -> void:

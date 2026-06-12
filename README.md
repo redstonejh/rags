@@ -26,6 +26,7 @@ UI/modal regression: `godot --headless --path . res://scenes/dev/UIStackSmokeTes
 In-play arrest regression: `godot --headless --path . res://scenes/dev/InPlayArrestSmokeTest.tscn`
 Real save/load regression: `godot --headless --path . res://scenes/dev/RealSaveLoadSmokeTest.tscn`
 Long-session regression: `godot --headless --path . res://scenes/dev/LongSessionSmokeTest.tscn`
+Save-slot regressions touch the same protected ironman files; run them serially, not in parallel.
 Economy telemetry regression: `godot --headless --path . res://scenes/dev/EconomyTelemetrySmokeTest.tscn`
 Work shift regression: `godot --headless --path . res://scenes/dev/WorkShiftSmokeTest.tscn`
 Rest amenity regression: `godot --headless --path . res://scenes/dev/RestAmenitySmokeTest.tscn`
