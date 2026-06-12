@@ -126,6 +126,7 @@ func _buy(item: ItemDef) -> void:
 		sheet.add_cash(-from_clean)
 	sheet.dirty_cents -= item.value_cents - from_clean
 	sheet.inventory.append(item.id)
+	EventBus.path_updated.emit()
 	EventBus.toast.emit("Bought %s. (I to use it.)" % item.display_name)
 	_update_cash()
 
@@ -140,6 +141,7 @@ func _shoplift(item: ItemDef) -> void:
 	else:
 		sheet.inventory.append(item.id)
 		sheet.add_skill_xp("stealth", 1.0)
+		EventBus.path_updated.emit()
 		EventBus.toast.emit("The %s was always yours, officer." % item.display_name)
 
 

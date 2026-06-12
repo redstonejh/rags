@@ -301,6 +301,11 @@ func _open_shop_from_counter() -> void:
 	_check(buy_noodles != null and not buy_noodles.disabled,
 			"shop exposes a named food purchase button")
 	if buy_noodles != null:
+		var objective := _main.get_node_or_null("HUD/TopLeft/VBox/ObjectiveLabel") as Label
+		_force_first_week_food_blocker()
+		await get_tree().process_frame
+		_check(objective != null and "Stay fed" in objective.text,
+				"HUD objective starts on food blocker before shop purchase")
 		var cash_before := WorldState.player_sheet.cash_cents
 		buy_noodles.pressed.emit()
 		await get_tree().process_frame
@@ -308,6 +313,8 @@ func _open_shop_from_counter() -> void:
 				"shop purchase spends cash")
 		_check("instant_noodles" in WorldState.player_sheet.inventory,
 				"shop purchase adds food to inventory")
+		_check(objective != null and not ("Stay fed" in objective.text),
+				"shop purchase refreshes HUD objective after adding food")
 
 
 func _open_pause_menu() -> void:
@@ -446,6 +453,20 @@ func _verify_hud_objective_tracker() -> void:
 	_check(objective != null and "First Week" in objective.text \
 			and "Stay fed" in objective.text,
 			"HUD objective refreshes from need changes")
+
+
+func _force_first_week_food_blocker() -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	sheet.job_id = "dishwasher"
+	sheet.shifts_worked = 1
+	var non_food: Array = []
+	for item_id in sheet.inventory:
+		var item := ContentDB.get_item(str(item_id))
+		if item == null or "consumable" not in item.tags \
+				or float(item.need_effects.get("hunger", 0.0)) <= 0.0:
+			non_food.append(item_id)
+	sheet.inventory = non_food
+	sheet.needs.change("hunger", 20.0 - sheet.needs.get_value("hunger"))
 
 
 func _verify_social_playthrough() -> void:

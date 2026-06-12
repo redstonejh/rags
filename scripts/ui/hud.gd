@@ -44,6 +44,7 @@ func _ready() -> void:
 	EventBus.player_job_changed.connect(func(_id: String) -> void:
 		_update_job_label()
 		_update_objective_label())
+	EventBus.path_updated.connect(_update_objective_label)
 	EventBus.wanted_changed.connect(_on_wanted_changed)
 	EventBus.toast.connect(_on_toast)
 
