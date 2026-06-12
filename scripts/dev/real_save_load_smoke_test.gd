@@ -130,6 +130,8 @@ func _reload_from_disk() -> void:
 
 	var loaded := SaveManager.load_game()
 	_check(loaded, "load_game falls back to backup after primary corruption")
+	_check(_save_file_has_player(SaveManager.SAVE_PATH, "Save Walker"),
+			"backup fallback repairs the primary save")
 	_check(WorldState.player_sheet != null and WorldState.player_sheet.char_name == "Save Walker",
 			"player sheet reloads from disk")
 	_check(WorldState.player_sheet != null and WorldState.player_sheet.cash_cents == 43210,
@@ -157,6 +159,8 @@ func _load_from_backup_without_primary() -> void:
 	WorldState.crime_cases.clear()
 	var loaded := SaveManager.load_game()
 	_check(loaded, "load_game uses backup when primary is missing")
+	_check(_save_file_has_player(SaveManager.SAVE_PATH, "Save Walker"),
+			"backup-only load recreates the primary save")
 	_check(WorldState.player_sheet != null and WorldState.player_sheet.char_name == "Save Walker",
 			"backup-only load restores the player")
 
@@ -219,6 +223,20 @@ func _descendant_text_contains(node: Node, text: String) -> bool:
 		if _descendant_text_contains(child, text):
 			return true
 	return false
+
+
+func _save_file_has_player(path: String, expected_name: String) -> bool:
+	if not FileAccess.file_exists(path):
+		return false
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return false
+	var parser := JSON.new()
+	if parser.parse(f.get_as_text()) != OK or typeof(parser.data) != TYPE_DICTIONARY:
+		return false
+	var world: Dictionary = parser.data.get("world", {})
+	var player: Dictionary = world.get("player", {})
+	return str(player.get("char_name", "")) == expected_name
 
 
 func _restore_save_files() -> void:

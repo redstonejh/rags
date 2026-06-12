@@ -84,6 +84,8 @@ func load_game() -> bool:
 	var data := _read_save_file(SAVE_PATH)
 	if data.is_empty():
 		data = _read_save_file(SAVE_PATH + ".bak")
+		if not data.is_empty():
+			_restore_primary_from_backup()
 	if data.is_empty():
 		push_error("SaveManager: no readable save file")
 		return false
@@ -111,6 +113,15 @@ func _read_save_file(path: String) -> Dictionary:
 func _remove_if_exists(path: String) -> void:
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
+
+
+func _restore_primary_from_backup() -> void:
+	var backup_path := SAVE_PATH + ".bak"
+	if not FileAccess.file_exists(backup_path):
+		return
+	var err := DirAccess.copy_absolute(backup_path, SAVE_PATH)
+	if err != OK:
+		push_warning("SaveManager: loaded backup but could not restore primary save (%d)" % err)
 
 
 ## Migration chain: each step upgrades one version. New fields should also
