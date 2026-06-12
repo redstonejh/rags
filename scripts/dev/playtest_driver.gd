@@ -656,6 +656,11 @@ func _verify_social_playthrough() -> void:
 	dialogue.call("_do_action_with_roll", "flirt", 0.0)
 	await get_tree().process_frame
 	_check(target.rel("player") > before_flirt, "dialogue flirt changes relationship")
+	_check(_descendant_text_contains(dialogue, "give them"),
+			"dialogue paces repeated serious social rolls")
+	GameClock.total_minutes = int(target.flags.get(
+			"player_social_roll_cooldown_until", GameClock.total_minutes))
+	await get_tree().process_frame
 	target.relationships["player"] = 0.0
 	_place_social_playtest_records(target, witness, stranger)
 	var camera := _player.get_node_or_null("Camera2D")

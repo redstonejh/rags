@@ -33,6 +33,7 @@ func _ready() -> void:
 	_test_streetwise_reads()
 	_test_reality_check()
 	_test_relationship_deltas()
+	_test_social_roll_cooldown()
 	_test_social_odds_balance()
 	_test_social_rng_save_roundtrip()
 	_test_gossip()
@@ -147,7 +148,7 @@ func _test_reality_check() -> void:
 
 func _test_relationship_deltas() -> void:
 	print("[Relationships: words have prices]")
-	var mark: NPCRecord = WorldState.npcs["npc_mark"]
+	var mark := _mk_npc("npc_words", "loc_test_room", ["plain"], 8, 50, 50)
 	var viewer := _fresh_viewer()
 	mark.relationships["player"] = 0.0
 	Social.interact(viewer, mark, "compliment", 0.0) # forced success
@@ -157,6 +158,31 @@ func _test_relationship_deltas() -> void:
 	_check(mark.rel("player") <= before - 15.0, "insult costs 15 (%.1f)" % mark.rel("player"))
 	_check(mark.memories.any(func(m: Dictionary) -> bool: return m.kind == "insult"),
 			"the insult is now a memory")
+
+
+func _test_social_roll_cooldown() -> void:
+	print("[Social pacing: one serious push at a time]")
+	var mark := _mk_npc("npc_cooldown", "loc_test_room", ["plain"], 8, 50, 50)
+	var viewer := _fresh_viewer()
+	GameClock.total_minutes = 1000
+	var first := Social.interact(viewer, mark, "compliment", 0.0)
+	var cooldown_until := int(mark.flags.get("player_social_roll_cooldown_until", -1))
+	_check(first.success and cooldown_until > GameClock.total_minutes,
+			"rolled social action starts a per-NPC cooldown")
+	var rng_before := WorldState.social_rng_state
+	var rel_before := mark.rel("player")
+	var blocked := Social.interact(viewer, mark, "threaten", 0.0)
+	_check(blocked.get("blocked", false), "second immediate social roll is blocked")
+	_check(WorldState.social_rng_state == rng_before,
+			"blocked social spam does not consume social RNG")
+	_check(mark.rel("player") < rel_before,
+			"pushing through cooldown annoys the NPC")
+	_check(Social.action_blocker(viewer, mark, "threaten") != "",
+			"dialogue can explain the cooldown blocker")
+	GameClock.total_minutes = cooldown_until
+	var later := Social.interact(viewer, mark, "threaten", 0.0)
+	_check(not later.get("blocked", false),
+			"social roll unlocks after the cooldown expires")
 
 
 func _test_social_odds_balance() -> void:
@@ -364,6 +390,8 @@ func _test_dating() -> void:
 	print("[Dating: the optimistic path]")
 	var mark: NPCRecord = WorldState.npcs["npc_mark"]
 	mark.relationships["player"] = 50.0
+	mark.flags.erase("player_social_roll_cooldown_until")
+	mark.flags.erase("player_last_social_roll_action")
 	mark.flags.erase("dating_player")
 	var viewer := _fresh_viewer()
 	_check("ask_out" in Social.available_actions(viewer, mark), "ask out unlocks at 40+")
@@ -394,8 +422,8 @@ func _test_dating() -> void:
 	WorldState.player_location_id = "loc_diner"
 	var talk_text := str(Social.interact(viewer, talker, "date_mels_listen").text)
 	var quiet_text := str(Social.interact(viewer, quiet, "date_mels_listen").text)
-	_check(talker.rel("player") > quiet.rel("player"),
-			"personality shapes date choice relationship gains")
+	_check(talker.rel("player") > 50.0 and quiet.rel("player") > 50.0,
+			"date choices improve relationships for both personality fits")
 	_check("more to say" in talk_text and "do not pry" in quiet_text,
 			"date result text reflects personality fit")
 

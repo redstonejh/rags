@@ -174,6 +174,7 @@ func _refresh() -> void:
 			"label": "Spend time together",
 			"roll": false,
 		})
+		var blocker := Social.action_blocker(sheet, _npc, action_id)
 		var is_revealed: bool = action_id == _revealed_action
 		var btn := Button.new()
 		btn.name = "Action_%s" % action_id
@@ -184,7 +185,7 @@ func _refresh() -> void:
 			btn.text = "%s  -  %d%%" % [def.label, roundi(shown * 100)]
 		else:
 			btn.text = str(def.get("label", action_id))
-		if action_id == _revealed_action:
+		if is_revealed:
 			btn.text = "%s  -  %d%% -> %d%%" % [
 				def.get("label", action_id),
 				roundi(_revealed_perceived * 100),
@@ -192,6 +193,11 @@ func _refresh() -> void:
 			]
 			btn.set_meta("reality_check_button_pulse", true)
 			_style_revealed_action_button(btn)
+		if blocker != "":
+			if not is_revealed:
+				btn.text = "%s  -  %s" % [def.get("label", action_id), blocker]
+			btn.disabled = true
+			btn.tooltip_text = "They need a little space before another serious push."
 		btn.pressed.connect(_do_action.bind(action_id))
 		_actions_box.add_child(btn)
 		if is_revealed:

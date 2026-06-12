@@ -103,6 +103,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
   - Started 2026-06-12: `Perception.read_line()` now gives People Reader a true-stat readout (`STR/DEX/CON/INT/WIS/CHA`) in dialogue, with M4 coverage for the visible text. Full social odds balance remains.
   - Continued 2026-06-12: M4 now has social odds guardrails for average, favorable, and hostile interactions, and the chance spread was widened so strong social builds help without immediately pinning the 95% cap. Broader play-balance telemetry remains.
+  - Continued 2026-06-12: rolled social actions now pace per NPC instead of letting the player spam the same person. Dialogue disables serious pushes during the cooldown, the target remembers being pushed, blocked attempts do not advance the social RNG, and the scripted playtest verifies cooldown UI alongside Reality Check feedback.
 - **DoD:** scripted playthrough covering chat → flirt → reality check → hearing about it from a stranger later.
   - Started 2026-06-12: `PlaytestDriver.tscn` now drives chat -> flirt -> forced Reality Check -> sourced gossip from a stranger through the real dialogue UI. Full balance and human play checkpoint remain.
 

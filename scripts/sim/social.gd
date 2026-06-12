@@ -21,6 +21,7 @@ const PICKPOCKET_EYE_PENALTY := 0.03
 const PICKPOCKET_COP_EYE_PENALTY := 0.08
 const PICKPOCKET_MAX_EYE_PENALTY := 0.18
 const WITNESS_BRIBE_BASE_CENTS_PER_SEVERITY := 2500
+const SOCIAL_ROLL_COOLDOWN_MINUTES := 60
 const PICKPOCKET_DISTRACTED_ACTIVITIES := [
 	"shopping", "drinking", "eating", "loitering", "wandering", "working", "date",
 ]
@@ -117,6 +118,17 @@ static func perceived_chance(sheet: CharacterSheet, npc: NPCRecord, action: Stri
 	return Perception.displayed_chance(sheet, _chance(sheet, npc, action, stats))
 
 
+static func action_blocker(_sheet: CharacterSheet, npc: NPCRecord, action: String) -> String:
+	var a: Dictionary = ACTIONS.get(action, {})
+	if not a.get("roll", false):
+		return ""
+	var cooldown_until := int(npc.flags.get("player_social_roll_cooldown_until", -1))
+	if GameClock.total_minutes < cooldown_until:
+		var mins_left := maxi(1, cooldown_until - GameClock.total_minutes)
+		return "give them %dm" % mins_left
+	return ""
+
+
 static func _chance(sheet: CharacterSheet, npc: NPCRecord, action: String, def_stats: Dictionary) -> float:
 	var a: Dictionary = ACTIONS.get(action, {})
 	if not a.get("roll", false):
@@ -174,6 +186,14 @@ static func _pickpocket_nearby_eyes(target: NPCRecord) -> Array:
 static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forced_roll := -1.0) -> Dictionary:
 	var perceived := perceived_chance(sheet, npc, action)
 	var actual := true_chance(sheet, npc, action)
+	var blocker := action_blocker(sheet, npc, action)
+	if blocker != "":
+		npc.change_rel("player", -1.0)
+		npc.add_memory("pushed", "player",
+				"kept pushing after you needed space", -0.2, 2.0)
+		return {"success": false, "blocked": true, "reality_check": false,
+				"perceived": perceived, "actual": actual,
+				"text": "They step back. %s." % blocker.capitalize()}
 	var roll := forced_roll if forced_roll >= 0.0 else _randf()
 	if forced_roll < 0.0 and sheet.has_tag("luck"):
 		roll = minf(roll, _randf()) # the Gambler's whole deal: roll twice, keep the better
@@ -368,6 +388,10 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 				roundi(perceived * 100), roundi(actual * 100)])
 
 	GameClock.skip_minutes(5)
+	if ACTIONS.get(action, {}).get("roll", false):
+		npc.flags["player_social_roll_cooldown_until"] = \
+				GameClock.total_minutes + SOCIAL_ROLL_COOLDOWN_MINUTES
+		npc.flags["player_last_social_roll_action"] = action
 	if date_location != "":
 		WorldState.player_location_id = date_location
 		npc.current_location_id = date_location
