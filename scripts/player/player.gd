@@ -67,7 +67,10 @@ func _physics_process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and _interact_target != null:
-		_interact_target.interact(self)
+		if _is_usable_interactable(_interact_target):
+			_interact_target.interact(self)
+		else:
+			_set_interact_target(null)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton \
 			and event.button_index == MOUSE_BUTTON_LEFT \
@@ -168,6 +171,9 @@ func _cancel_click_move() -> void:
 func _try_click_interaction() -> void:
 	if _click_interact_target == null:
 		return
+	if not _is_usable_interactable(_click_interact_target):
+		_cancel_click_move()
+		return
 	if global_position.distance_to(_click_interact_target.global_position) > CLICK_INTERACT_DISTANCE:
 		return
 	var target := _click_interact_target
@@ -193,11 +199,24 @@ func _update_interact_target() -> void:
 	var nearest: Interactable = null
 	var nearest_dist := INF
 	for area in interact_area.get_overlapping_areas():
-		if area is Interactable:
+		if _is_usable_interactable(area):
 			var dist := global_position.distance_squared_to(area.global_position)
 			if dist < nearest_dist:
 				nearest_dist = dist
 				nearest = area
-	if nearest != _interact_target:
-		_interact_target = nearest
-		EventBus.interact_target_changed.emit(nearest.prompt() if nearest else "")
+	_set_interact_target(nearest)
+
+
+func _set_interact_target(target: Interactable) -> void:
+	if target == _interact_target:
+		return
+	_interact_target = target
+	EventBus.interact_target_changed.emit(target.prompt() if target else "")
+
+
+func _is_usable_interactable(target) -> bool:
+	return is_instance_valid(target) \
+			and target is Interactable \
+			and target.is_inside_tree() \
+			and target.monitoring \
+			and target.monitorable

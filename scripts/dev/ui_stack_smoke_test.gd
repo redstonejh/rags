@@ -128,6 +128,7 @@ func _test_empty_carjack_removes_car() -> void:
 	var dirty_before: int = WorldState.player_sheet.dirty_cents
 	var cases_before: int = WorldState.crime_cases.size()
 	car.occupied_chance = 0.0
+	_player.set("_interact_target", car)
 	car.interact(_player)
 	_check(parent != null and not parent.get_children().has(car),
 			"empty carjack removes the car synchronously")
@@ -135,6 +136,13 @@ func _test_empty_carjack_removes_car() -> void:
 			"empty carjack pays dirty cash")
 	_check(WorldState.crime_cases.size() == cases_before + 1,
 			"empty carjack creates a car-theft case")
+	var dirty_after: int = WorldState.player_sheet.dirty_cents
+	var cases_after: int = WorldState.crime_cases.size()
+	_player.call("_unhandled_input", _action("interact"))
+	_check(WorldState.player_sheet.dirty_cents == dirty_after,
+			"stale car target cannot pay twice")
+	_check(WorldState.crime_cases.size() == cases_after,
+			"stale car target cannot create a duplicate case")
 	_check(not GameClock.paused, "empty carjack leaves control unpaused")
 
 
