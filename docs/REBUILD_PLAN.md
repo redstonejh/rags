@@ -44,7 +44,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 5. **UI shell:** a `UIStack` manager node in Main (not an autoload) owning modal open/close and a single source of clock-pause truth — fixes the six-modals-each-pausing-the-clock hazard. Esc opens a pause menu (Resume / Save / Walk Away / Settings / Quit) instead of hard-exiting to the main menu. Consistent theme from `assets/ui/`.
    - Started 2026-06-12: `UIStack` now owns modal open/close, named clock pause locks, and the Esc pause menu. Existing modal panels are wired through it; visual theme work remains.
 6. **Playtest harness:** `scripts/dev/playtest_driver.gd` injects real InputEvents to run scripted playthroughs windowed and dumps screenshots at checkpoints (spawn → walk to diner → enter → interact → phone → shop). Everything it surfaces gets fixed.
-   - Started 2026-06-12: `PlaytestDriver.tscn` validates spawn → movement → diner travel → phone → inventory → pause menu. Headless runs validate flow; windowed runs dump PNG checkpoints under `user://playtests`.
+   - Started 2026-06-12: `PlaytestDriver.tscn` validates spawn → movement → diner travel → phone → inventory → store travel → shop interaction → pause menu. Headless runs validate flow; windowed runs dump PNG checkpoints under `user://playtests`.
 - **Definition of done:** the town reads as a 3/4 pixel-art town in screenshots; both control schemes work; every existing modal opens/closes with no pause or input conflicts; M1–M8 suites still green.
 
 ### Phase 1 — Social + Reality Check to 100%

@@ -27,8 +27,10 @@ func _ready() -> void:
 	await _checkpoint("04_phone")
 	await _close_phone_open_inventory()
 	await _checkpoint("05_inventory")
+	await _enter_store_open_shop()
+	await _checkpoint("06_shop")
 	await _open_pause_menu()
-	await _checkpoint("06_pause_menu")
+	await _checkpoint("07_pause_menu")
 	_report()
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -91,10 +93,36 @@ func _close_phone_open_inventory() -> void:
 	_check(not phone.visible and inventory.visible and GameClock.paused, "inventory opened after phone")
 
 
+func _enter_store_open_shop() -> void:
+	var inventory: CanvasLayer = _main.get_node("Inventory")
+	if inventory.visible:
+		inventory._unhandled_input(_action("inventory"))
+	await get_tree().process_frame
+	EventBus.travel_requested.emit("loc_store")
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	_check(WorldState.player_location_id == "loc_store", "travel entered the store")
+	var counter := _find_current_world_node_with_property("stock")
+	if counter == null:
+		_check(false, "shop counter exists")
+		return
+	_check(true, "shop counter exists")
+	_player.set("global_position", counter.get("global_position"))
+	await get_tree().physics_frame
+	_player.call("_physics_process", 0.0)
+	_player.call("_unhandled_input", _action("interact"))
+	await get_tree().process_frame
+	var shop: CanvasLayer = _main.get_node("Shop")
+	_check(shop.visible and GameClock.paused, "shop opened from interact input")
+
+
 func _open_pause_menu() -> void:
 	var inventory: CanvasLayer = _main.get_node("Inventory")
 	if inventory.visible:
 		inventory._unhandled_input(_action("inventory"))
+	var shop: CanvasLayer = _main.get_node("Shop")
+	if shop.visible:
+		shop._unhandled_input(_action("ui_cancel"))
 	_main._unhandled_input(_action("ui_cancel"))
 	await get_tree().process_frame
 	var stack: Node = _main.get_node("UIStack")
@@ -141,6 +169,16 @@ func _find_exterior_door(location_id: String) -> Node:
 		return null
 	for child in world_root.get_child(0).get_children():
 		if child.get("target_location_id") == location_id:
+			return child
+	return null
+
+
+func _find_current_world_node_with_property(property_name: String) -> Node:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return null
+	for child in world_root.get_child(0).get_children():
+		if child.get(property_name) != null:
 			return child
 	return null
 

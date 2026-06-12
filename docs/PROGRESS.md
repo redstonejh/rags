@@ -16,7 +16,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Modal pause safety:** phone, inventory, shop, dialogue, dilemma, confrontation, and death screen flows now use composable pause locks, so closing one modal cannot accidentally resume time while another modal or manual pause is still active.
 - **Click-to-move foundation:** `Player.tscn` now has a `NavigationAgent2D`; clicking walkable ground sets a path, clicking an interactable arms a walk-then-interact target, and WASD immediately cancels the click path to keep direct control authoritative.
 - **Regression coverage:** added `UIStackSmokeTest.tscn`, which instantiates the real main scene, opens overlapping panels, verifies speed keys cannot break modal pause, checks Esc pause-menu toggling, and covers click movement, click-to-interact arrival, and WASD cancellation.
-- **Scripted playtest harness:** added `PlaytestDriver.tscn`, which runs the real gameplay scene through spawn, movement, diner travel, phone, inventory, and pause-menu checkpoints. Headless mode validates flow and reports screenshot skips; windowed mode saves PNG checkpoints to `user://playtests`.
+- **Scripted playtest harness:** added `PlaytestDriver.tscn`, which runs the real gameplay scene through spawn, movement, diner travel, phone, inventory, store travel, shop interaction, and pause-menu checkpoints. Headless mode validates flow and reports screenshot skips; windowed mode saves PNG checkpoints to `user://playtests`.
 
 ## Systems implemented (headless-tested only — see status note above)
 
