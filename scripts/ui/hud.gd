@@ -141,9 +141,9 @@ func _update_job_label() -> void:
 
 func _on_time_scale_changed(scale: float) -> void:
 	if scale == 0.0:
-		speed_label.text = "⏸ PAUSED  (space resumes, 1/2/3 speed)"
+		speed_label.text = "Paused  Space / 1 2 3"
 	else:
-		speed_label.text = "▶ %dx speed  (space pauses, 1/2/3 speed)" % int(scale)
+		speed_label.text = "%dx  Space / 1 2 3" % int(scale)
 
 
 # ------------------------------------------------------------------- toasts

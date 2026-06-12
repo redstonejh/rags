@@ -89,6 +89,7 @@ func _instantiate_main() -> void:
 	_player = _main.get_node("Player")
 	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
 	await _verify_player_outfit_switch()
+	_verify_hud_time_hint_fit()
 	await _verify_social_playthrough()
 	_check(_exterior_ground_tile_count(Vector2i(5, 0)) > 0, "exterior sidewalks spawned")
 	_check(_exterior_ground_tile_count(Vector2i(6, 0)) > 0, "exterior dirt lots spawned")
@@ -284,6 +285,16 @@ func _verify_player_outfit_switch() -> void:
 	_check(outfit.texture != null \
 			and outfit.texture.resource_path.ends_with("outfit_nice_suit_walk.png"),
 			"player outfit sprite follows worn clothing")
+
+
+func _verify_hud_time_hint_fit() -> void:
+	var label := _main.get_node_or_null("HUD/TopLeft/VBox/SpeedLabel") as Label
+	var top_left := _main.get_node_or_null("HUD/TopLeft") as Control
+	var backing := _main.get_node_or_null("HUD/TopLeftBack") as ColorRect
+	_check(label != null and top_left != null and label.size.x <= top_left.size.x,
+			"HUD time hint fits the status panel")
+	_check(backing != null and backing.visible and backing.color.a > 0.0,
+			"HUD status panel has readable backing")
 
 
 func _verify_social_playthrough() -> void:

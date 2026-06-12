@@ -44,6 +44,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Interior prop sprites started:** generated sprites now cover the fridge, bed, shower, TV, bar counter, records desk, work spot, dealer, and fence. Existing interactable behavior and collision stay intact through sprite-first/fallback rendering, and the scripted playtest now asserts that interior prop sprites spawn after entering the diner.
 - **Street furniture started:** generated bench, street lamp, trash can, dumpster, and news-box sprites now populate the exterior. Benches use the existing `Amenity` rest behavior, while the other props render through a non-colliding `StreetPropLayer`; the scripted playtest asserts that street props spawn.
 - **UI shell theme started:** generated pause-menu command icons now live in `assets/ui/`, and `UIStack` applies a consistent dark panel/button/label theme to gameplay UI controls as they are created.
+- **HUD hint polish:** the top-left time-control hint now uses compact wording and a subtle backing panel so it stays readable over busy world art, with scripted playtest coverage for the layout.
 
 ## Systems implemented (headless-tested only — see status note above)
 
