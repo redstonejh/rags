@@ -4,7 +4,7 @@
 
 ## Honest starting point
 
-M0–M8 of `DESIGN.md` exist as **simulation systems verified by ~250 headless, function-level checks** — and that is all they are. The game has never been played interactively. The visuals are flat colored rectangles on an obvious grid. Several flows (heir, Walk Away, in-play arrest, modal UI stacking) have never executed outside unit tests that call functions directly with forced dice. Jail, hospitals, marriage, and elections are a button plus a toast string. Minigames, factions, the radio DJ, build mode, six of twelve origins, and every origin's unique mechanic do not exist.
+M0–M8 of `DESIGN.md` exist as **simulation systems verified by ~250 headless, function-level checks**. Phase 0/1 also has a scripted-input harness that exercises a narrow real input → UI → world loop and saves windowed screenshot checkpoints, but the game has still never had a human playtest pass. The visuals have moved from flat rectangles to generated programmer-art placeholders, not final art. Several flows (heir selection through death UI, in-play arrest, long-session save/load, and Walk Away beyond its pause-menu entry point) remain unproven in real play. Jail, hospitals, marriage, and elections are a button plus a toast string. Minigames, factions, the radio DJ, build mode, six of twelve origins, and every origin's unique mechanic do not exist.
 
 What IS real: the architecture (data-driven `.tres` defs, record/view separation, EventBus, ironman saves that round-trip everything) and the signature mechanics implemented at the math layer (Reality Check perceived-vs-true odds, persistent-world permadeath, the witness pipeline). This is an engine, not a game. The plan below turns it into one.
 
