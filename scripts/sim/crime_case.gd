@@ -21,6 +21,7 @@ var status: String = UNREPORTED
 var day: int = 0
 var location_id: String = ""
 var witness_ids: Array = []
+var spawned_by_case_id: String = ""
 
 
 func def() -> CrimeDef:
@@ -37,6 +38,7 @@ func to_dict() -> Dictionary:
 		"perpetrator_id": perpetrator_id, "suspect_id": suspect_id,
 		"evidence": evidence, "status": status, "day": day,
 		"location_id": location_id, "witness_ids": witness_ids.duplicate(),
+		"spawned_by_case_id": spawned_by_case_id,
 	}
 
 
@@ -51,4 +53,5 @@ static func from_dict(d: Dictionary) -> CrimeCase:
 	c.day = int(d.get("day", 0))
 	c.location_id = d.get("location_id", "")
 	c.witness_ids = d.get("witness_ids", []).duplicate()
+	c.spawned_by_case_id = str(d.get("spawned_by_case_id", ""))
 	return c

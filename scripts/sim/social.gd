@@ -317,7 +317,7 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 				npc.add_memory("witness_intimidation_failed", "player",
 						"tried to scare you out of talking", -0.8, 9.0)
 				CrimeSystem.commit("witness_intimidation", npc.current_location_id, npc,
-						npc.abstract_position(GameClock.total_minutes))
+						npc.abstract_position(GameClock.total_minutes), case_id)
 				result.text = "Wrong witness. The coverup becomes its own charge."
 
 	# The Reality Check moment: confidence meets fact, fact wins.

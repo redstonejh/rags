@@ -147,17 +147,29 @@ func _test_witness_intimidation() -> void:
 
 	WorldState.crime_cases.clear()
 	var stubborn := _mk_npc("w_stubborn", "loc_intimidate_fail", 90, 14, 90)
-	CrimeSystem.commit("shoplift", "loc_intimidate_fail")
+	var original := CrimeSystem.commit("shoplift", "loc_intimidate_fail")
 	var before_count := WorldState.crime_cases.size()
 	var failed := Social.interact(sheet, stubborn, "intimidate_witness", 0.999)
 	_check(not failed.success, "failed intimidation resolves as failure")
 	_check(WorldState.crime_cases.size() == before_count + 1,
 			"failed intimidation creates a coverup case")
-	var found_coverup := false
+	var coverup: CrimeCase = null
 	for c in WorldState.crime_cases.values():
 		if c.crime_id == "witness_intimidation":
-			found_coverup = true
-	_check(found_coverup, "coverup case is witness intimidation")
+			coverup = c
+	_check(coverup != null, "coverup case is witness intimidation")
+	_check(coverup != null and coverup.spawned_by_case_id == original.id,
+			"coverup case links back to the original crime")
+	var coverup_id := coverup.id if coverup != null else ""
+	var parent_id := original.id
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with linked coverup case")
+	WorldState.crime_cases.clear()
+	_check(SaveManager.load_game(), "load_game restores linked coverup case")
+	var loaded_coverup: CrimeCase = WorldState.crime_cases.get(coverup_id)
+	_check(loaded_coverup != null and loaded_coverup.spawned_by_case_id == parent_id,
+			"case chain survives save/load")
+	SaveManager.set_in_game(false)
 	CrimeSystem._close_warrants()
 
 

@@ -74,7 +74,7 @@ func _ready() -> void:
 ## The player commits a crime. target = the wronged NPC (may be null);
 ## world_pos limits exterior witnesses to line-of-sight-ish range.
 static func commit(crime_id: String, location_id: String, target: NPCRecord = null,
-		world_pos := Vector2.INF) -> CrimeCase:
+		world_pos := Vector2.INF, spawned_by_case_id := "") -> CrimeCase:
 	var def := ContentDB.get_crime(crime_id)
 	var sheet: CharacterSheet = WorldState.player_sheet
 	var case := CrimeCase.new()
@@ -83,6 +83,7 @@ static func commit(crime_id: String, location_id: String, target: NPCRecord = nu
 	case.day = GameClock.day
 	case.location_id = location_id
 	case.evidence = ANONYMOUS_BASELINE_EVIDENCE
+	case.spawned_by_case_id = spawned_by_case_id
 
 	var caught_red_handed := false
 	for npc in witnesses_at(location_id, world_pos, target):
