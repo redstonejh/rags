@@ -37,6 +37,7 @@ func _ready() -> void:
 	_test_shoplift_sightlines()
 	_test_register_robbery_is_never_quiet()
 	_test_register_silent_alarm_response()
+	_test_arrest_flee_retry()
 	_test_arrest_paths()
 	_test_pickpocket()
 	_test_fence()
@@ -364,6 +365,37 @@ func _test_register_silent_alarm_response() -> void:
 	CrimeSystem.commit_register_robbery("loc_alarm_store", Vector2.INF, 0.99)
 	_check(not quiet_sheet.flags.has("silent_alarm_minute"),
 			"high alarm roll skips silent alarm")
+	CrimeSystem._close_warrants()
+
+
+func _test_arrest_flee_retry() -> void:
+	print("[Arrest: fleeing keeps heat close]")
+	var sheet := _fresh_sheet()
+	WorldState.crime_cases.clear()
+	WorldState.player_location_id = "loc_flee"
+	GameClock.total_minutes = 9 * 60
+	var cop := _mk_npc("flee_cop", "loc_flee", 100, 10, 80, "cop")
+	var warrant := CrimeSystem.commit("shoplift", "loc_quiet")
+	warrant.status = CrimeCase.WARRANT
+	warrant.suspect_id = "player"
+	warrant.evidence = CrimeCase.WARRANT_EVIDENCE
+	var result := Confrontation.resolve("arrest", "flee", sheet, cop, 0.0)
+	_check(result.success, "successful arrest flee resolves as an escape")
+	_check(CrimeSystem.wanted_stars() == 1, "fleeing leaves the warrant active")
+	_check(warrant.evidence > CrimeCase.WARRANT_EVIDENCE,
+			"fleeing adds evidence to the active warrant")
+	var retry_minute := int(sheet.flags.get("arrest_escape_retry_minute", -1))
+	_check(retry_minute == GameClock.total_minutes + CrimeSystem.ARREST_ESCAPE_RETRY_MINUTES,
+			"fleeing schedules a short radio-search retry")
+	_check(cop.knows_memory("player", "ran from you during an arrest stop"),
+			"the arresting cop remembers the escape")
+	var law := CrimeSystem.new()
+	law.set("_arrest_cooldown_until", GameClock.total_minutes + CrimeSystem.ARREST_COOLDOWN_MINUTES)
+	_check(law._arrest_cooldown_blocks(GameClock.total_minutes + 5, sheet),
+			"normal arrest cooldown still blocks before the retry minute")
+	_check(not law._arrest_cooldown_blocks(retry_minute, sheet),
+			"radio-search retry bypasses the long arrest cooldown")
+	law.free()
 	CrimeSystem._close_warrants()
 
 

@@ -147,6 +147,7 @@ static func _resolve_arrest(choice: String, sheet: CharacterSheet,
 			if roll < _flee_chance(sheet, cop):
 				sheet.needs.change("energy", -15.0)
 				_bump_warrant_evidence(5.0)
+				CrimeSystem.record_arrest_escape(cop)
 				return {"text": "You vanish through the alley. Somewhere behind you, a radio crackles.",
 						"done": true, "follow_up": {}, "success": true}
 			_bump_warrant_evidence(10.0)

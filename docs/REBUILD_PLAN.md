@@ -135,6 +135,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 - Cops visibly patrol; wanted = embodied pursuit (chase AI) → arrest confrontation; jail becomes a real interior with a daily event loop (yard / library / kitchen) instead of a toast.
   - Started 2026-06-12: `InPlayArrestSmokeTest.tscn` now proves the real crime-to-warrant-to-embodied-cop arrest flow opens the production confrontation, serves time, clears wanted stars, and returns control to play. Chase AI and walkable jail remain.
   - Continued 2026-06-12: serving time now records deterministic yard/library/kitchen day events, summarizes them in the arrest result, can introduce one criminal-leaning inmate as a persistent underworld contact, strains partner relationships, and increments a Child Services file for parents. Full walkable jail and deeper inmate social ecosystem remain.
+  - Continued 2026-06-12: successfully fleeing an arrest now keeps the warrant hot, adds evidence, gives the arresting cop a memory, and schedules a short radio-search retry that can bypass the normal long arrest cooldown. Full chase AI remains.
 - **DoD:** rob the QuikStop with and without witnesses and feel the difference; get chased; serve time.
 
 ### Phase 4 — Housing + furnishing to 100%

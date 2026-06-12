@@ -17,6 +17,7 @@ const BAIL_CENTS_PER_DAY := 5000
 const MAX_STARS := 5
 const COP_CHECK_MINUTES := 5
 const ARREST_COOLDOWN_MINUTES := 90
+const ARREST_ESCAPE_RETRY_MINUTES := 15
 const EXTERIOR_WITNESS_RADIUS := 320.0
 const REGISTER_SILENT_ALARM_CHANCE := 0.50
 const REGISTER_SILENT_ALARM_MINUTES := 3
@@ -342,13 +343,15 @@ static func _process_cop_gossip() -> void:
 func _on_minute_passed(total: int) -> void:
 	if _maybe_trigger_silent_alarm(total):
 		return
-	if total % COP_CHECK_MINUTES != 0 or total < _arrest_cooldown_until:
+	if total % COP_CHECK_MINUTES != 0:
 		return
 	var sheet: CharacterSheet = WorldState.player_sheet
 	if sheet == null or not sheet.alive or wanted_stars() == 0:
 		return
 	if sheet.flags.get("jailed", false):
 		return # you're already exactly where they want you
+	if _arrest_cooldown_blocks(total, sheet):
+		return
 	var cop := _cop_who_spots_player()
 	if cop == null:
 		return
@@ -356,10 +359,29 @@ func _on_minute_passed(total: int) -> void:
 	if sheet.flags.get("police_budget_low", false):
 		cooldown *= 3 # the mayor gutted patrols. The mayor is you.
 	_arrest_cooldown_until = total + cooldown
+	sheet.flags.erase("arrest_escape_retry_minute")
+	sheet.flags.erase("arrest_escape_cop_id")
 	EventBus.confrontation_started.emit({
 		"kind": "arrest", "npc_id": cop.id,
 		"text": "Officer %s squares up: \"Stop right there. We've been looking for you.\"" % cop.display_name,
 	})
+
+
+func _arrest_cooldown_blocks(total: int, sheet: CharacterSheet) -> bool:
+	if total >= _arrest_cooldown_until:
+		return false
+	var escape_retry := int(sheet.flags.get("arrest_escape_retry_minute", -1))
+	return escape_retry < 0 or total < escape_retry
+
+
+static func record_arrest_escape(cop: NPCRecord) -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet == null:
+		return
+	sheet.flags["arrest_escape_retry_minute"] = GameClock.total_minutes + ARREST_ESCAPE_RETRY_MINUTES
+	if cop != null:
+		sheet.flags["arrest_escape_cop_id"] = cop.id
+		cop.add_memory("arrest_escape", "player", "ran from you during an arrest stop", -0.4, 7.0)
 
 
 func _cop_who_spots_player() -> NPCRecord:
