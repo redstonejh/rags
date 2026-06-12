@@ -4,6 +4,11 @@ extends Node
 ##   godot --headless --path <repo> res://scenes/dev/OpeningBeatSmokeTest.tscn
 
 const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
+const START_MARKER_PROPS := {
+	"loc_bus_stop": "BusStopSprite",
+	"loc_gas_station_rear": "StreetCampSprite",
+	"loc_decent_apartment": "ApartmentSignSprite",
+}
 
 var failures := 0
 var _main: Node = null
@@ -11,29 +16,30 @@ var _toasts: Array[String] = []
 
 
 func _ready() -> void:
-	await _run_origin_start_case("off_the_bus", "Arrival Walker",
-			"loc_bus_stop", "Small-Town Transplant", "bus stop", "BusStopSprite")
-	await _run_origin_start_case("fresh_out", "Gate Money",
-			"loc_bus_stop", "Ex-Con", "bus stop", "BusStopSprite")
-	await _run_origin_start_case("one_more_hand", "Lucky Coin",
-			"loc_bus_stop", "Gambler", "bus stop", "BusStopSprite")
-	await _run_origin_start_case("struck_off", "No License",
-			"loc_bus_stop", "Disgraced Doctor", "bus stop", "BusStopSprite")
-	await _run_origin_start_case("rock_bottom", "Alley Starter",
-			"loc_gas_station_rear", "Tweaker", "behind the gas station", "StreetCampSprite")
-	await _run_origin_start_case("fired_exec", "Corner Office Ghost",
-			"loc_decent_apartment", "Fired Corporate Exec", "decent apartments", "ApartmentSignSprite")
+	var origins := ContentDB.all_origins()
+	_check(not origins.is_empty(), "ContentDB has origins to verify")
+	for origin: OriginDef in origins:
+		var expected_marker := origin.starting_location_id
+		_check(expected_marker != "",
+				"%s defines a first-life start marker" % origin.id)
+		if expected_marker == "":
+			continue
+		var expected_prop_name := str(START_MARKER_PROPS.get(expected_marker, ""))
+		_check(expected_prop_name != "",
+				"%s start marker %s has an opening prop mapping" % [
+						origin.id, expected_marker])
+		if expected_prop_name == "":
+			continue
+		await _run_origin_start_case(origin, expected_prop_name)
 	print("Opening beat smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
 
-func _run_origin_start_case(origin_id: String, char_name: String, expected_marker: String,
-		origin_toast_text: String, start_toast_text: String, expected_prop_name: String) -> void:
+func _run_origin_start_case(origin: OriginDef, expected_prop_name: String) -> void:
 	await _teardown_main()
-	_setup_world(origin_id, char_name)
+	_setup_world(origin.id, "%s Tester" % origin.id.capitalize())
 	await _instantiate_main()
-	_test_origin_start_and_opening_beat(origin_id, expected_marker, origin_toast_text,
-			start_toast_text, expected_prop_name)
+	_test_origin_start_and_opening_beat(origin, expected_prop_name)
 
 
 func _setup_world(origin_id: String, char_name: String) -> void:
@@ -57,27 +63,28 @@ func _instantiate_main() -> void:
 	await get_tree().process_frame
 
 
-func _test_origin_start_and_opening_beat(origin_id: String, expected_marker: String,
-		origin_toast_text: String, start_toast_text: String, expected_prop_name: String) -> void:
+func _test_origin_start_and_opening_beat(origin: OriginDef, expected_prop_name: String) -> void:
 	var player: Node2D = _main.get_node("Player")
+	var expected_marker := origin.starting_location_id
 	var start_marker := str(WorldState.player_sheet.flags.get("start_location_id", ""))
 	var expected := Locations.door_pos(expected_marker)
 	_check(start_marker == expected_marker,
-			"%s stores %s start marker on the sheet" % [origin_id, expected_marker])
+			"%s stores %s start marker on the sheet" % [origin.id, expected_marker])
 	_check(player.global_position.distance_to(expected) <= 1.0,
-			"%s first-life exterior spawn uses %s" % [origin_id, expected_marker])
+			"%s first-life exterior spawn uses %s" % [origin.id, expected_marker])
 	_check(expected.x >= 160.0,
-			"%s %s start marker is clear of the HUD at the west camera limit" % [origin_id, expected_marker])
+			"%s %s start marker is clear of the HUD at the west camera limit" % [origin.id, expected_marker])
 	_check(WorldState.player_location_id == "exterior",
-			"%s exterior start marker preserves simulation location" % origin_id)
+			"%s exterior start marker preserves simulation location" % origin.id)
 	_check(int(WorldState.player_sheet.flags.get("opening_seen_life", 0)) \
 			== WorldState.player_sheet.lives_lived,
-			"%s opening beat is recorded for this life" % origin_id)
+			"%s opening beat is recorded for this life" % origin.id)
+	var start_toast_text := Locations.display_name(expected_marker)
 	_check(_toasts.any(func(t: String) -> bool:
-			return origin_toast_text in t and start_toast_text in t),
-			"%s opening beat names the origin and start place" % origin_id)
+			return origin.display_name in t and start_toast_text in t),
+			"%s opening beat names the origin and start place" % origin.id)
 	_check(_current_world_has_node(expected_prop_name),
-			"%s opening prop exists near the start marker" % origin_id)
+			"%s opening prop exists near the start marker" % origin.id)
 
 
 func _current_world_has_node(node_name: String) -> bool:
