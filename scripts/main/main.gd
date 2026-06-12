@@ -196,7 +196,8 @@ func _play_reality_check_sting(npc_id: String) -> void:
 			int(_reality_sting_player.get_meta("reality_check_stings", 0)) + 1)
 	_reality_sting_player.set_meta("last_reality_check_target", npc_id)
 	_reality_sting_player.stop()
-	_reality_sting_player.play()
+	if DisplayServer.get_name() != "headless":
+		_reality_sting_player.play()
 
 
 # ---------------------------------------------------------------- death

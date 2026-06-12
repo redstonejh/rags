@@ -32,10 +32,13 @@ const STREET_LAMP_TEXTURE_PATH := "res://assets/props/street_lamp.png"
 const TRASH_CAN_TEXTURE_PATH := "res://assets/props/trash_can.png"
 const DUMPSTER_TEXTURE_PATH := "res://assets/props/dumpster.png"
 const NEWS_BOX_TEXTURE_PATH := "res://assets/props/news_box.png"
+const ROOF_FADE_ALPHA := 0.38
+const ROOF_FADE_SPEED := 10.0
 
 var player_spawn: Vector2
 var facade_layer: Node2D = null
 var street_prop_layer: Node2D = null
+var roof_groups: Array[Dictionary] = []
 
 ## Buildings: rect (in cells), door cell, location id, label.
 const BUILDINGS := [
@@ -51,6 +54,7 @@ const BUILDINGS := [
 
 
 func _ready() -> void:
+	roof_groups.clear()
 	# Grass field.
 	for x in W:
 		for y in H:
@@ -85,6 +89,10 @@ func _ready() -> void:
 	Locations.register_door("loc_bus_stop", cell_to_world(Vector2i(12, 12)))
 	Locations.register_door("loc_gas_station_rear", cell_to_world(Vector2i(5, 24)))
 	Locations.register_door("loc_decent_apartment", cell_to_world(Vector2i(37, 28)))
+
+
+func _process(delta: float) -> void:
+	_update_roof_fades(delta)
 
 
 func _stamp_sidewalks() -> void:
@@ -140,8 +148,17 @@ func _stamp_building(rect: Rect2i, door_cell: Vector2i, loc_id: String, label: S
 func _add_facade(rect: Rect2i, door_cell: Vector2i, loc_id: String) -> void:
 	if facade_layer == null:
 		return
+	var roof_sprites: Array[Sprite2D] = []
 	for x in range(rect.position.x, rect.end.x):
-		_add_facade_sprite(ROOF_TEXTURE_PATH, Vector2i(x, rect.position.y), Vector2(0, -20))
+		var roof := _add_facade_sprite(ROOF_TEXTURE_PATH, Vector2i(x, rect.position.y), Vector2(0, -20))
+		if roof != null:
+			roof.name = "RoofSprite"
+			roof_sprites.append(roof)
+	if not roof_sprites.is_empty():
+		roof_groups.append({
+			"rect": rect,
+			"sprites": roof_sprites,
+		})
 	var face_y := door_cell.y
 	for x in range(rect.position.x, rect.end.x):
 		var cell := Vector2i(x, face_y)
@@ -160,15 +177,38 @@ func _add_facade(rect: Rect2i, door_cell: Vector2i, loc_id: String) -> void:
 		_add_facade_sprite(SIGN_TEXTURES[loc_id], door_cell, Vector2(0, -42))
 
 
-func _add_facade_sprite(texture_path: String, cell: Vector2i, offset: Vector2) -> void:
+func _add_facade_sprite(texture_path: String, cell: Vector2i, offset: Vector2) -> Sprite2D:
 	var texture: Texture2D = load(texture_path)
 	if texture == null:
-		return
+		return null
 	var sprite := Sprite2D.new()
 	sprite.texture = texture
 	sprite.texture_filter = 1
 	sprite.position = cell_to_world(cell) + offset
 	facade_layer.add_child(sprite)
+	return sprite
+
+
+func _update_roof_fades(delta: float) -> void:
+	var player: Node2D = SimEngine.player_node
+	if player == null or not is_instance_valid(player):
+		return
+	var player_cell := ground.local_to_map(to_local(player.global_position))
+	for group in roof_groups:
+		var rect: Rect2i = group.get("rect", Rect2i())
+		var target_alpha := ROOF_FADE_ALPHA if _cell_is_behind_roof(player_cell, rect) else 1.0
+		var sprites: Array = group.get("sprites", [])
+		for sprite in sprites:
+			if sprite is Sprite2D:
+				var current_alpha: float = sprite.modulate.a
+				sprite.modulate.a = lerpf(current_alpha, target_alpha,
+						clampf(delta * ROOF_FADE_SPEED, 0.0, 1.0))
+
+
+func _cell_is_behind_roof(cell: Vector2i, rect: Rect2i) -> bool:
+	if cell.x < rect.position.x or cell.x >= rect.end.x:
+		return false
+	return cell.y >= rect.position.y - 1 and cell.y <= rect.position.y + 1
 
 
 func _place_street_props() -> void:

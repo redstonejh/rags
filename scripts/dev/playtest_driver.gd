@@ -124,6 +124,7 @@ func _instantiate_main() -> void:
 	_check(_exterior_ground_tile_count(Vector2i(5, 0)) > 0, "exterior sidewalks spawned")
 	_check(_exterior_ground_tile_count(Vector2i(6, 0)) > 0, "exterior dirt lots spawned")
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
+	await _verify_exterior_roof_fade()
 	_check(_exterior_street_prop_count() > 0, "exterior street props spawned")
 
 
@@ -149,7 +150,7 @@ func _enter_diner() -> void:
 	await get_tree().physics_frame
 	_check(WorldState.player_location_id == "loc_diner", "travel entered the diner")
 	_check(_current_world_named_count("PropSprite") > 0, "interior prop sprites spawned")
-	_check(_current_world_named_count("DecorSprite") >= 8,
+	_check(_current_world_name_prefix_count("DecorSprite") >= 8,
 			"diner decorative sprites spawned")
 	_move_player_to_current_world_cell(Vector2i(7, 4))
 	_clear_hud_toasts()
@@ -254,7 +255,7 @@ func _enter_store_move_to_counter() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 	_check(WorldState.player_location_id == "loc_store", "travel entered the store")
-	_check(_current_world_named_count("DecorSprite") >= 4,
+	_check(_current_world_name_prefix_count("DecorSprite") >= 4,
 			"store decorative sprites spawned")
 	_shop_counter = _find_current_world_node_with_property("stock")
 	if _shop_counter == null:
@@ -274,7 +275,7 @@ func _open_shop_from_counter() -> void:
 		_check(false, "shop counter available for interaction")
 		return
 	await get_tree().physics_frame
-	_player.call("_physics_process", 0.0)
+	_player.set("_interact_target", _shop_counter)
 	_player.call("_unhandled_input", _action("interact"))
 	await get_tree().process_frame
 	var shop: CanvasLayer = _main.get_node("Shop")
@@ -345,7 +346,7 @@ func _stop_runtime_audio() -> void:
 	if sting != null:
 		sting.stop()
 		sting.stream = null
-		sting.queue_free()
+		sting.free()
 	await get_tree().process_frame
 
 
@@ -634,6 +635,29 @@ func _exterior_facade_count() -> int:
 	return layer.get_child_count() if layer != null else 0
 
 
+func _verify_exterior_roof_fade() -> void:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		_check(false, "exterior roof fade has a world")
+		return
+	var world := world_root.get_child(0)
+	if not world.has_method("cell_to_world"):
+		_check(false, "exterior roof fade can position player by cell")
+		return
+	var roof := _find_named_descendant(world, "RoofSprite") as Sprite2D
+	_check(roof != null, "exterior roof sprites are named for depth behavior")
+	if roof == null:
+		return
+	var start: Vector2 = _player.get("global_position")
+	_player.set("global_position", world.call("cell_to_world", Vector2i(9, 1)))
+	world.call("_update_roof_fades", 1.0)
+	_check(roof.modulate.a < 0.8, "roof fades when the player is behind it")
+	_player.set("global_position", start)
+	world.call("_update_roof_fades", 1.0)
+	_check(roof.modulate.a > 0.9, "roof opacity restores away from the building")
+	_reset_player_camera_smoothing()
+
+
 func _exterior_street_prop_count() -> int:
 	var world_root: Node = _main.get_node("WorldRoot")
 	if world_root.get_child_count() == 0:
@@ -674,6 +698,13 @@ func _current_world_named_count(node_name: String) -> int:
 	return _count_named_descendants(world_root.get_child(0), node_name)
 
 
+func _current_world_name_prefix_count(prefix: String) -> int:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		return 0
+	return _count_name_prefix_descendants(world_root.get_child(0), prefix)
+
+
 func _move_player_to_current_world_cell(cell: Vector2i) -> void:
 	var world_root: Node = _main.get_node("WorldRoot")
 	if world_root.get_child_count() == 0:
@@ -694,6 +725,13 @@ func _count_named_descendants(node: Node, node_name: String) -> int:
 	var count := 1 if node.name == node_name else 0
 	for child in node.get_children():
 		count += _count_named_descendants(child, node_name)
+	return count
+
+
+func _count_name_prefix_descendants(node: Node, prefix: String) -> int:
+	var count := 1 if str(node.name).begins_with(prefix) else 0
+	for child in node.get_children():
+		count += _count_name_prefix_descendants(child, prefix)
 	return count
 
 

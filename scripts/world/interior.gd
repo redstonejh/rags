@@ -226,6 +226,7 @@ func get_npc_spawn_position(_npc) -> Vector2:
 
 func _place_decor() -> void:
 	var decor: Array = DECOR_BY_LOCATION.get(location_id, [])
+	var index := 0
 	for item in decor:
 		var kind := str(item.get("kind", ""))
 		if not DECOR_TEXTURES.has(kind):
@@ -234,9 +235,10 @@ func _place_decor() -> void:
 		if texture == null:
 			continue
 		var sprite := Sprite2D.new()
-		sprite.name = "DecorSprite"
+		sprite.name = "DecorSprite_%02d" % index
 		sprite.texture = texture
 		sprite.texture_filter = 1
 		var cell: Vector2i = item.get("cell", Vector2i.ZERO)
 		sprite.position = cell_to_world(cell) + DECOR_OFFSETS.get(kind, Vector2.ZERO)
 		add_child(sprite)
+		index += 1
