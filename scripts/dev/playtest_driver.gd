@@ -343,8 +343,11 @@ func _verify_social_playthrough() -> void:
 	await get_tree().process_frame
 	var dialogue: CanvasLayer = _main.get_node("Dialogue")
 	var portrait := _find_named_descendant(dialogue, "Portrait")
+	var scrim := _find_named_descendant(dialogue, "DialogueScrim")
 	_check(dialogue.visible and portrait is TextureRect and portrait.texture != null,
 			"dialogue opens with NPC portrait")
+	_check(scrim is ColorRect and scrim.visible and scrim.color.a >= 0.35,
+			"dialogue stages conversation with a readable scrim")
 	dialogue.call("_do_action_with_roll", "chat")
 	await get_tree().process_frame
 	_check(_dialogue_result_has_text(dialogue), "dialogue chat produces a response")

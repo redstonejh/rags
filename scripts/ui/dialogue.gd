@@ -41,6 +41,13 @@ func _build_ui() -> void:
 	blocker.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(blocker)
 
+	var scrim := ColorRect.new()
+	scrim.name = "DialogueScrim"
+	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	scrim.color = Color(0.02, 0.018, 0.015, 0.42)
+	blocker.add_child(scrim)
+
 	_panel = PanelContainer.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_panel.custom_minimum_size = Vector2(680, 0)

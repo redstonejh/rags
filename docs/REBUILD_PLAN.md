@@ -61,6 +61,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 ### Phase 1 — Social + Reality Check to 100%
 - Dialogue as a real scene: portrait, name, relationship state, the streetwise read as an italic inner voice, intent menu with visible odds.
   - Started 2026-06-12: generated 64x64 archetype portraits now render in the dialogue UI beside the relationship/read/intent menu. Individualized portraits, stronger composition, and full Reality Check theater remain.
+  - Continued 2026-06-12: dialogue now stages conversations over a subtle scrim so the live world remains visible without fighting the portrait, read, rumor, result, and action controls.
 - **The Reality Check moment as theater:** the on-screen odds visibly re-roll and collapse (90% → 4%) with a sting; aftermath lines; witnesses turn to look.
   - Started 2026-06-12: dialogue now renders a dedicated Reality Check callout with perceived-to-actual odds collapse text and aftermath flavor, and the scripted playtest forces/captures the moment through the real dialogue UI. Button-level odds animation and visible witness reactions remain.
   - Continued 2026-06-12: social witnesses now keep a timed reaction state; embodied NPCs pause, face the target, and show a `!` cue while reacting. Stronger animation/camera staging remains.
