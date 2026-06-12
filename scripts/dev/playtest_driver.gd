@@ -306,6 +306,8 @@ func _verify_date_scene_ui() -> void:
 	var choice := _find_named_descendant(dialogue, "DateChoice_date_mels_listen")
 	_check(choice is Button and str(choice.text).contains("week"),
 			"date activity opens venue choices")
+	_check(_find_named_descendant(dialogue, "Action_date_mels") == null,
+			"date activity removes stale action buttons synchronously")
 	await _checkpoint("03_date_scene")
 	var before := date.rel("player")
 	if choice is Button:

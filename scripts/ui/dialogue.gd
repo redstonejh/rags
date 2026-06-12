@@ -162,8 +162,7 @@ func _refresh() -> void:
 	var rumor := _dialogue_rumor_text(_npc)
 	_rumor_label.text = rumor
 	_rumor_label.visible = rumor != ""
-	for child in _actions_box.get_children():
-		child.queue_free()
+	_clear_actions()
 
 	if _date_scene_action != "":
 		_refresh_date_scene()
@@ -197,6 +196,12 @@ func _refresh() -> void:
 		_actions_box.add_child(btn)
 		if is_revealed:
 			_pulse_revealed_action_button.call_deferred(btn)
+
+
+func _clear_actions() -> void:
+	for child in _actions_box.get_children():
+		_actions_box.remove_child(child)
+		child.queue_free()
 
 
 func _style_revealed_action_button(btn: Button) -> void:
