@@ -18,6 +18,12 @@ const MAX_STARS := 5
 const COP_CHECK_MINUTES := 5
 const ARREST_COOLDOWN_MINUTES := 90
 const EXTERIOR_WITNESS_RADIUS := 320.0
+const SHOPLIFT_BASE_CATCH_CHANCE := 0.20
+const SHOPLIFT_STEALTH_REDUCTION := 0.025
+const SHOPLIFT_EMPTY_STORE_FACTOR := 0.35
+const SHOPLIFT_BYSTANDER_PRESSURE := 0.15
+const SHOPLIFT_CLERK_PRESSURE := 0.75
+const SHOPLIFT_COP_PRESSURE := 1.50
 const JAIL_EVENTS := [
 	{
 		"kind": "yard",
@@ -195,6 +201,42 @@ static func random_int(min_value: int, max_value: int) -> int:
 	var value := rng.randi_range(min_value, max_value)
 	_store_crime_rng(rng)
 	return value
+
+
+static func shoplift_catch_chance(sheet: CharacterSheet, location_id: String,
+		world_pos := Vector2.INF) -> float:
+	var base := clampf(SHOPLIFT_BASE_CATCH_CHANCE
+			- SHOPLIFT_STEALTH_REDUCTION * sheet.skill_level("stealth"), 0.05, 1.0)
+	var witnesses := witnesses_at(location_id, world_pos)
+	if witnesses.is_empty():
+		return clampf(base * SHOPLIFT_EMPTY_STORE_FACTOR, 0.02, 0.95)
+	var pressure := 1.0
+	for npc in witnesses:
+		if npc.is_cop():
+			pressure += SHOPLIFT_COP_PRESSURE
+		elif npc.archetype_id == "store_clerk":
+			pressure += SHOPLIFT_CLERK_PRESSURE
+		else:
+			pressure += SHOPLIFT_BYSTANDER_PRESSURE
+	return clampf(base * pressure, 0.02, 0.95)
+
+
+static func shoplift_attention_text(location_id: String, world_pos := Vector2.INF) -> String:
+	var witnesses := witnesses_at(location_id, world_pos)
+	if witnesses.is_empty():
+		return "no one is watching closely"
+	var cops := 0
+	var clerks := 0
+	for npc in witnesses:
+		if npc.is_cop():
+			cops += 1
+		elif npc.archetype_id == "store_clerk":
+			clerks += 1
+	if cops > 0:
+		return "%d cop%s in sight" % [cops, "" if cops == 1 else "s"]
+	if clerks > 0:
+		return "%d clerk%s watching" % [clerks, "" if clerks == 1 else "s"]
+	return "%d shopper%s nearby" % [witnesses.size(), "" if witnesses.size() == 1 else "s"]
 
 
 # ------------------------------------------------------------ the law's day

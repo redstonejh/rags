@@ -100,7 +100,7 @@ func _open(stock: Array) -> void:
 		var pocket := Button.new()
 		pocket.name = "Pocket_%s" % item.id
 		pocket.text = "Pocket"
-		pocket.tooltip_text = "Five-finger discount. The camera is fake. Probably."
+		pocket.tooltip_text = _shoplift_risk_text()
 		pocket.custom_minimum_size = Vector2(70, 0)
 		pocket.pressed.connect(_shoplift.bind(item))
 		row.add_child(pocket)
@@ -134,18 +134,32 @@ func _buy(item: ItemDef) -> void:
 	_update_cash()
 
 
-## Catch chance 20% minus 2.5% per Stealth level. Stealth is crime's tuition.
+## Catch chance starts from DESIGN.md's 20% baseline, then sightlines do the rest.
 func _shoplift(item: ItemDef) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
-	var catch_chance := clampf(0.20 - 0.025 * sheet.skill_level("stealth"), 0.05, 1.0)
+	var catch_chance := CrimeSystem.shoplift_catch_chance(sheet, WorldState.player_location_id)
 	if CrimeSystem.roll_chance(catch_chance):
-		CrimeSystem.commit("shoplift", WorldState.player_location_id)
-		EventBus.toast.emit("\"HEY!\" The whole store turns. The %s stays." % item.display_name)
+		var case := CrimeSystem.commit("shoplift", WorldState.player_location_id)
+		if case.status != CrimeCase.UNREPORTED:
+			EventBus.toast.emit("\"HEY!\" %s. The %s stays." % [
+					CrimeSystem.shoplift_attention_text(WorldState.player_location_id).capitalize(),
+					item.display_name])
+		else:
+			EventBus.toast.emit("The %s catches on the rack. No one reports it, but your pulse does." %
+					item.display_name)
 	else:
 		sheet.inventory.append(item.id)
 		sheet.add_skill_xp("stealth", 1.0)
 		EventBus.path_updated.emit()
 		EventBus.toast.emit("The %s was always yours, officer." % item.display_name)
+
+
+func _shoplift_risk_text() -> String:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var chance := CrimeSystem.shoplift_catch_chance(sheet, WorldState.player_location_id)
+	var attention := CrimeSystem.shoplift_attention_text(WorldState.player_location_id)
+	return "Five-finger discount. Catch risk: %d%%; %s." % [
+		roundi(chance * 100.0), attention]
 
 
 ## Always witnesses. ALWAYS. That's what the 'armed' part buys you.

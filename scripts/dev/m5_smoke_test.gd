@@ -33,6 +33,7 @@ func _ready() -> void:
 	_test_carjack_fight()
 	_test_crime_rng_save_roundtrip()
 	_test_crime_rng_public_rolls_roundtrip()
+	_test_shoplift_sightlines()
 	_test_arrest_paths()
 	_test_pickpocket()
 	_test_fence()
@@ -259,6 +260,33 @@ func _test_crime_rng_public_rolls_roundtrip() -> void:
 	_check(actual == expected, "loaded public crime rolls repeat shop outcomes")
 	SaveManager.set_in_game(false)
 	WorldState.player_sheet = sheet
+
+
+func _test_shoplift_sightlines() -> void:
+	print("[Shoplifting: sightlines change risk]")
+	var sheet := _fresh_sheet()
+	WorldState.town_fear = 0.0
+	var empty := CrimeSystem.shoplift_catch_chance(sheet, "loc_shop_empty")
+	_mk_npc("shop_bystander", "loc_shop_busy", 50)
+	var bystander := CrimeSystem.shoplift_catch_chance(sheet, "loc_shop_busy")
+	_mk_npc("shop_clerk", "loc_shop_clerk", 90, 8, 40, "store_clerk")
+	var clerk := CrimeSystem.shoplift_catch_chance(sheet, "loc_shop_clerk")
+	_mk_npc("shop_cop", "loc_shop_cop", 100, 10, 80, "cop")
+	var cop := CrimeSystem.shoplift_catch_chance(sheet, "loc_shop_cop")
+	_check(empty < bystander and bystander < clerk and clerk < cop,
+			"sightlines scale shoplift risk (%.0f%% < %.0f%% < %.0f%% < %.0f%%)" % [
+				empty * 100.0, bystander * 100.0, clerk * 100.0, cop * 100.0])
+	_check("clerk" in CrimeSystem.shoplift_attention_text("loc_shop_clerk"),
+			"shoplift attention names the clerk")
+	var no_witness_case := CrimeSystem.commit("shoplift", "loc_shop_empty")
+	_check(no_witness_case.status == CrimeCase.UNREPORTED,
+			"caught unwatched shoplifting stays anonymous")
+	var clerk_case := CrimeSystem.commit("shoplift", "loc_shop_clerk")
+	_check(clerk_case.status == CrimeCase.OPEN and clerk_case.evidence > no_witness_case.evidence,
+			"clerk-witnessed shoplifting opens a stronger case")
+	var cop_case := CrimeSystem.commit("shoplift", "loc_shop_cop")
+	_check(cop_case.is_active_warrant(), "shoplifting in front of a cop is instant warrant")
+	CrimeSystem._close_warrants()
 
 
 func _test_parked_car_rng_save_roundtrip() -> void:

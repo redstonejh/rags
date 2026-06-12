@@ -400,9 +400,14 @@ func _open_shop_from_counter() -> void:
 	_check(_prompt_text() == "", "shop modal hides the interaction prompt")
 	_check(_survival_feedback_layer() < shop.layer,
 			"survival feedback stays behind the shop modal")
+	_check(_descendant_text_contains(shop, "Cash:"),
+			"shop shows current cash even with no dirty money")
 	var buy_noodles := _find_named_descendant(shop, "Buy_instant_noodles") as Button
 	_check(buy_noodles != null and not buy_noodles.disabled,
 			"shop exposes a named food purchase button")
+	var pocket_noodles := _find_named_descendant(shop, "Pocket_instant_noodles") as Button
+	_check(pocket_noodles != null and "Catch risk:" in str(pocket_noodles.tooltip_text),
+			"shop Pocket action previews sightline risk")
 	if buy_noodles != null:
 		var objective := _main.get_node_or_null("HUD/TopLeft/VBox/ObjectiveLabel") as Label
 		_force_first_week_food_blocker()

@@ -127,6 +127,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 
 ### Phase 3 — Crime + police to 100%
 - In-world verbs: pickpocket (proximity/behind), shoplifting under clerk sightlines, street carjacks; fence/dealer as scenes.
+  - Continued 2026-06-12: shoplifting catch risk now reads the actual witness pool: empty stores reduce risk, bystanders add pressure, clerks matter more, and cops create instant warrants. The shop UI surfaces the current risk source in Pocket tooltips, and M5 covers the risk ladder plus anonymous/reported case outcomes.
 - Cops visibly patrol; wanted = embodied pursuit (chase AI) → arrest confrontation; jail becomes a real interior with a daily event loop (yard / library / kitchen) instead of a toast.
   - Started 2026-06-12: `InPlayArrestSmokeTest.tscn` now proves the real crime-to-warrant-to-embodied-cop arrest flow opens the production confrontation, serves time, clears wanted stars, and returns control to play. Chase AI and walkable jail remain.
   - Continued 2026-06-12: serving time now records deterministic yard/library/kitchen day events, summarizes them in the arrest result, can introduce one criminal-leaning inmate as a persistent underworld contact, strains partner relationships, and increments a Child Services file for parents. Full walkable jail and deeper inmate social ecosystem remain.
