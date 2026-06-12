@@ -187,6 +187,7 @@ func _open_phone() -> void:
 			"People tab phrases player memories from the player's view")
 	_check(phone.call("open_tab", "Paths"), "phone Paths tab selectable")
 	await _ui_frames(2)
+	var sheet: CharacterSheet = WorldState.player_sheet
 	var paths_content := _find_named_descendant(phone, "PathsContent")
 	var first_week_heading := _find_named_descendant(phone, "PathHeading_first_week")
 	var ged_button := _find_named_descendant(phone, "GedEnrollButton")
@@ -207,7 +208,7 @@ func _open_phone() -> void:
 	_check(paths_content != null and _descendant_text_contains(paths_content, "LEVEL 2") \
 			and _descendant_text_contains(paths_content, "1 perk point"),
 			"Paths tab refreshes when leveling grants a perk point")
-	var take_perk := _find_button_with_text(phone, "Take")
+	var take_perk := _find_enabled_button_with_text(phone, "Take")
 	_check(take_perk != null and not take_perk.disabled,
 			"Paths tab exposes newly unlocked perk choices")
 	if take_perk != null:
@@ -749,6 +750,16 @@ func _find_button_with_text(node: Node, text: String) -> Button:
 		return node
 	for child in node.get_children():
 		var found := _find_button_with_text(child, text)
+		if found != null:
+			return found
+	return null
+
+
+func _find_enabled_button_with_text(node: Node, text: String) -> Button:
+	if node is Button and str(node.text) == text and not node.disabled:
+		return node
+	for child in node.get_children():
+		var found := _find_enabled_button_with_text(child, text)
 		if found != null:
 			return found
 	return null
