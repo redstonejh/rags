@@ -262,6 +262,8 @@ func _enter_store_move_to_counter() -> void:
 	_player.set("global_position", _shop_counter.get("global_position"))
 	_reset_player_camera_smoothing()
 	await get_tree().create_timer(1.0).timeout
+	_clear_hud_toasts()
+	_clear_hud_prompt()
 	await get_tree().physics_frame
 
 
@@ -569,6 +571,22 @@ func _survival_feedback_layer() -> int:
 func _prompt_text() -> String:
 	var prompt := _main.get_node_or_null("HUD/PromptLabel") as Label
 	return str(prompt.text) if prompt != null else ""
+
+
+func _clear_hud_toasts() -> void:
+	var toast_box := _main.get_node_or_null("HUD/ToastAnchor/ToastBox")
+	if toast_box == null:
+		return
+	for child in toast_box.get_children():
+		child.queue_free()
+
+
+func _clear_hud_prompt() -> void:
+	var prompt := _main.get_node_or_null("HUD/PromptLabel") as Label
+	if prompt == null:
+		return
+	prompt.text = ""
+	prompt.visible = false
 
 
 func _find_button_with_text(node: Node, text: String) -> Button:
