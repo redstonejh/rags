@@ -24,6 +24,7 @@ godot --path .
 Dev smoke tests: `godot --headless --path . res://scenes/dev/M8SmokeTest.tscn`
 UI/modal regression: `godot --headless --path . res://scenes/dev/UIStackSmokeTest.tscn`
 In-play arrest regression: `godot --headless --path . res://scenes/dev/InPlayArrestSmokeTest.tscn`
+Real save/load regression: `godot --headless --path . res://scenes/dev/RealSaveLoadSmokeTest.tscn`
 Scripted playtest: `godot --headless --path . res://scenes/dev/PlaytestDriver.tscn` validates the flow; omit `--headless` to dump PNG checkpoints under Godot's `user://playtests`.
 Generate art assets: `python tools/artgen/generate_assets.py`
 

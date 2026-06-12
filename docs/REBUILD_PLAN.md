@@ -4,7 +4,7 @@
 
 ## Honest starting point
 
-M0–M8 of `DESIGN.md` exist as **simulation systems verified by ~250 headless, function-level checks**. Phase 0/1 also has a scripted-input harness that exercises a narrow real input → UI → world loop and saves windowed screenshot checkpoints, but the game has still never had a human playtest pass. The visuals have moved from flat rectangles to generated programmer-art placeholders, not final art. Long-session save/load remains unproven in real play. Jail, hospitals, marriage, and elections are a button plus a toast string. Minigames, factions, the radio DJ, build mode, six of twelve origins, and every origin's unique mechanic do not exist.
+M0–M8 of `DESIGN.md` exist as **simulation systems verified by ~250 headless, function-level checks**. Phase 0/1 also has a scripted-input harness that exercises a narrow real input → UI → world loop and saves windowed screenshot checkpoints, plus focused real-scene checks for arrest and save/load rehydration. The game has still never had a human playtest pass. The visuals have moved from flat rectangles to generated programmer-art placeholders, not final art. Long-session endurance remains unproven in real play. Jail, hospitals, marriage, and elections are a button plus a toast string. Minigames, factions, the radio DJ, build mode, six of twelve origins, and every origin's unique mechanic do not exist.
 
 What IS real: the architecture (data-driven `.tres` defs, record/view separation, EventBus, ironman saves that round-trip everything) and the signature mechanics implemented at the math layer (Reality Check perceived-vs-true odds, persistent-world permadeath, the witness pipeline). This is an engine, not a game. The plan below turns it into one.
 
@@ -56,6 +56,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
    - Continued 2026-06-12: the pause-menu Walk Away button is now exercised by the UIStack smoke suite, proving the UI path converts the controlled life into a persistent NPC before deferred character creation.
    - Continued 2026-06-12: `LegacyHandoffSmokeTest.tscn` now drives the real character creation UI after Walk Away and verifies the next life rejoins the existing town with the former-player NPC intact.
    - Continued 2026-06-12: `DeathHeirSmokeTest.tscn` now drives the real death screen heir button and verifies the grown child inherits into the same persistent town.
+   - Continued 2026-06-12: `RealSaveLoadSmokeTest.tscn` now drives the real main scene, pause-menu Save button, disk load, and fresh Main rehydration for an interior save with player, NPC, crime, clock, and Gazette state intact.
 6. **Playtest harness:** `scripts/dev/playtest_driver.gd` injects real InputEvents to run scripted playthroughs windowed and dumps screenshots at checkpoints (spawn → walk to diner → enter → interact → phone → shop). Everything it surfaces gets fixed.
    - Started 2026-06-12: `PlaytestDriver.tscn` validates spawn → movement → diner travel → phone → inventory → store travel → shop interaction → pause menu. Headless runs validate flow; windowed runs dump PNG checkpoints under `user://playtests`.
    - Continued 2026-06-12: interior checkpoint framing now resets camera smoothing after harness teleports, moves to a representative diner room view, and captures the store counter before opening the shop modal.
