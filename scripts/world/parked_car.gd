@@ -71,8 +71,11 @@ func interact(_actor: Node) -> void:
 			return
 	var loot := CrimeSystem.random_int(CHOP_MIN_CENTS, CHOP_MAX_CENTS)
 	WorldState.player_sheet.add_dirty_cash(loot)
-	CrimeSystem.commit("car_theft", "exterior", null, global_position)
-	EventBus.toast.emit("Empty. Twenty minutes later it's $%.2f at the chop shop. Beater rates." % (loot / 100.0))
+	var case := CrimeSystem.commit_car_theft("exterior", global_position)
+	var alarm_text := " The plates are hot; wanted stars are already moving." \
+			if case.is_active_warrant() else ""
+	EventBus.toast.emit("Empty. Twenty minutes later it's $%.2f at the chop shop. Beater rates.%s" % [
+			loot / 100.0, alarm_text])
 	EventBus.interact_target_changed.emit("")
 	monitoring = false
 	monitorable = false

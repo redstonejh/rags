@@ -31,6 +31,7 @@ func _ready() -> void:
 	_test_evidence_decay()
 	_test_gossip_to_cop()
 	_test_carjack_fight()
+	_test_car_theft_hot_plates()
 	_test_crime_rng_save_roundtrip()
 	_test_crime_rng_public_rolls_roundtrip()
 	_test_shoplift_sightlines()
@@ -203,6 +204,27 @@ func _test_carjack_fight() -> void:
 	var loss := Confrontation.resolve("carjack", "fight", weak, wall, 0.99)
 	_check(not loss.success and weak.needs.get_value("energy") < 100.0,
 			"losing your own fight costs you")
+	CrimeSystem._close_warrants()
+
+
+func _test_car_theft_hot_plates() -> void:
+	print("[Car theft: hot plates]")
+	var sheet := _fresh_sheet()
+	WorldState.crime_cases.clear()
+	WorldState.gazette = []
+	WorldState.town_fear = 0.0
+	var quiet := CrimeSystem.commit_car_theft("exterior", Vector2.ZERO, 0.99)
+	_check(quiet.status == CrimeCase.UNREPORTED, "cold plates can stay anonymous")
+	CrimeSystem._close_warrants()
+	WorldState.crime_cases.clear()
+	var hot := CrimeSystem.commit_car_theft("exterior", Vector2.ZERO, 0.0)
+	_check(hot.is_active_warrant(), "hot plates force a car-theft warrant")
+	_check(hot.evidence >= CrimeCase.WARRANT_EVIDENCE,
+			"hot plates force warrant-grade evidence")
+	_check(sheet.infamy >= 4.0, "hot plates add car-theft infamy")
+	_check(not WorldState.gazette.is_empty()
+			and "HOT PLATES" in str(WorldState.gazette.back().get("text", "")),
+			"hot plates hit the Gazette")
 	CrimeSystem._close_warrants()
 
 

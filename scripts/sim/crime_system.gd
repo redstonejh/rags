@@ -20,6 +20,7 @@ const ARREST_COOLDOWN_MINUTES := 90
 const EXTERIOR_WITNESS_RADIUS := 320.0
 const REGISTER_SILENT_ALARM_CHANCE := 0.50
 const REGISTER_SILENT_ALARM_MINUTES := 3
+const CAR_THEFT_HOT_PLATE_CHANCE := 0.15
 const SHOPLIFT_BASE_CATCH_CHANCE := 0.20
 const SHOPLIFT_STEALTH_REDUCTION := 0.025
 const SHOPLIFT_EMPTY_STORE_FACTOR := 0.35
@@ -255,6 +256,16 @@ static func commit_register_robbery(location_id: String, world_pos := Vector2.IN
 			sheet.flags["silent_alarm_location_id"] = location_id
 			sheet.flags["silent_alarm_case_id"] = case.id
 	WorldState.add_news("QUIKSTOP ROBBED. Police say the register survived emotionally, but not financially.")
+	return case
+
+
+static func commit_car_theft(location_id: String, world_pos := Vector2.INF,
+		forced_hot_plate_roll := -1.0) -> CrimeCase:
+	var case := commit("car_theft", location_id, null, world_pos)
+	var roll := forced_hot_plate_roll if forced_hot_plate_roll >= 0.0 else random_float()
+	if roll < CAR_THEFT_HOT_PLATE_CHANCE and not case.is_active_warrant():
+		_force_warrant(case)
+		WorldState.add_news("HOT PLATES. A stolen beater lights up half the county scanner.")
 	return case
 
 
