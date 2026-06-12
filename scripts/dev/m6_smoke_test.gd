@@ -39,6 +39,16 @@ func _check(ok: bool, what: String) -> void:
 		printerr("  FAIL: %s" % what)
 
 
+func _count_path_updates(action: Callable) -> int:
+	var events := {"count": 0}
+	var signal_handler := func() -> void:
+		events["count"] = int(events.count) + 1
+	EventBus.path_updated.connect(signal_handler)
+	action.call()
+	EventBus.path_updated.disconnect(signal_handler)
+	return int(events.count)
+
+
 func _fresh_sheet(origin := "off_the_bus") -> CharacterSheet:
 	var sheet := CharacterSheet.new()
 	sheet.char_name = "Test Subject"
@@ -88,9 +98,11 @@ func _test_gates() -> void:
 			"blazer + 4 weeks employed opens the door")
 	# Deposit actually leaves the wallet.
 	var cash := sheet.cash_cents
-	Housing.move_in(sheet, bricks)
+	var move_events := _count_path_updates(func() -> void:
+		Housing.move_in(sheet, bricks))
 	_check(sheet.housing_id == "bricks_unit" and sheet.cash_cents == cash - bricks.deposit_cents,
 			"move-in takes the deposit")
+	_check(move_events > 0, "move-in refreshes path-sensitive housing state")
 
 
 func _test_rent_and_credit() -> void:
@@ -99,17 +111,23 @@ func _test_rent_and_credit() -> void:
 	sheet.housing_id = "bricks_unit"
 	sheet.cash_cents = 20000
 	var credit := sheet.credit_score
-	EventBus.day_passed.emit(7)
+	var paid_events := _count_path_updates(func() -> void:
+		EventBus.day_passed.emit(7))
 	_check(sheet.cash_cents == 11000, "bricks rent ($90) charged from the def")
+	_check(paid_events > 0, "paid rent refreshes path-sensitive housing state")
 	_check(sheet.credit_score == credit + 1, "on-time rent nudges credit up")
 	_check(int(sheet.flags.get("clean_rent_weeks", 0)) == 1, "clean rent history counts")
 	sheet.cash_cents = 0
-	EventBus.day_passed.emit(14)
+	var missed_events := _count_path_updates(func() -> void:
+		EventBus.day_passed.emit(14))
 	_check(sheet.credit_score == credit + 1 - 5, "missed rent dents credit")
+	_check(missed_events > 0, "missed rent refreshes path-sensitive housing state")
 	_check(int(sheet.flags.get("clean_rent_weeks", 0)) == 0, "history resets on a miss")
 	EventBus.day_passed.emit(21)
-	EventBus.day_passed.emit(28)
+	var eviction_events := _count_path_updates(func() -> void:
+		EventBus.day_passed.emit(28))
 	_check(sheet.housing_id == "", "evicted on strike 3")
+	_check(eviction_events > 0, "eviction refreshes path-sensitive housing state")
 	_check(sheet.credit_score == credit + 1 - 5 - 5 - 5 - 15, "eviction craters credit")
 
 
@@ -123,10 +141,12 @@ func _test_buying() -> void:
 	_check("credit" in Housing.buy_blocker(sheet, house), "credit 30 can't buy")
 	sheet.credit_score = 55
 	_check(Housing.buy_blocker(sheet, house) == "", "credit 55 + down payment can")
-	Housing.buy(sheet, house)
+	var buy_events := _count_path_updates(func() -> void:
+		Housing.buy(sheet, house))
 	_check(sheet.housing_id == "small_house" and sheet.flags.get("home_owned", false),
 			"bought: the mailbox has your name on it")
 	_check(sheet.cash_cents == 1000, "20%% down left the wallet")
+	_check(buy_events > 0, "home purchase refreshes path-sensitive housing state")
 
 
 func _test_furniture_and_mood() -> void:

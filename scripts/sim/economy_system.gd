@@ -72,6 +72,7 @@ func _collect_rent(sheet: CharacterSheet) -> void:
 	var prepaid := int(sheet.flags.get("rent_prepaid_weeks", 0))
 	if prepaid > 0:
 		sheet.flags["rent_prepaid_weeks"] = prepaid - 1
+		EventBus.path_updated.emit()
 		EventBus.toast.emit("Rent on %s: covered. %d prepaid week%s left." % [
 			def.display_name, prepaid - 1, "" if prepaid - 1 == 1 else "s"])
 		return
@@ -80,6 +81,7 @@ func _collect_rent(sheet: CharacterSheet) -> void:
 		sheet.rent_strikes = 0
 		sheet.credit_score = clampi(sheet.credit_score + CREDIT_ON_TIME, 0, 100)
 		sheet.flags["clean_rent_weeks"] = int(sheet.flags.get("clean_rent_weeks", 0)) + 1
+		EventBus.path_updated.emit()
 		EventBus.toast.emit("%s: $%.2f. The roof remains, technically, yours." % [
 			"Mortgage paid" if sheet.flags.get("home_owned", false) else "Rent paid", rent / 100.0])
 		return
@@ -91,8 +93,10 @@ func _collect_rent(sheet: CharacterSheet) -> void:
 		sheet.rent_strikes = 0
 		sheet.flags.erase("home_owned")
 		sheet.credit_score = clampi(sheet.credit_score + CREDIT_EVICTED, 0, 100)
+		EventBus.path_updated.emit()
 		EventBus.toast.emit("The locks have been changed. The landlord kept the deposit, and the high ground.")
 	else:
+		EventBus.path_updated.emit()
 		EventBus.toast.emit("Rent missed (%d/%d). The landlord's patience is not a renewable resource." % [
 			sheet.rent_strikes, EVICTION_STRIKES])
 

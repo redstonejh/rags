@@ -127,7 +127,7 @@ func _update_slow_labels() -> void:
 		return
 	mood_label.text = "Mood %d" % int(sheet.mood())
 	weight_label.text = "%.1f kg" % sheet.weight_kg
-	_update_money() # dirty cash has no signal; piggyback the minute tick
+	_update_money() # slow safety net for any non-transactional wallet changes
 	_update_objective_label()
 
 

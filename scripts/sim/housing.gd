@@ -32,6 +32,7 @@ static func move_in(sheet: CharacterSheet, def: HousingDef) -> bool:
 	sheet.housing_id = def.id
 	sheet.rent_strikes = 0
 	sheet.flags.erase("home_owned")
+	EventBus.path_updated.emit()
 	EventBus.toast.emit("Moved in: %s. %s" % [def.display_name,
 			"Rent is $%d, Mondays." % (def.weekly_rent_cents / 100) if def.weekly_rent_cents > 0 else "No rent. Just rules."])
 	return true
@@ -60,6 +61,7 @@ static func buy(sheet: CharacterSheet, def: HousingDef) -> bool:
 	sheet.housing_id = def.id
 	sheet.rent_strikes = 0
 	sheet.flags["home_owned"] = true
+	EventBus.path_updated.emit()
 	EventBus.toast.emit("SOLD: %s. The mailbox has your name on it. The bank has everything else." % def.display_name)
 	return true
 
