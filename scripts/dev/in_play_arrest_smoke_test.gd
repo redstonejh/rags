@@ -17,6 +17,7 @@ func _ready() -> void:
 		_finish()
 		return
 	await _instantiate_main()
+	await _test_embodied_cop_teardown_is_synchronous()
 	await _test_embodied_cop_starts_arrest()
 	_finish()
 
@@ -63,6 +64,8 @@ func _test_embodied_cop_starts_arrest() -> void:
 	var cop_agent := _cop.agent
 	_check(cop_agent != null and is_instance_valid(cop_agent),
 			"wanted player has an embodied cop nearby")
+	await _place_player_at_cop_patrol_point()
+	GameClock.total_minutes = _next_cop_check_minute()
 	EventBus.minute_passed.emit(GameClock.total_minutes)
 	await get_tree().process_frame
 	var confrontation: CanvasLayer = _main.get_node("Confrontation")
@@ -88,6 +91,40 @@ func _test_embodied_cop_starts_arrest() -> void:
 		await get_tree().process_frame
 		_check(not confrontation.visible and not GameClock.paused,
 				"leaving arrest returns control to play")
+
+
+func _test_embodied_cop_teardown_is_synchronous() -> void:
+	print("[Embodied NPC teardown]")
+	var cop_agent := _cop.agent
+	_check(cop_agent != null and is_instance_valid(cop_agent),
+			"cop starts embodied before teardown")
+	if cop_agent == null or not is_instance_valid(cop_agent):
+		return
+	var parent := cop_agent.get_parent()
+	SimEngine.despawn_npc(_cop)
+	_check(_cop.agent == null, "despawn clears the NPC record agent")
+	_check(parent != null and not parent.get_children().has(cop_agent),
+			"despawn detaches the old agent synchronously")
+	await get_tree().create_timer(0.6).timeout
+	_check(_cop.agent != null and is_instance_valid(_cop.agent),
+			"wanted cop can re-embody after synchronous teardown")
+
+
+func _place_player_at_cop_patrol_point() -> void:
+	var player := _main.get_node_or_null("Player") as Node2D
+	if player == null:
+		return
+	_cop.current_location_id = "exterior"
+	_cop.current_activity = "patrol"
+	_cop.traveling = false
+	player.global_position = _cop.abstract_position(GameClock.total_minutes)
+	await get_tree().physics_frame
+
+
+func _next_cop_check_minute() -> int:
+	var total := GameClock.total_minutes
+	var remainder := total % CrimeSystem.COP_CHECK_MINUTES
+	return total if remainder == 0 else total + CrimeSystem.COP_CHECK_MINUTES - remainder
 
 
 func _first_cop() -> NPCRecord:

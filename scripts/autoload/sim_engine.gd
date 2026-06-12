@@ -147,6 +147,19 @@ func _update_embodiment() -> void:
 			_spawn(npc)
 
 
+func despawn_npc(npc: NPCRecord) -> void:
+	if npc == null or npc.agent == null:
+		return
+	var agent := npc.agent
+	npc.agent = null
+	if not is_instance_valid(agent):
+		return
+	var parent := agent.get_parent()
+	if parent != null:
+		parent.remove_child(agent)
+	agent.queue_free()
+
+
 func _spawn(npc: NPCRecord) -> void:
 	var agent := _agent_scene.instantiate()
 	agent.setup(npc)
@@ -159,10 +172,7 @@ func _spawn(npc: NPCRecord) -> void:
 
 
 func _despawn(npc: NPCRecord) -> void:
-	if npc.agent != null:
-		if is_instance_valid(npc.agent):
-			npc.agent.queue_free()
-		npc.agent = null
+	despawn_npc(npc)
 
 
 func _despawn_all() -> void:

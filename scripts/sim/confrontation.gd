@@ -210,7 +210,5 @@ static func _resolve_standoff_win(choice: String, sheet: CharacterSheet,
 static func kill_npc(npc: NPCRecord, cause: String) -> void:
 	npc.alive = false
 	npc.current_activity = "dead"
-	if npc.agent != null and is_instance_valid(npc.agent):
-		npc.agent.queue_free()
-		npc.agent = null
+	SimEngine.despawn_npc(npc)
 	EventBus.npc_died.emit(npc.id, cause)
