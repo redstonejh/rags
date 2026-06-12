@@ -209,10 +209,24 @@ func _verify_date_scene_ui() -> void:
 func _close_phone_open_inventory() -> void:
 	var phone: CanvasLayer = _main.get_node("Phone")
 	var inventory: CanvasLayer = _main.get_node("Inventory")
+	WorldState.player_sheet.needs.values["hunger"] = 40.0
+	WorldState.player_sheet.inventory.append("instant_noodles")
+	WorldState.player_sheet.flags["calories_today"] = 0
 	phone._unhandled_input(_action("phone"))
 	inventory._unhandled_input(_action("inventory"))
 	await get_tree().process_frame
 	_check(not phone.visible and inventory.visible and GameClock.paused, "inventory opened after phone")
+	var use_button := _find_button_with_text(inventory, "Use")
+	_check(use_button != null, "inventory exposes consumable use button")
+	if use_button != null:
+		use_button.pressed.emit()
+		await get_tree().process_frame
+	_check(WorldState.player_sheet.needs.get_value("hunger") > 40.0,
+			"inventory Use restores hunger")
+	_check(int(WorldState.player_sheet.flags.get("calories_today", 0)) > 0,
+			"inventory Use logs calories")
+	_check("instant_noodles" not in WorldState.player_sheet.inventory,
+			"inventory Use removes one consumed item")
 
 
 func _enter_store_move_to_counter() -> void:
@@ -468,6 +482,16 @@ func _find_named_descendant(node: Node, node_name: String) -> Node:
 		return node
 	for child in node.get_children():
 		var found := _find_named_descendant(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _find_button_with_text(node: Node, text: String) -> Button:
+	if node is Button and str(node.text) == text:
+		return node
+	for child in node.get_children():
+		var found := _find_button_with_text(child, text)
 		if found != null:
 			return found
 	return null

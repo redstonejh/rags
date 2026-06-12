@@ -124,10 +124,35 @@ func _refresh() -> void:
 
 func _use(item_id: String) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet == null:
+		return
+	var needs_before := sheet.needs.values.duplicate()
+	var calories_before := int(sheet.flags.get("calories_today", 0))
 	if sheet.consume_item(item_id):
 		var item := ContentDB.get_item(item_id)
-		EventBus.toast.emit("Used %s." % (item.display_name if item else item_id))
+		EventBus.toast.emit(_use_feedback(item, item_id, needs_before, calories_before))
 	_refresh()
+
+
+func _use_feedback(item: ItemDef, fallback_id: String, needs_before: Dictionary,
+		calories_before: int) -> String:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var item_name := item.display_name if item else fallback_id
+	if sheet == null:
+		return "Used %s." % item_name
+	var parts: Array[String] = []
+	for need_id in sheet.needs.values:
+		var before := float(needs_before.get(need_id, sheet.needs.get_value(need_id)))
+		var after := sheet.needs.get_value(need_id)
+		var delta := after - before
+		if absf(delta) >= 0.5:
+			parts.append("%s %+d" % [need_id.capitalize(), int(round(delta))])
+	var calories_after := int(sheet.flags.get("calories_today", 0))
+	var calories_delta := calories_after - calories_before
+	if calories_delta > 0:
+		parts.append("%d kcal logged" % calories_delta)
+	return "Used %s. %s" % [item_name, ", ".join(parts)] if not parts.is_empty() \
+			else "Used %s." % item_name
 
 
 func _wear(item_id: String) -> void:
