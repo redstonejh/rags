@@ -236,7 +236,7 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 				var take: int = clampi(npc.money_cents / 10, 500, 4500)
 				take = mini(take, npc.money_cents)
 				npc.money_cents -= take
-				sheet.dirty_cents += take
+				sheet.add_dirty_cash(take)
 				sheet.add_skill_xp("stealth", 2.0)
 				result.text = "$%.2f migrates pockets. Nobody felt a thing." % (take / 100.0)
 			else:

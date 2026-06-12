@@ -128,7 +128,7 @@ func _business_day() -> void:
 		sheet.add_cash(net)
 		var wash: int = mini(int(biz.wash_cap), sheet.dirty_cents)
 		if wash > 0:
-			sheet.dirty_cents -= wash
+			sheet.add_dirty_cash(-wash)
 			sheet.add_cash(int(wash * WASH_RATE))
 
 
@@ -178,7 +178,8 @@ static func donate_to_campaign(sheet: CharacterSheet, cents: int) -> bool:
 	if sheet.cash_cents + sheet.dirty_cents < cents:
 		return false
 	var from_dirty: int = mini(sheet.dirty_cents, cents)
-	sheet.dirty_cents -= from_dirty
+	if from_dirty > 0:
+		sheet.add_dirty_cash(-from_dirty)
 	if cents - from_dirty > 0:
 		sheet.add_cash(-(cents - from_dirty))
 	sheet.flags["candidate"] = true

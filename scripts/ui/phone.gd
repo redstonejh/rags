@@ -780,7 +780,8 @@ func _refresh_health() -> void:
 	_health_button(row, "Back-alley doc ($40)", sheet.cash_cents + sheet.dirty_cents >= 4000 and not sheet.wounds.is_empty(),
 		func() -> void:
 			var from_dirty: int = mini(sheet.dirty_cents, 4000)
-			sheet.dirty_cents -= from_dirty
+			if from_dirty > 0:
+				sheet.add_dirty_cash(-from_dirty)
 			if 4000 - from_dirty > 0:
 				sheet.add_cash(-(4000 - from_dirty))
 			var n := Body.treat_wounds(sheet)

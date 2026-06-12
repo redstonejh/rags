@@ -169,8 +169,14 @@ func _test_carjack_fight() -> void:
 	_check(WorldState.crime_cases.size() == cases_before + 1, "the swing itself is an assault case")
 	# Rob them while they're down.
 	var dirty_before := sheet.dirty_cents
+	var robbery_events := {"money": 0}
+	var robbery_money_signal := func(_cash_cents: int) -> void:
+		robbery_events["money"] = int(robbery_events.money) + 1
+	EventBus.money_changed.connect(robbery_money_signal)
 	Confrontation.resolve("standoff_win", "rob", sheet, pushover)
+	EventBus.money_changed.disconnect(robbery_money_signal)
 	_check(sheet.dirty_cents > dirty_before, "robbery pays dirty")
+	_check(int(robbery_events.money) > 0, "robbery dirty payout refreshes money UI")
 	# Or end them: a murder case, a permanent absence.
 	var victim := _mk_npc("w_dead", "exterior", 50, 6, 10)
 	Confrontation.resolve("standoff_win", "kill", sheet, victim)
@@ -246,9 +252,20 @@ func _test_fence() -> void:
 	sheet.dirty_cents = 0
 	var fence := FenceSpot.new()
 	add_child(fence)
+	var fence_events := {"money": 0, "path": 0}
+	var fence_money_signal := func(_cash_cents: int) -> void:
+		fence_events["money"] = int(fence_events.money) + 1
+	var fence_path_signal := func() -> void:
+		fence_events["path"] = int(fence_events.path) + 1
+	EventBus.money_changed.connect(fence_money_signal)
+	EventBus.path_updated.connect(fence_path_signal)
 	fence.interact(null)
+	EventBus.money_changed.disconnect(fence_money_signal)
+	EventBus.path_updated.disconnect(fence_path_signal)
 	_check(sheet.dirty_cents == int(2000 * 0.4) + int(150 * 0.4),
 			"meth + noodles fenced at 40%% ($%.2f)" % (sheet.dirty_cents / 100.0))
+	_check(int(fence_events.money) > 0, "fence dirty payout refreshes money UI")
+	_check(int(fence_events.path) > 0, "fence sale refreshes path-sensitive inventory")
 	_check("nice_suit" in sheet.inventory, "he won't take the suit off your back")
 	fence.queue_free()
 

@@ -55,7 +55,8 @@ func interact(_actor: Node) -> void:
 	if sold.is_empty():
 		EventBus.toast.emit("\"You're carrying nothing I want.\" He says it like a eulogy.")
 		return
-	sheet.dirty_cents += total
+	sheet.add_dirty_cash(total)
 	sheet.add_skill_xp("streetwise", 1.0)
+	EventBus.path_updated.emit()
 	EventBus.toast.emit("Fenced %d item%s for $%.2f. No receipts in this economy." % [
 			sold.size(), "" if sold.size() == 1 else "s", total / 100.0])

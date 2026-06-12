@@ -124,7 +124,9 @@ func _buy(item: ItemDef) -> void:
 	var from_clean: int = mini(sheet.cash_cents, item.value_cents)
 	if from_clean > 0:
 		sheet.add_cash(-from_clean)
-	sheet.dirty_cents -= item.value_cents - from_clean
+	var from_dirty := item.value_cents - from_clean
+	if from_dirty > 0:
+		sheet.add_dirty_cash(-from_dirty)
 	sheet.inventory.append(item.id)
 	EventBus.path_updated.emit()
 	EventBus.toast.emit("Bought %s. (I to use it.)" % item.display_name)
@@ -149,7 +151,7 @@ func _shoplift(item: ItemDef) -> void:
 func _rob_register() -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	var loot := randi_range(20000, 60000)
-	sheet.dirty_cents += loot
+	sheet.add_dirty_cash(loot)
 	CrimeSystem.commit("armed_robbery", WorldState.player_location_id)
 	EventBus.toast.emit("$%.2f in a paper bag. Everyone in the store memorized your face." % (loot / 100.0))
 	_close()

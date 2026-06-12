@@ -46,7 +46,7 @@ func interact(_actor: Node) -> void:
 			})
 			return
 	var loot := randi_range(CHOP_MIN_CENTS, CHOP_MAX_CENTS)
-	WorldState.player_sheet.dirty_cents += loot
+	WorldState.player_sheet.add_dirty_cash(loot)
 	CrimeSystem.commit("car_theft", "exterior", null, global_position)
 	EventBus.toast.emit("Empty. Twenty minutes later it's $%.2f at the chop shop. Beater rates." % (loot / 100.0))
 	queue_free()

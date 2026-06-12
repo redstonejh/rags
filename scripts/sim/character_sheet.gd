@@ -265,6 +265,11 @@ func add_cash(delta_cents: int) -> void:
 	EventBus.money_changed.emit(cash_cents)
 
 
+func add_dirty_cash(delta_cents: int) -> void:
+	dirty_cents += delta_cents
+	EventBus.money_changed.emit(cash_cents)
+
+
 func has_tag(tag: String) -> bool:
 	var origin := ContentDB.get_origin(origin_id)
 	if origin and tag in origin.tags:

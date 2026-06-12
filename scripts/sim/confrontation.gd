@@ -189,7 +189,7 @@ static func _resolve_standoff_win(choice: String, sheet: CharacterSheet,
 		"rob":
 			var take: int = mini(npc.money_cents, 2000 + npc.money_cents / 4)
 			npc.money_cents -= take
-			sheet.dirty_cents += take
+			sheet.add_dirty_cash(take)
 			CrimeSystem.commit("armed_robbery", WorldState.player_location_id, npc,
 					npc.abstract_position(GameClock.total_minutes))
 			return {"text": "$%.2f, still warm. They memorize your face the whole time." % (take / 100.0),
