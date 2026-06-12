@@ -76,6 +76,8 @@ func _test_embodied_cop_starts_arrest() -> void:
 		return
 	var day_before := GameClock.day
 	comply.pressed.emit()
+	_check(_find_button_containing(confrontation, "Hands up") == null,
+			"resolved arrest removes stale comply option immediately")
 	await get_tree().process_frame
 	_check(GameClock.day == day_before + 1, "comply serves the warrant sentence")
 	_check(CrimeSystem.wanted_stars() == 0, "serving clears wanted stars")

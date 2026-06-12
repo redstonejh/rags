@@ -66,14 +66,19 @@ func _open(payload: Dictionary) -> void:
 
 
 func _render_options() -> void:
-	for child in _options_box.get_children():
-		child.queue_free()
+	_clear_options()
 	for opt in Confrontation.options(_kind, WorldState.player_sheet, _npc):
 		var btn := Button.new()
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.text = "%s   (%s)" % [opt.label, opt.get("sub", "")]
 		btn.pressed.connect(_choose.bind(str(opt.id)))
 		_options_box.add_child(btn)
+
+
+func _clear_options() -> void:
+	for child in _options_box.get_children():
+		_options_box.remove_child(child)
+		child.queue_free()
 
 
 func _choose(choice: String) -> void:
@@ -85,8 +90,7 @@ func _choose(choice: String) -> void:
 		_text_label.text = "%s\n\n%s" % [result.text, str(follow.get("text", ""))]
 		return
 	if result.done:
-		for child in _options_box.get_children():
-			child.queue_free()
+		_clear_options()
 		var leave := Button.new()
 		leave.text = "Walk away"
 		leave.pressed.connect(_close)
