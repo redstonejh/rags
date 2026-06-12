@@ -102,7 +102,9 @@ func _hud_objective_matches_origin(origin: OriginDef) -> bool:
 		return false
 	var expected_path := "Getting Off the Street" \
 			if origin.tags.has("no_papers") else "First Week"
-	return expected_path in objective.text
+	if expected_path not in objective.text:
+		return false
+	return "cash work" in objective.text if origin.tags.has("no_papers") else true
 
 
 func _current_world_has_node(node_name: String) -> bool:

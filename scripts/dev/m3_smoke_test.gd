@@ -205,6 +205,8 @@ func _test_paths() -> void:
 	var fresh := _find_path(LifePaths.evaluate(broke), "Getting Off the Street")
 	_check(not fresh.steps[0].done and fresh.steps[0].current,
 			"fresh tweaker's current step is scraping up the fee")
+	_check("cash work" in str(fresh.steps[0].label),
+			"fresh tweaker ID-fee blocker points toward cash work")
 	var none := _fresh_sheet("off_the_bus")
 	_check(_find_path(LifePaths.evaluate(none), "Getting Off the Street").is_empty(),
 			"papered origins see no ID path")

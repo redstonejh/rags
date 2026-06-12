@@ -105,7 +105,7 @@ static func _getting_off_the_street(sheet: CharacterSheet) -> Dictionary:
 	var waited: bool = has_id or (filed and GameClock.day >= ready_day)
 
 	var steps: Array = [
-		{"label": "Scrape together the $%d ID fee" % (ID_FEE_CENTS / 100),
+		{"label": "Earn $%d for the ID fee (cash work counts)" % (ID_FEE_CENTS / 100),
 			"done": has_id or filed or sheet.cash_cents >= ID_FEE_CENTS},
 		{"label": "File at the records desk, Vantage Plaza (Window 3 is closed)",
 			"done": has_id or filed},
