@@ -116,8 +116,9 @@ func _show_opening_beat() -> void:
 	var origin := ContentDB.get_origin(sheet.origin_id)
 	var origin_name := origin.display_name if origin else "This life"
 	var start_name := Locations.display_name(str(sheet.flags.get("start_location_id", "exterior")))
-	EventBus.toast.emit("%s begins at %s. Check the HUD objective; rent, food, and work do not wait." % [
-			origin_name, start_name])
+	var opening_line := origin.opening_line if origin and origin.opening_line.strip_edges() != "" else \
+			"%s begins at %s." % [origin_name, start_name]
+	EventBus.toast.emit("%s Check the HUD objective; rent, food, and work do not wait." % opening_line)
 
 
 func _unhandled_input(event: InputEvent) -> void:

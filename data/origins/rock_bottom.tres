@@ -13,6 +13,7 @@ blurb = "You live behind the gas station. You know which dumpsters are good. You
 - The Need: a full addiction with a craving meter, and it is not patient. No Papers: no legal jobs, no bank, no lease until you rebuild your ID. Cops search you on sight in nice neighborhoods.
 
 The hardest life in the game. Getting clean is the greatest run RAGS has."
+opening_line = "The Tweaker wakes behind the gas station beside a shopping cart, with every good dumpster already mapped in memory."
 difficulty = 5
 starting_cash_cents = 700
 starting_items = ["shopping_cart"]

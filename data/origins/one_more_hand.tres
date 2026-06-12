@@ -13,6 +13,7 @@ blurb = "You were up $40K at 2 AM. You remember that part very clearly.
 - $150 a week to Big Mickey says you owe him $15,000, and Mickey employs two large opinions about late payments.
 
 The casino gave you a chip for the bus. You kept it."
+opening_line = "The Gambler rolls into the bus stop with one lucky chip and Big Mickey's payment clock already running."
 difficulty = 3
 starting_cash_cents = 15000
 starting_items = ["thrift_blazer"]

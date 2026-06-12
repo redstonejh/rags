@@ -11,6 +11,9 @@ extends Resource
 ## The flavor title, e.g. "The Golden Parachute That Didn't Open"
 @export var title: String = ""
 @export_multiline var blurb: String = ""
+## One-sentence first-life arrival beat shown when a new character enters play.
+## Include the display name and starting place so the HUD toast is self-contained.
+@export var opening_line: String = ""
 @export_range(1, 5) var difficulty: int = 1
 
 @export var starting_cash_cents: int = 0

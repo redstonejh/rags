@@ -22,6 +22,8 @@ func _ready() -> void:
 		var expected_marker := origin.starting_location_id
 		_check(expected_marker != "",
 				"%s defines a first-life start marker" % origin.id)
+		_check(origin.opening_line.strip_edges() != "",
+				"%s defines a first-life opening line" % origin.id)
 		if expected_marker == "":
 			continue
 		var expected_prop_name := str(START_MARKER_PROPS.get(expected_marker, ""))
@@ -81,7 +83,7 @@ func _test_origin_start_and_opening_beat(origin: OriginDef, expected_prop_name: 
 			"%s opening beat is recorded for this life" % origin.id)
 	var start_toast_text := Locations.display_name(expected_marker)
 	_check(_toasts.any(func(t: String) -> bool:
-			return origin.display_name in t and start_toast_text in t),
+			return origin.display_name in t and start_toast_text in t and origin.opening_line in t),
 			"%s opening beat names the origin and start place" % origin.id)
 	_check(_current_world_has_node(expected_prop_name),
 			"%s opening prop exists near the start marker" % origin.id)

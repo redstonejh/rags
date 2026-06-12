@@ -13,6 +13,7 @@ blurb = "Twelve years of training. One pill scandal. The license is gone; the ha
 - Wage garnishment takes 25% of every legal paycheck (the student loans survived the scandal). A quiet oxy problem that is not, currently, quiet.
 
 You sleep in a nice car. It's the last thing they couldn't take."
+opening_line = "The Disgraced Doctor wakes near the bus stop after another night in the car, medical hands steady and a license gone cold."
 difficulty = 3
 starting_cash_cents = 30000
 starting_items = ["oxy_pill", "oxy_pill"]

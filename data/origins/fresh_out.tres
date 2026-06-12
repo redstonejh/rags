@@ -13,6 +13,7 @@ blurb = "Eight years inside. The world got smartphones; you got a bus ticket and
 - The Record: background checks bounce you from good jobs until you stay clean long enough to seal it. Everyone you knew is a felony waiting to reconnect.
 
 Going Straight is a real path. Most don't make it."
+opening_line = "The Ex-Con arrives at the bus stop with gate money in one pocket and parole breathing down the other."
 difficulty = 3
 starting_cash_cents = 20000
 starting_items = ["hoodie"]

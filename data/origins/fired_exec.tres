@@ -13,6 +13,7 @@ blurb = "You had the corner office until the merger. Security walked you out wit
 - Champagne Taste: cheap food, cheap beds, and bus rides drain your Mood twice as fast. Industry Blacklist: your old rival is out there, badmouthing you. Car payments due on a car you can't afford.
 
 Comfortable start. Expensive soul."
+opening_line = "The Fired Corporate Exec stands outside the decent apartments in a nice suit, one prepaid month between comfort and the street."
 difficulty = 2
 starting_cash_cents = 240000
 starting_items = ["nice_suit", "leased_car_keys"]

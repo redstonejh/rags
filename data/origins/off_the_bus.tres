@@ -13,6 +13,7 @@ blurb = "Population 312 to population 80,000. You have a duffel bag, sturdy boot
 - You know NOBODY. Naive to city scams. No skills above baseline.
 
 The tutorial life: lowest highs, highest floor."
+opening_line = "The Small-Town Transplant steps off at the bus stop with a duffel bag, sturdy boots, and a cousin's fake address."
 difficulty = 1
 starting_cash_cents = 40000
 starting_items = ["duffel_bag", "sturdy_boots"]
