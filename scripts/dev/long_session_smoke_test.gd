@@ -62,6 +62,8 @@ func _instantiate_main() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 	_check(_main.get("current_world") != null, "main scene starts for endurance run")
+	_check(_world_root_has_single_current_world(),
+			"main scene owns exactly one world after startup")
 
 
 func _advance_one_day(day_index: int) -> void:
@@ -71,6 +73,8 @@ func _advance_one_day(day_index: int) -> void:
 	await get_tree().physics_frame
 	_check(_current_scene_matches(target_location),
 			"day %d location swap remains coherent" % day_index)
+	_check(_world_root_has_single_current_world(),
+			"day %d location swap removes the old world synchronously" % day_index)
 
 	var day_before := GameClock.day
 	WorldState.player_sheet.flags["calories_today"] = 2200
@@ -126,6 +130,8 @@ func _reload_cycle(day_index: int) -> void:
 	await _instantiate_main()
 	_check(_current_scene_matches(expected_location),
 			"reloaded scene matches saved location on day %d" % day_index)
+	_check(_world_root_has_single_current_world(),
+			"reloaded scene owns exactly one world on day %d" % day_index)
 
 
 func _final_checks() -> void:
@@ -149,6 +155,17 @@ func _current_scene_matches(location_id: String) -> bool:
 	return WorldState.player_location_id == location_id \
 			and current_world is Interior \
 			and current_world.location_id == location_id
+
+
+func _world_root_has_single_current_world() -> bool:
+	if _main == null or not is_instance_valid(_main):
+		return false
+	var world_root := _main.get_node_or_null("WorldRoot")
+	var current_world: Node = _main.get("current_world")
+	return world_root != null \
+			and current_world != null \
+			and world_root.get_child_count() == 1 \
+			and world_root.get_child(0) == current_world
 
 
 func _teardown_main() -> void:

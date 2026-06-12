@@ -47,6 +47,7 @@ func _enter_location(location_id: String, initial: bool) -> void:
 	var came_from := WorldState.player_location_id
 	if current_world != null:
 		SimEngine.spawn_host = null
+		world_root.remove_child(current_world)
 		current_world.queue_free()
 		current_world = null
 
