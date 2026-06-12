@@ -12,6 +12,7 @@ static func evaluate(sheet: CharacterSheet) -> Array:
 	var paths: Array = []
 	if sheet.has_tag("no_papers"):
 		paths.append(_getting_off_the_street(sheet))
+	paths.append(_first_week(sheet))
 	var worst := Body.worst_addiction(sheet)
 	if float(worst.addiction) > 0.05 or int(worst.clean_days) > 0:
 		paths.append(_recovery(worst))
@@ -19,6 +20,25 @@ static func evaluate(sheet: CharacterSheet) -> Array:
 		paths.append(_going_straight(sheet))
 	paths.append(_education(sheet))
 	return paths
+
+
+static func _first_week(sheet: CharacterSheet) -> Dictionary:
+	var housing := ContentDB.get_housing(sheet.housing_id)
+	var rent := housing.weekly_rent_cents if housing else 0
+	var has_food_buffer := sheet.needs.get_value("hunger") >= 45.0 \
+			or sheet.inventory.any(func(item_id: String) -> bool:
+				var item := ContentDB.get_item(item_id)
+				return item != null and "consumable" in item.tags \
+						and float(item.need_effects.get("hunger", 0.0)) > 0.0)
+	var rent_label := "Keep Monday rent ready"
+	if rent > 0:
+		rent_label = "Keep $%d for Monday rent" % (rent / 100)
+	var steps: Array = [
+		{"label": "Get hired from the phone Jobs tab", "done": sheet.job_id != ""},
+		{"label": rent_label, "done": rent <= 0 or sheet.cash_cents >= rent},
+		{"label": "Stay fed enough to make the next shift", "done": has_food_buffer},
+	]
+	return _mark_current({"name": "First Week", "steps": steps})
 
 
 ## The Ex-Con's road: most players won't make it.

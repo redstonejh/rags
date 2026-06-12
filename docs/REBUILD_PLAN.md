@@ -97,6 +97,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 
 ### Phase 2 — Survival loop to 100%
 - Origin opening beats (arrive by bus / wake behind the gas station…), HUD goal tracker fed by the existing `LifePaths`, tutorialized first day.
+  - Started 2026-06-12: the HUD now shows the current Life Path blocker as a compact objective. `LifePaths` includes a First Week path for getting hired, keeping rent ready, and staying fed before longer-term goals.
 - Work shifts become visible montages (fast clock, workplace vignette, mid-shift dilemmas); sleeping/eating get fades and feedback.
 - Balance via a headless bot-week telemetry run tuned to DESIGN.md §6.7: the dishwasher week is survivable but tight.
   - Started 2026-06-12: `EconomyTelemetrySmokeTest.tscn` now guards the dishwasher-week baseline with production shift pay, food spending, Monday rent, and a bounded weekly margin.

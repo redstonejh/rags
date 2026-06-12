@@ -114,6 +114,7 @@ func _instantiate_main() -> void:
 	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
 	await _verify_player_outfit_switch()
 	_verify_hud_time_hint_fit()
+	await _verify_hud_objective_tracker()
 	await _verify_social_playthrough()
 	_check(_exterior_ground_tile_count(Vector2i(5, 0)) > 0, "exterior sidewalks spawned")
 	_check(_exterior_ground_tile_count(Vector2i(6, 0)) > 0, "exterior dirt lots spawned")
@@ -327,6 +328,21 @@ func _verify_hud_time_hint_fit() -> void:
 			"HUD time hint fits the status panel")
 	_check(backing != null and backing.visible and backing.color.a > 0.0,
 			"HUD status panel has readable backing")
+
+
+func _verify_hud_objective_tracker() -> void:
+	var objective := _main.get_node_or_null("HUD/TopLeft/VBox/ObjectiveLabel") as Label
+	_check(objective != null and objective.visible,
+			"HUD objective tracker is visible")
+	_check(objective != null and "First Week" in objective.text \
+			and "Jobs" in objective.text,
+			"HUD objective points a new player toward work")
+	WorldState.player_sheet.job_id = "dishwasher"
+	EventBus.player_job_changed.emit("dishwasher")
+	await get_tree().process_frame
+	_check(objective != null and "Education" in objective.text \
+			and "Enroll" in objective.text,
+			"HUD objective advances after first-week work blocker clears")
 
 
 func _verify_social_playthrough() -> void:

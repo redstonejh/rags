@@ -21,6 +21,7 @@ const MAX_TOASTS := 3
 @onready var mood_label: Label = %MoodLabel
 @onready var weight_label: Label = %WeightLabel
 @onready var job_label: Label = %JobLabel
+@onready var objective_label: Label = %ObjectiveLabel
 @onready var wanted_label: Label = %WantedLabel
 @onready var clock_label: Label = %ClockLabel
 @onready var speed_label: Label = %SpeedLabel
@@ -35,9 +36,13 @@ func _ready() -> void:
 	EventBus.minute_passed.connect(func(_t: int) -> void: _update_slow_labels())
 	EventBus.time_scale_changed.connect(_on_time_scale_changed)
 	EventBus.player_need_changed.connect(_on_need_changed)
-	EventBus.money_changed.connect(func(_c: int) -> void: _update_money())
+	EventBus.money_changed.connect(func(_c: int) -> void:
+		_update_money()
+		_update_objective_label())
 	EventBus.interact_target_changed.connect(func(p: String) -> void: prompt_label.text = p)
-	EventBus.player_job_changed.connect(func(_id: String) -> void: _update_job_label())
+	EventBus.player_job_changed.connect(func(_id: String) -> void:
+		_update_job_label()
+		_update_objective_label())
 	EventBus.wanted_changed.connect(_on_wanted_changed)
 	EventBus.toast.connect(_on_toast)
 
@@ -120,6 +125,7 @@ func _update_slow_labels() -> void:
 	mood_label.text = "Mood %d" % int(sheet.mood())
 	weight_label.text = "%.1f kg" % sheet.weight_kg
 	_update_money() # dirty cash has no signal; piggyback the minute tick
+	_update_objective_label()
 
 
 func _on_wanted_changed(stars: int) -> void:
@@ -137,6 +143,21 @@ func _update_job_label() -> void:
 	job_label.text = "%s @ %s — %d:00%s" % [
 		job.display_name, Locations.display_name(job.workplace_id),
 		job.shift_start_hour, "" if on_today else " (off today)"]
+
+
+func _update_objective_label() -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet == null:
+		objective_label.text = ""
+		objective_label.visible = false
+		return
+	objective_label.visible = true
+	for path in LifePaths.evaluate(sheet):
+		for step in path.steps:
+			if bool(step.get("current", false)):
+				objective_label.text = "%s: %s" % [str(path.name), str(step.label)]
+				return
+	objective_label.text = "Paths: open the phone for longer-term goals"
 
 
 func _on_time_scale_changed(scale: float) -> void:
