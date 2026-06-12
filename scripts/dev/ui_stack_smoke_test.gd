@@ -17,6 +17,7 @@ func _ready() -> void:
 	_test_pause_locks()
 	_test_panel_overlap()
 	_test_escape_pause_menu()
+	_test_pause_settings()
 	await _test_click_move()
 	await _test_wasd_cancels_click_move()
 	_test_empty_carjack_removes_car()
@@ -92,6 +93,43 @@ func _test_escape_pause_menu() -> void:
 	_check(stack.call("is_modal_open", "pause_menu") and GameClock.paused, "Esc opens pause menu")
 	_main._unhandled_input(_action("ui_cancel"))
 	_check(not stack.call("is_modal_open", "pause_menu") and not GameClock.paused, "Esc closes pause menu")
+
+
+func _test_pause_settings() -> void:
+	print("[Pause settings]")
+	GameClock.clear_pause_locks()
+	GameClock.set_manual_paused(false)
+	var stack: Node = _main.get_node("UIStack")
+	var master_bus := AudioServer.get_bus_index("Master")
+	var original_volume := AudioServer.get_bus_volume_db(master_bus)
+	var original_muted := AudioServer.is_bus_mute(master_bus)
+	_main._unhandled_input(_action("ui_cancel"))
+	var settings := _find_button_with_text(stack, "Settings")
+	_check(settings != null and not settings.disabled, "pause menu exposes enabled Settings")
+	if settings == null:
+		return
+	settings.pressed.emit()
+	_check(stack.call("is_modal_open", "settings") and GameClock.pause_lock_count() == 2,
+			"Settings opens as a stacked pause modal")
+	var slider := _find_named_descendant(stack, "MasterVolumeSlider") as HSlider
+	var mute := _find_named_descendant(stack, "MuteAudioCheck") as CheckButton
+	_check(slider != null and mute != null, "Settings exposes audio controls")
+	if slider != null:
+		slider.value = -20.0
+		_check(is_equal_approx(AudioServer.get_bus_volume_db(master_bus), -20.0),
+				"master volume slider updates AudioServer")
+	if mute != null:
+		mute.button_pressed = true
+		_check(AudioServer.is_bus_mute(master_bus), "mute toggle updates AudioServer")
+	_main._unhandled_input(_action("ui_cancel"))
+	_check(not stack.call("is_modal_open", "settings") \
+			and stack.call("is_modal_open", "pause_menu") and GameClock.paused,
+			"Esc closes Settings before the pause menu")
+	_main._unhandled_input(_action("ui_cancel"))
+	_check(not stack.call("is_modal_open", "pause_menu") and not GameClock.paused,
+			"Esc closes pause after returning from Settings")
+	AudioServer.set_bus_volume_db(master_bus, original_volume)
+	AudioServer.set_bus_mute(master_bus, original_muted)
 
 
 func _test_click_move() -> void:
@@ -213,6 +251,16 @@ func _find_button_with_text(node: Node, text: String) -> Button:
 		return node
 	for child in node.get_children():
 		var found := _find_button_with_text(child, text)
+		if found != null:
+			return found
+	return null
+
+
+func _find_named_descendant(node: Node, node_name: String) -> Node:
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named_descendant(child, node_name)
 		if found != null:
 			return found
 	return null
