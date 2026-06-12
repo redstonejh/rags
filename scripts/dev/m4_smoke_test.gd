@@ -34,6 +34,7 @@ func _ready() -> void:
 	_test_reality_check()
 	_test_relationship_deltas()
 	_test_social_odds_balance()
+	_test_social_rng_save_roundtrip()
 	_test_gossip()
 	_test_gossip_rng_save_roundtrip()
 	_test_memory_hygiene()
@@ -181,6 +182,46 @@ func _test_social_odds_balance() -> void:
 	var disliked_chance := Social.true_chance(disliked, mark, "compliment")
 	_check(disliked_chance < baseline_chance - 0.20,
 			"bad stats and hostility materially hurt the roll (%d%%)" % roundi(disliked_chance * 100))
+
+
+func _test_social_rng_save_roundtrip() -> void:
+	print("[Save round trip: social RNG]")
+	var viewer := _fresh_viewer()
+	viewer.origin_id = "one_more_hand"
+	viewer.base_stats["CHA"] = 9
+	viewer.base_stats["STR"] = 11
+	viewer.skills["persuasion"] = 20.0
+	viewer.skills["streetwise"] = 20.0
+	WorldState.world_seed = 612028
+	WorldState.reset_social_rng()
+	var mark := _mk_npc("s_rng_mark", "loc_social_rng", ["plain"], 8, 50, 50)
+	mark.relationships["player"] = 5.0
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success with social RNG state")
+	var expected := _social_sequence_signature(viewer, mark)
+	WorldState.player_sheet = null
+	WorldState.npcs.clear()
+	WorldState.social_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores social RNG state")
+	var loaded_viewer: CharacterSheet = WorldState.player_sheet
+	var loaded_mark: NPCRecord = WorldState.npcs.get("s_rng_mark")
+	var actual := _social_sequence_signature(loaded_viewer, loaded_mark)
+	_check(actual == expected, "loaded social RNG repeats interaction outcomes")
+	SaveManager.set_in_game(false)
+
+
+func _social_sequence_signature(viewer: CharacterSheet, mark: NPCRecord) -> Dictionary:
+	var compliment := Social.interact(viewer, mark, "compliment")
+	var threaten := Social.interact(viewer, mark, "threaten")
+	return {
+		"compliment_success": bool(compliment.get("success", false)),
+		"compliment_text": str(compliment.get("text", "")),
+		"threaten_success": bool(threaten.get("success", false)),
+		"threaten_text": str(threaten.get("text", "")),
+		"rel": mark.rel("player"),
+		"xp": viewer.xp,
+		"social_rng_state": str(WorldState.social_rng_state),
+	}
 
 
 func _test_gossip() -> void:

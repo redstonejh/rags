@@ -120,9 +120,9 @@ static func _chance(sheet: CharacterSheet, npc: NPCRecord, action: String, def_s
 static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forced_roll := -1.0) -> Dictionary:
 	var perceived := perceived_chance(sheet, npc, action)
 	var actual := true_chance(sheet, npc, action)
-	var roll := forced_roll if forced_roll >= 0.0 else randf()
+	var roll := forced_roll if forced_roll >= 0.0 else _randf()
 	if forced_roll < 0.0 and sheet.has_tag("luck"):
-		roll = minf(roll, randf()) # the Gambler's whole deal: roll twice, keep the better
+		roll = minf(roll, _randf()) # the Gambler's whole deal: roll twice, keep the better
 	var success := roll < actual
 	if success and ACTIONS.get(action, {}).get("roll", false):
 		sheet.add_xp(3)
@@ -438,3 +438,14 @@ static func _witness_event(_sheet: CharacterSheet, target: NPCRecord,
 		npc.flags["reacting_until_min"] = now + 20
 		npc.flags["reaction_target_id"] = target.id
 		npc.flags["reaction_kind"] = "witnessed"
+
+
+static func _randf() -> float:
+	var rng := RandomNumberGenerator.new()
+	if WorldState.social_rng_state == 0:
+		WorldState.reset_social_rng()
+	rng.seed = WorldState.social_rng_seed
+	rng.state = WorldState.social_rng_state
+	var value := rng.randf()
+	WorldState.social_rng_state = rng.state
+	return value
