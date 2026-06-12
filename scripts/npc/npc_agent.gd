@@ -11,7 +11,7 @@ var record: NPCRecord
 var _wander_target: Vector2 = Vector2.ZERO
 var _wander_wait := 0.0
 
-@onready var body: Polygon2D = $Body
+@onready var outfit_sprite: Sprite2D = $OutfitSprite
 @onready var name_label: Label = $NameLabel
 @onready var nav: NavigationAgent2D = $NavigationAgent2D
 
@@ -23,7 +23,7 @@ func setup(npc: NPCRecord) -> void:
 func _ready() -> void:
 	var arch := record.archetype()
 	if arch:
-		body.color = arch.color
+		outfit_sprite.modulate = arch.color
 	name_label.text = record.display_name.get_slice(" ", 0)
 	_wander_target = global_position
 	add_child(NPCInteractable.new(record))

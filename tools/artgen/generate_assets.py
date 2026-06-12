@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""Generate deterministic programmer-art assets for RAGS.
-
-The current game still builds most visuals in code. This starts the Phase 0
-asset pipeline with a committed terrain atlas matching TileWorld's existing
-five tile coordinates:
-
-0 grass, 1 road, 2 floor, 3 wall, 4 solid floor under walls.
-"""
+"""Generate deterministic programmer-art assets for RAGS."""
 
 from __future__ import annotations
 
@@ -18,8 +11,12 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
 TILE = 32
-OUT_DIR = ROOT / "assets" / "tiles"
-OUT_PATH = OUT_DIR / "terrain_atlas.png"
+TILES_DIR = ROOT / "assets" / "tiles"
+CHARS_DIR = ROOT / "assets" / "chars"
+TERRAIN_PATH = TILES_DIR / "terrain_atlas.png"
+BODY_PATH = CHARS_DIR / "body_base.png"
+PLAYER_OUTFIT_PATH = CHARS_DIR / "outfit_player.png"
+NPC_OUTFIT_PATH = CHARS_DIR / "outfit_npc.png"
 SEED = 741_2026
 
 
@@ -118,9 +115,8 @@ def draw_wall(draw: ImageDraw.ImageDraw, x0: int, rng: random.Random) -> None:
         draw.point((x, y), fill=jitter(p["accent"], 8, rng))
 
 
-def main() -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    rng = random.Random(SEED)
+def generate_terrain(rng: random.Random) -> None:
+    TILES_DIR.mkdir(parents=True, exist_ok=True)
     img = Image.new("RGB", (TILE * 5, TILE))
     draw = ImageDraw.Draw(img)
     draw_grass(draw, 0 * TILE, rng)
@@ -128,8 +124,67 @@ def main() -> None:
     draw_floor(draw, 2 * TILE, rng)
     draw_wall(draw, 3 * TILE, rng)
     draw_floor(draw, 4 * TILE, rng, solid=True)
-    img.save(OUT_PATH)
-    print(f"wrote {OUT_PATH.relative_to(ROOT)}")
+    img.save(TERRAIN_PATH)
+    print(f"wrote {TERRAIN_PATH.relative_to(ROOT)}")
+
+
+def draw_body_base() -> None:
+    CHARS_DIR.mkdir(parents=True, exist_ok=True)
+    img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    skin = (194, 143, 102, 255)
+    skin_shadow = (139, 93, 68, 255)
+    hair = (54, 38, 31, 255)
+    # Legs and hands.
+    draw.rectangle((11, 31, 14, 42), fill=skin_shadow)
+    draw.rectangle((18, 31, 21, 42), fill=skin_shadow)
+    draw.rectangle((7, 24, 10, 30), fill=skin)
+    draw.rectangle((22, 24, 25, 30), fill=skin)
+    # Neck and face.
+    draw.rectangle((14, 14, 18, 20), fill=skin_shadow)
+    draw.rectangle((10, 4, 22, 16), fill=skin)
+    draw.rectangle((11, 3, 21, 7), fill=hair)
+    draw.rectangle((9, 7, 12, 13), fill=hair)
+    draw.rectangle((20, 7, 23, 13), fill=hair)
+    draw.point((13, 10), fill=(30, 24, 22, 255))
+    draw.point((19, 10), fill=(30, 24, 22, 255))
+    draw.line((14, 14, 18, 14), fill=(116, 65, 61, 255))
+    img.save(BODY_PATH)
+    print(f"wrote {BODY_PATH.relative_to(ROOT)}")
+
+
+def draw_outfit(path: Path, color: tuple[int, int, int], trim: tuple[int, int, int]) -> None:
+    img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    main = (*color, 255)
+    dark = (*tuple(max(0, c - 38) for c in color), 255)
+    trim_rgba = (*trim, 255)
+    # Shirt/jacket.
+    draw.rectangle((9, 18, 23, 31), fill=main)
+    draw.rectangle((8, 20, 11, 27), fill=dark)
+    draw.rectangle((21, 20, 24, 27), fill=dark)
+    draw.line((16, 18, 16, 31), fill=trim_rgba)
+    draw.rectangle((12, 19, 20, 21), fill=trim_rgba)
+    # Pants and shoes.
+    draw.rectangle((10, 31, 15, 42), fill=(45, 47, 54, 255))
+    draw.rectangle((17, 31, 22, 42), fill=(45, 47, 54, 255))
+    draw.rectangle((9, 42, 15, 44), fill=(28, 25, 24, 255))
+    draw.rectangle((17, 42, 23, 44), fill=(28, 25, 24, 255))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path)
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def generate_characters() -> None:
+    draw_body_base()
+    draw_outfit(PLAYER_OUTFIT_PATH, (64, 98, 178), (211, 218, 235))
+    draw_outfit(NPC_OUTFIT_PATH, (210, 210, 210), (250, 250, 250))
+
+
+def main() -> None:
+    rng = random.Random(SEED)
+    generate_terrain(rng)
+    generate_characters()
 
 
 if __name__ == "__main__":
