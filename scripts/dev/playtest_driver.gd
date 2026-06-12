@@ -402,6 +402,9 @@ func _open_shop_from_counter() -> void:
 			"survival feedback stays behind the shop modal")
 	_check(_descendant_text_contains(shop, "Cash:"),
 			"shop shows current cash even with no dirty money")
+	_check(_descendant_text_contains(shop, "QUIKSTOP")
+			and _descendant_text_contains(shop, "Rob the register"),
+			"shop counter exposes store title and register robbery")
 	var buy_noodles := _find_named_descendant(shop, "Buy_instant_noodles") as Button
 	_check(buy_noodles != null and not buy_noodles.disabled,
 			"shop exposes a named food purchase button")
@@ -427,6 +430,21 @@ func _open_shop_from_counter() -> void:
 		_check(_descendant_text_contains(shop, "ChocoLode Bar") \
 				and not _descendant_text_contains(shop, "Instant Noodles"),
 				"shop refresh replaces stock rows synchronously")
+		EventBus.shop_opened.emit({
+			"stock": ["meth"],
+			"title": "A GUY BEHIND SITE 9",
+			"allow_pocket": false,
+			"allow_register_robbery": false,
+		})
+		await get_tree().process_frame
+		_check(_descendant_text_contains(shop, "A GUY BEHIND SITE 9"),
+				"dealer payload replaces the shop title")
+		_check(_find_named_descendant(shop, "Buy_meth") != null,
+				"dealer payload exposes contraband purchase")
+		_check(_find_named_descendant(shop, "Pocket_meth") == null,
+				"dealer payload suppresses store shoplifting")
+		_check(not _descendant_text_contains(shop, "Rob the register"),
+				"dealer payload suppresses register robbery")
 
 
 func _open_pause_menu() -> void:

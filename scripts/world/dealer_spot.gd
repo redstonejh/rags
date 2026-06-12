@@ -40,4 +40,10 @@ func _add_prop_sprite() -> bool:
 
 func interact(_actor: Node) -> void:
 	EventBus.toast.emit("\"What do you need?\" He asks it like a pharmacist who lost a bet.")
-	EventBus.shop_opened.emit(MENU)
+	EventBus.shop_opened.emit({
+		"stock": MENU,
+		"title": "A GUY BEHIND SITE 9",
+		"allow_pocket": false,
+		"allow_register_robbery": false,
+		"buy_toast": "%s disappears into your pocket like evidence.",
+	})

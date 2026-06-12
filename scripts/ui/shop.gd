@@ -1,11 +1,12 @@
 extends CanvasLayer
-## Shop UI: opens when any ShopCounter emits shop_opened. Infinite stock in
-## M3; prices come straight off the ItemDefs. Cash is cash — the clerk takes
-## the dirty kind too, this is not that kind of store.
+## Shop UI: shared by counters and black-market vendors. The payload decides
+## which commands are legal, so a dealer does not inherit QuikStop-only verbs.
 
 var _panel: PanelContainer
 var _rows_box: VBoxContainer
 var _cash_label: Label
+var _title_label: Label
+var _context: Dictionary = {}
 const MODAL_ID := "shop"
 
 
@@ -52,12 +53,11 @@ func _build_ui() -> void:
 
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title := Label.new()
-	title.text = "🛒  QUIKSTOP — \"Open Late. Regret Later.\""
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
+	_title_label = Label.new()
+	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(_title_label)
 	var close := Button.new()
-	close.text = "✕"
+	close.text = "X"
 	close.pressed.connect(_close)
 	header.add_child(close)
 
@@ -74,10 +74,12 @@ func _build_ui() -> void:
 	scroll.add_child(_rows_box)
 
 
-func _open(stock: Array) -> void:
+func _open(payload) -> void:
+	var stock := _normalize_payload(payload)
 	for child in _rows_box.get_children():
 		_rows_box.remove_child(child)
 		child.queue_free()
+	_title_label.text = str(_context.get("title", "QUIKSTOP - \"Open Late. Regret Later.\""))
 	for item_id in stock:
 		var item := ContentDB.get_item(item_id)
 		if item == null:
@@ -88,7 +90,7 @@ func _open(stock: Array) -> void:
 		var info := Label.new()
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		info.text = "%s — $%.2f\n%s" % [item.display_name, item.value_cents / 100.0, item.description]
+		info.text = "%s - $%.2f\n%s" % [item.display_name, item.value_cents / 100.0, item.description]
 		info.add_theme_font_size_override("font_size", 12)
 		row.add_child(info)
 		var btn := Button.new()
@@ -97,17 +99,19 @@ func _open(stock: Array) -> void:
 		btn.custom_minimum_size = Vector2(70, 0)
 		btn.pressed.connect(_buy.bind(item))
 		row.add_child(btn)
-		var pocket := Button.new()
-		pocket.name = "Pocket_%s" % item.id
-		pocket.text = "Pocket"
-		pocket.tooltip_text = _shoplift_risk_text()
-		pocket.custom_minimum_size = Vector2(70, 0)
-		pocket.pressed.connect(_shoplift.bind(item))
-		row.add_child(pocket)
-	var rob := Button.new()
-	rob.text = "🔫  Rob the register"
-	rob.pressed.connect(_rob_register)
-	_rows_box.add_child(rob)
+		if _context.get("allow_pocket", true):
+			var pocket := Button.new()
+			pocket.name = "Pocket_%s" % item.id
+			pocket.text = "Pocket"
+			pocket.tooltip_text = _shoplift_risk_text()
+			pocket.custom_minimum_size = Vector2(70, 0)
+			pocket.pressed.connect(_shoplift.bind(item))
+			row.add_child(pocket)
+	if _context.get("allow_register_robbery", true):
+		var rob := Button.new()
+		rob.text = "Rob the register"
+		rob.pressed.connect(_rob_register)
+		_rows_box.add_child(rob)
 	_update_cash()
 	var stack := _ui_stack()
 	if stack != null:
@@ -116,12 +120,29 @@ func _open(stock: Array) -> void:
 		visible = true
 
 
+func _normalize_payload(payload) -> Array:
+	_context = {
+		"title": "QUIKSTOP - \"Open Late. Regret Later.\"",
+		"allow_pocket": true,
+		"allow_register_robbery": true,
+		"buy_toast": "Bought %s. Press I to use it.",
+	}
+	if payload is Dictionary:
+		for key in payload.keys():
+			if key != "stock":
+				_context[key] = payload[key]
+		return payload.get("stock", [])
+	if payload is Array:
+		return payload
+	return []
+
+
 func _buy(item: ItemDef) -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	if sheet.cash_cents + sheet.dirty_cents < item.value_cents:
 		EventBus.toast.emit("The register makes a sad noise. You can't afford that.")
 		return
-	# Clean cash first; the street kind covers the rest. The clerk doesn't care.
+	# Clean cash first; the street kind covers the rest. The clerk does not care.
 	var from_clean: int = mini(sheet.cash_cents, item.value_cents)
 	if from_clean > 0:
 		sheet.add_cash(-from_clean)
@@ -130,7 +151,7 @@ func _buy(item: ItemDef) -> void:
 		sheet.add_dirty_cash(-from_dirty)
 	sheet.inventory.append(item.id)
 	EventBus.path_updated.emit()
-	EventBus.toast.emit("Bought %s. (I to use it.)" % item.display_name)
+	EventBus.toast.emit(str(_context.get("buy_toast", "Bought %s. Press I to use it.")) % item.display_name)
 	_update_cash()
 
 
@@ -162,7 +183,7 @@ func _shoplift_risk_text() -> String:
 		roundi(chance * 100.0), attention]
 
 
-## Always witnesses. ALWAYS. That's what the 'armed' part buys you.
+## Always witnesses. ALWAYS. That is what the armed part buys you.
 func _rob_register() -> void:
 	var sheet: CharacterSheet = WorldState.player_sheet
 	var loot := CrimeSystem.random_int(20000, 60000)

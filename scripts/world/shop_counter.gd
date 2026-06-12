@@ -31,4 +31,9 @@ func _init() -> void:
 
 
 func interact(_actor: Node) -> void:
-	EventBus.shop_opened.emit(stock)
+	EventBus.shop_opened.emit({
+		"stock": stock,
+		"title": "QUIKSTOP - \"Open Late. Regret Later.\"",
+		"allow_pocket": true,
+		"allow_register_robbery": true,
+	})

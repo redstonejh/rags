@@ -24,7 +24,7 @@ signal toast(message: String)                       # one-line narrator text
 signal shift_started(job: JobDef, late_minutes: int)
 signal shift_finished(job: JobDef, late_minutes: int)
 signal shift_dilemma(dilemma: Dictionary)           # post-shift moment; UI presents choices
-signal shop_opened(stock: Array)
+signal shop_opened(payload)
 signal survival_feedback(kind: String, title: String, detail: String) # short action vignette
 signal path_updated                                 # life-path step changed
 signal player_died(cause: String)
