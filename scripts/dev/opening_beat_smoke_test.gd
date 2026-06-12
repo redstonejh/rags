@@ -13,6 +13,12 @@ var _toasts: Array[String] = []
 func _ready() -> void:
 	await _run_origin_start_case("off_the_bus", "Arrival Walker",
 			"loc_bus_stop", "Small-Town Transplant", "bus stop", "BusStopSprite")
+	await _run_origin_start_case("fresh_out", "Gate Money",
+			"loc_bus_stop", "Ex-Con", "bus stop", "BusStopSprite")
+	await _run_origin_start_case("one_more_hand", "Lucky Coin",
+			"loc_bus_stop", "Gambler", "bus stop", "BusStopSprite")
+	await _run_origin_start_case("struck_off", "No License",
+			"loc_bus_stop", "Disgraced Doctor", "bus stop", "BusStopSprite")
 	await _run_origin_start_case("rock_bottom", "Alley Starter",
 			"loc_gas_station_rear", "Tweaker", "behind the gas station", "StreetCampSprite")
 	await _run_origin_start_case("fired_exec", "Corner Office Ghost",
@@ -26,7 +32,7 @@ func _run_origin_start_case(origin_id: String, char_name: String, expected_marke
 	await _teardown_main()
 	_setup_world(origin_id, char_name)
 	await _instantiate_main()
-	_test_origin_start_and_opening_beat(expected_marker, origin_toast_text,
+	_test_origin_start_and_opening_beat(origin_id, expected_marker, origin_toast_text,
 			start_toast_text, expected_prop_name)
 
 
@@ -51,26 +57,27 @@ func _instantiate_main() -> void:
 	await get_tree().process_frame
 
 
-func _test_origin_start_and_opening_beat(expected_marker: String, origin_toast_text: String,
-		start_toast_text: String, expected_prop_name: String) -> void:
+func _test_origin_start_and_opening_beat(origin_id: String, expected_marker: String,
+		origin_toast_text: String, start_toast_text: String, expected_prop_name: String) -> void:
 	var player: Node2D = _main.get_node("Player")
 	var start_marker := str(WorldState.player_sheet.flags.get("start_location_id", ""))
 	var expected := Locations.door_pos(expected_marker)
-	_check(start_marker == expected_marker, "%s start marker is stored on the sheet" % expected_marker)
+	_check(start_marker == expected_marker,
+			"%s stores %s start marker on the sheet" % [origin_id, expected_marker])
 	_check(player.global_position.distance_to(expected) <= 1.0,
-			"%s first-life exterior spawn uses the origin start marker" % expected_marker)
+			"%s first-life exterior spawn uses %s" % [origin_id, expected_marker])
 	_check(expected.x >= 160.0,
-			"%s origin start marker is clear of the HUD at the west camera limit" % expected_marker)
+			"%s %s start marker is clear of the HUD at the west camera limit" % [origin_id, expected_marker])
 	_check(WorldState.player_location_id == "exterior",
-			"%s exterior start marker preserves simulation location" % expected_marker)
+			"%s exterior start marker preserves simulation location" % origin_id)
 	_check(int(WorldState.player_sheet.flags.get("opening_seen_life", 0)) \
 			== WorldState.player_sheet.lives_lived,
-			"%s opening beat is recorded for this life" % expected_marker)
+			"%s opening beat is recorded for this life" % origin_id)
 	_check(_toasts.any(func(t: String) -> bool:
 			return origin_toast_text in t and start_toast_text in t),
-			"%s opening beat names the origin and start place" % expected_marker)
+			"%s opening beat names the origin and start place" % origin_id)
 	_check(_current_world_has_node(expected_prop_name),
-			"%s opening prop exists near the start marker" % expected_marker)
+			"%s opening prop exists near the start marker" % origin_id)
 
 
 func _current_world_has_node(node_name: String) -> bool:
