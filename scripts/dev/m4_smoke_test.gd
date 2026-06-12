@@ -192,11 +192,16 @@ func _test_dating() -> void:
 	Social.interact(viewer, mark, "ask_out", 0.0) # forced yes
 	_check(mark.flags.get("dating_player", false), "they said yes")
 	var actions := Social.available_actions(viewer, mark)
-	_check("spend_time" in actions and "ask_out" not in actions,
-			"dating swaps ask-out for spend-time")
+	_check("date_mels" in actions and "date_anchor" in actions and "ask_out" not in actions,
+			"dating swaps ask-out for named date activities")
 	var before := mark.rel("player")
-	Social.interact(viewer, mark, "spend_time")
-	_check(mark.rel("player") > before, "time together compounds")
+	Social.interact(viewer, mark, "date_mels")
+	_check(mark.rel("player") > before, "date activity compounds the relationship")
+	_check(WorldState.player_location_id == "loc_diner" and mark.current_location_id == "loc_diner",
+			"date activity moves the couple to the venue")
+	_check(mark.memories.any(func(m: Dictionary) -> bool:
+		return m.get("kind", "") == "date" and "Mel's" in str(m.get("text", ""))),
+			"date activity leaves a specific memory")
 
 
 func _test_save_roundtrip() -> void:

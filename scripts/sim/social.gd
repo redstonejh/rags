@@ -29,6 +29,8 @@ const ACTIONS := {
 		"atk_stat": "STR", "atk_skill": "streetwise", "def_stat": "STR", "def_bravery": true},
 	"pickpocket": {"label": "Pickpocket", "roll": true,
 		"atk_stat": "DEX", "atk_skill": "stealth", "def_stat": "WIS"},
+	"date_mels": {"label": "Date: meal at Mel's", "roll": false},
+	"date_anchor": {"label": "Date: drink at the Anchor", "roll": false},
 	"propose": {"label": "Propose", "roll": true, "min_rel": 70.0,
 		"atk_stat": "CHA", "atk_skill": "persuasion", "def_stat": "WIS"},
 	"try_for_baby": {"label": "Try for a baby", "roll": false},
@@ -39,7 +41,7 @@ static func available_actions(sheet: CharacterSheet, npc: NPCRecord) -> Array:
 	var rel := npc.rel("player")
 	var out: Array = []
 	for id in ACTIONS:
-		if id in ["propose", "try_for_baby"]:
+		if id in ["date_mels", "date_anchor", "propose", "try_for_baby"]:
 			continue # appended below, gated on the relationship stage
 		var a: Dictionary = ACTIONS[id]
 		if rel < float(a.get("min_rel", -1000.0)):
@@ -48,7 +50,8 @@ static func available_actions(sheet: CharacterSheet, npc: NPCRecord) -> Array:
 			continue
 		out.append(id)
 	if npc.flags.get("dating_player", false):
-		out.append("spend_time")
+		out.append("date_mels")
+		out.append("date_anchor")
 		if rel >= 70.0 and not npc.flags.get("married_to_player", false):
 			out.append("propose")
 	if npc.flags.get("married_to_player", false) \
@@ -95,6 +98,7 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 		sheet.add_xp(3)
 	var result := {"success": success, "reality_check": false,
 			"perceived": perceived, "actual": actual, "text": ""}
+	var date_location := ""
 
 	match action:
 		"chat":
@@ -124,12 +128,16 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 				npc.change_rel("player", -8.0)
 				npc.add_memory("rejection", "player", "turned you down", -0.4, 5.0)
 				result.text = "\"Oh. Oh no. I'm— flattered?\" The worst sentence in English."
-		"spend_time":
-			GameClock.skip_minutes(60)
-			npc.change_rel("player", 4.0)
-			sheet.needs.change("social", 20.0)
-			sheet.needs.change("fun", 10.0)
-			result.text = "An hour disappears the good way."
+		"date_mels":
+			date_location = "loc_diner"
+			result.text = _date_activity(sheet, npc, "loc_diner", 90, 6.0, 18.0, 8.0,
+					"shared a booth with you at Mel's",
+					"Mel's gives you the corner booth. Pancakes, burnt coffee, and no urgent disasters.")
+		"date_anchor":
+			date_location = "loc_bar"
+			result.text = _date_activity(sheet, npc, "loc_bar", 120, 4.0, 14.0, 16.0,
+					"had drinks with you at the Rusty Anchor",
+					"The Anchor is loud enough to make honesty feel private. It works, mostly.")
 		"propose":
 			if success:
 				npc.flags["married_to_player"] = true
@@ -196,6 +204,11 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 				roundi(perceived * 100), roundi(actual * 100)])
 
 	GameClock.skip_minutes(5)
+	if date_location != "":
+		WorldState.player_location_id = date_location
+		npc.current_location_id = date_location
+		npc.current_activity = "date"
+		npc.traveling = false
 	return result
 
 
@@ -247,6 +260,21 @@ static func _apply(sheet: CharacterSheet, npc: NPCRecord, success: bool,
 		return win_text
 	npc.change_rel("player", lose_rel)
 	return lose_text
+
+
+static func _date_activity(sheet: CharacterSheet, npc: NPCRecord, location_id: String,
+		minutes: int, rel_gain: float, social_gain: float, fun_gain: float,
+		memory_text: String, result_text: String) -> String:
+	GameClock.skip_minutes(minutes)
+	WorldState.player_location_id = location_id
+	npc.current_location_id = location_id
+	npc.current_activity = "date"
+	npc.traveling = false
+	npc.change_rel("player", rel_gain)
+	sheet.needs.change("social", social_gain)
+	sheet.needs.change("fun", fun_gain)
+	npc.add_memory("date", "player", memory_text, 0.7, 6.5)
+	return result_text
 
 
 ## Everyone else in the room remembers what they saw. Outside, only people
