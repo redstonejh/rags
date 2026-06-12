@@ -324,6 +324,8 @@ func _verify_social_playthrough() -> void:
 	_place_social_playtest_records(target, witness, stranger)
 	var camera := _player.get_node_or_null("Camera2D")
 	var before_pulses := int(camera.get_meta("reality_check_pulses", 0)) if camera != null else -1
+	var sting := _main.get_node_or_null("RealityCheckSting") as AudioStreamPlayer
+	var before_stings := int(sting.get_meta("reality_check_stings", 0)) if sting != null else -1
 	dialogue.call("_do_action_with_roll", "threaten", 0.99)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -336,6 +338,10 @@ func _verify_social_playthrough() -> void:
 	_check(camera != null and int(camera.get_meta("reality_check_pulses", 0)) > before_pulses \
 			and str(camera.get_meta("last_reality_check_target", "")) == target.id,
 			"Reality Check pulses the player camera")
+	_check(sting != null and sting.stream != null \
+			and int(sting.get_meta("reality_check_stings", 0)) > before_stings \
+			and str(sting.get_meta("last_reality_check_target", "")) == target.id,
+			"Reality Check plays the generated sting")
 	await _checkpoint("00_dialogue")
 	dialogue._unhandled_input(_action("ui_cancel"))
 	await get_tree().process_frame

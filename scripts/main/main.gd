@@ -3,6 +3,7 @@ extends Node2D
 ## swaps it on door travel, and wires the SimEngine's embodiment hooks.
 
 const TOWN_SCENE := preload("res://scenes/world/Town.tscn")
+const REALITY_STING := preload("res://assets/audio/reality_check.wav")
 const REALITY_CAMERA_ZOOM_MULT := 1.12
 const REALITY_CAMERA_OFFSET_MAX := 36.0
 const REALITY_CAMERA_IN_TIME := 0.08
@@ -11,6 +12,7 @@ const REALITY_CAMERA_OUT_TIME := 0.22
 
 var current_world: Node2D = null
 var _reality_camera_tween: Tween = null
+var _reality_sting_player: AudioStreamPlayer = null
 
 @onready var world_root: Node2D = $WorldRoot
 @onready var player: Player = $Player
@@ -19,6 +21,7 @@ var _reality_camera_tween: Tween = null
 
 func _ready() -> void:
 	WorldState.ensure_player_sheet()
+	_setup_reality_check_audio()
 	EventBus.travel_requested.connect(_travel_to)
 	EventBus.player_died.connect(_on_player_died)
 	EventBus.reality_check.connect(_on_reality_check)
@@ -75,6 +78,7 @@ func _unhandled_input(event: InputEvent) -> void:
 # -------------------------------------------------------- Reality Check
 
 func _on_reality_check(_perceived: float, _actual: float, npc_id: String) -> void:
+	_play_reality_check_sting(npc_id)
 	var camera := player.get_node_or_null("Camera2D") as Camera2D
 	if camera == null:
 		return
@@ -124,6 +128,24 @@ func _reality_camera_focus_offset(npc_id: String) -> Vector2:
 	if to_target.length_squared() <= 1.0:
 		return Vector2.ZERO
 	return to_target.limit_length(REALITY_CAMERA_OFFSET_MAX)
+
+
+func _setup_reality_check_audio() -> void:
+	_reality_sting_player = AudioStreamPlayer.new()
+	_reality_sting_player.name = "RealityCheckSting"
+	_reality_sting_player.stream = REALITY_STING
+	_reality_sting_player.volume_db = -8.0
+	add_child(_reality_sting_player)
+
+
+func _play_reality_check_sting(npc_id: String) -> void:
+	if _reality_sting_player == null:
+		return
+	_reality_sting_player.set_meta("reality_check_stings",
+			int(_reality_sting_player.get_meta("reality_check_stings", 0)) + 1)
+	_reality_sting_player.set_meta("last_reality_check_target", npc_id)
+	_reality_sting_player.stop()
+	_reality_sting_player.play()
 
 
 # ---------------------------------------------------------------- death

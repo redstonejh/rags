@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 import random
+import struct
+import wave
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -17,6 +20,7 @@ PROPS_DIR = ROOT / "assets" / "props"
 UI_DIR = ROOT / "assets" / "ui"
 BUILDINGS_DIR = ROOT / "assets" / "buildings"
 PORTRAITS_DIR = ROOT / "assets" / "portraits"
+AUDIO_DIR = ROOT / "assets" / "audio"
 TERRAIN_PATH = TILES_DIR / "terrain_atlas.png"
 BODY_PATH = CHARS_DIR / "body_base.png"
 PLAYER_OUTFIT_PATH = CHARS_DIR / "outfit_player.png"
@@ -71,6 +75,7 @@ UI_ICON_PATHS = {
     "walk": UI_DIR / "icon_walk.png",
     "quit": UI_DIR / "icon_quit.png",
 }
+REALITY_STING_PATH = AUDIO_DIR / "reality_check.wav"
 ARCHETYPE_PORTRAITS = {
     "barfly": ((153, 89, 128), (83, 52, 72), "B"),
     "cop": ((76, 115, 217), (35, 49, 88), "P"),
@@ -784,6 +789,30 @@ def generate_portraits() -> None:
         draw_portrait(PORTRAITS_DIR / ("%s.png" % archetype_id), main, dark, initial)
 
 
+def generate_audio() -> None:
+    AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+    sample_rate = 22_050
+    duration = 0.42
+    frames = int(sample_rate * duration)
+    payload = bytearray()
+    for i in range(frames):
+        t = i / sample_rate
+        envelope = max(0.0, 1.0 - t / duration)
+        wobble = math.sin(2.0 * math.pi * 13.0 * t) * 35.0
+        freq = 790.0 - 360.0 * (t / duration) + wobble
+        tone = math.sin(2.0 * math.pi * freq * t)
+        overtone = 0.42 * math.sin(2.0 * math.pi * (freq * 1.5) * t)
+        click = 0.35 * math.sin(2.0 * math.pi * 1700.0 * t) if t < 0.035 else 0.0
+        sample = (tone + overtone + click) * envelope * 0.32
+        payload.extend(struct.pack("<h", int(max(-1.0, min(1.0, sample)) * 32767)))
+    with wave.open(str(REALITY_STING_PATH), "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(sample_rate)
+        wav.writeframes(payload)
+    print(f"wrote {REALITY_STING_PATH.relative_to(ROOT)}")
+
+
 def main() -> None:
     rng = random.Random(SEED)
     generate_terrain(rng)
@@ -792,6 +821,7 @@ def main() -> None:
     generate_props()
     generate_portraits()
     generate_ui()
+    generate_audio()
 
 
 if __name__ == "__main__":
