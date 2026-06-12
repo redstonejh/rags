@@ -55,13 +55,19 @@ func interact(actor: Node) -> void:
 	if not ("needs" in actor and actor.needs is Needs):
 		return
 	var sheet: CharacterSheet = WorldState.player_sheet
+	if sheet == null:
+		return
 	match kind:
 		"shower":
+			var before := sheet.needs.get_value("hygiene")
 			GameClock.skip_minutes(20)
 			sheet.needs.change("hygiene", 70.0 * quality)
+			EventBus.toast.emit("Cleaned up. Hygiene +%d." % int(round(sheet.needs.get_value("hygiene") - before)))
 		"tv":
+			var before := sheet.needs.get_value("fun")
 			GameClock.skip_minutes(45)
 			sheet.needs.change("fun", 30.0 * quality)
+			EventBus.toast.emit("Killed 45 minutes. Fun +%d." % int(round(sheet.needs.get_value("fun") - before)))
 		"bed":
 			if sheet.housing_id == "":
 				EventBus.toast.emit("You don't live here. The bed knows.")
@@ -80,6 +86,9 @@ func _sleep(sheet: CharacterSheet, restore_per_hour: float) -> void:
 	if to_seven < 60:
 		to_seven = 60
 	var hours := to_seven / 60.0
+	var energy_before := sheet.needs.get_value("energy")
 	GameClock.skip_minutes(to_seven)
 	sheet.needs.change("energy", restore_per_hour * hours)
-	EventBus.toast.emit("You wake up. It is, regrettably, tomorrow.")
+	var energy_gain := sheet.needs.get_value("energy") - energy_before
+	EventBus.toast.emit("Slept %.1f hour%s. Energy +%d. It is, regrettably, tomorrow." % [
+			hours, "" if is_equal_approx(hours, 1.0) else "s", int(round(energy_gain))])
