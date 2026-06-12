@@ -128,6 +128,9 @@ func _instantiate_main() -> void:
 	_check(_exterior_street_prop_count() > 0, "exterior street props spawned")
 	_check(_exterior_has_named_node("BusStopSprite"),
 			"bus stop prop spawned at the opening marker")
+	_check(_current_world_name_prefix_count("TrafficCar_") >= 3,
+			"exterior traffic cars spawned")
+	await _verify_exterior_traffic_moves()
 
 
 func _walk_toward_diner() -> void:
@@ -883,6 +886,21 @@ func _verify_exterior_roof_fade() -> void:
 	_reset_player_camera_smoothing()
 
 
+func _verify_exterior_traffic_moves() -> void:
+	var world_root: Node = _main.get_node("WorldRoot")
+	if world_root.get_child_count() == 0:
+		_check(false, "traffic car has an exterior world")
+		return
+	var car := _find_name_prefix_descendant(world_root.get_child(0), "TrafficCar_") as Node2D
+	_check(car != null, "traffic car is inspectable")
+	if car == null:
+		return
+	var start := car.global_position
+	await get_tree().create_timer(0.35).timeout
+	_check(car.global_position.distance_to(start) > 8.0,
+			"traffic cars visibly move along roads")
+
+
 func _exterior_street_prop_count() -> int:
 	var world_root: Node = _main.get_node("WorldRoot")
 	if world_root.get_child_count() == 0:
@@ -965,6 +983,16 @@ func _count_name_prefix_descendants(node: Node, prefix: String) -> int:
 	for child in node.get_children():
 		count += _count_name_prefix_descendants(child, prefix)
 	return count
+
+
+func _find_name_prefix_descendant(node: Node, prefix: String) -> Node:
+	if str(node.name).begins_with(prefix):
+		return node
+	for child in node.get_children():
+		var found := _find_name_prefix_descendant(child, prefix)
+		if found != null:
+			return found
+	return null
 
 
 func _physics_frames(count: int) -> void:

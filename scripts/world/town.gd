@@ -36,15 +36,33 @@ const NEWS_BOX_TEXTURE_PATH := "res://assets/props/news_box.png"
 const BUS_STOP_TEXTURE_PATH := "res://assets/props/bus_stop.png"
 const STREET_CAMP_TEXTURE_PATH := "res://assets/props/street_camp.png"
 const APARTMENT_SIGN_TEXTURE_PATH := "res://assets/props/apartment_sign.png"
+const TRAFFIC_CAR_TEXTURE_PATH := "res://assets/props/parked_car.png"
 const ROOF_FADE_ALPHA := 0.38
 const ROOF_FADE_SPEED := 10.0
+const TRAFFIC_CAR_SPEED := 96.0
 const HORIZONTAL_ROAD_Y := [11, 12, 26, 27]
 const VERTICAL_ROAD_X := [20, 21]
+const TRAFFIC_CAR_COLORS := [
+	Color(0.68, 0.28, 0.28),
+	Color(0.25, 0.36, 0.68),
+	Color(0.28, 0.48, 0.30),
+]
+const TRAFFIC_ROUTES := [
+	[Vector2i(-2, 12), Vector2i(20, 12), Vector2i(20, 26),
+			Vector2i(62, 26), Vector2i(62, 27), Vector2i(21, 27),
+			Vector2i(21, 12)],
+	[Vector2i(64, 11), Vector2i(21, 11), Vector2i(21, 27),
+			Vector2i(-2, 27), Vector2i(-2, 26), Vector2i(20, 26),
+			Vector2i(20, 11)],
+	[Vector2i(21, -2), Vector2i(21, 12), Vector2i(62, 12),
+			Vector2i(62, 11), Vector2i(20, 11), Vector2i(20, 35)],
+]
 
 var player_spawn: Vector2
 var facade_layer: Node2D = null
 var street_prop_layer: Node2D = null
 var roof_groups: Array[Dictionary] = []
+var traffic_cars: Array[Dictionary] = []
 
 ## Buildings: rect (in cells), door cell, location id, label.
 const BUILDINGS := [
@@ -91,6 +109,7 @@ func _ready() -> void:
 		car.position = cell_to_world(cell)
 		add_child(car)
 	_place_street_props()
+	_spawn_traffic()
 	player_spawn = cell_to_world(Vector2i(22, 13))
 	Locations.register_door("exterior", player_spawn)
 	Locations.register_door("loc_bus_stop", cell_to_world(Vector2i(12, 12)))
@@ -100,6 +119,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_update_roof_fades(delta)
+	_update_traffic(delta)
 
 
 func _stamp_sidewalks() -> void:
@@ -263,6 +283,73 @@ func _add_street_prop(texture_path: String, cell: Vector2i, offset: Vector2,
 
 
 ## A random spot on the road network — wander anchors for exterior NPCs.
+func _spawn_traffic() -> void:
+	traffic_cars.clear()
+	if street_prop_layer == null:
+		return
+	var texture: Texture2D = load(TRAFFIC_CAR_TEXTURE_PATH)
+	for i in TRAFFIC_ROUTES.size():
+		var route_cells: Array = TRAFFIC_ROUTES[i]
+		var route: Array[Vector2] = []
+		for cell in route_cells:
+			route.append(cell_to_world(cell))
+		if route.size() < 2:
+			continue
+		var car := Node2D.new()
+		car.name = "TrafficCar_%d" % i
+		car.z_index = 45
+		var sprite := Sprite2D.new()
+		sprite.name = "Sprite"
+		sprite.texture_filter = 1
+		sprite.modulate = TRAFFIC_CAR_COLORS[i % TRAFFIC_CAR_COLORS.size()]
+		if texture != null:
+			sprite.texture = texture
+		car.add_child(sprite)
+		car.global_position = route[i % route.size()]
+		street_prop_layer.add_child(car)
+		traffic_cars.append({
+			"node": car,
+			"route": route,
+			"target_index": (i + 1) % route.size(),
+		})
+
+
+func _update_traffic(delta: float) -> void:
+	for state in traffic_cars:
+		var car := state.get("node") as Node2D
+		if car == null or not is_instance_valid(car):
+			continue
+		var route: Array = state.get("route", [])
+		if route.size() < 2:
+			continue
+		var target_index := int(state.get("target_index", 1)) % route.size()
+		var target: Vector2 = route[target_index]
+		var to_target := target - car.global_position
+		var step := TRAFFIC_CAR_SPEED * delta
+		if to_target.length() <= step:
+			car.global_position = target
+			target_index = (target_index + 1) % route.size()
+			state["target_index"] = target_index
+			to_target = route[target_index] - car.global_position
+		if to_target.length_squared() <= 1.0:
+			continue
+		var direction := to_target.normalized()
+		car.global_position += direction * step
+		_face_traffic_car(car, direction)
+
+
+func _face_traffic_car(car: Node2D, direction: Vector2) -> void:
+	var sprite := car.get_node_or_null("Sprite") as Sprite2D
+	if absf(direction.x) >= absf(direction.y):
+		car.rotation = 0.0
+		if sprite != null:
+			sprite.flip_h = direction.x < 0.0
+	else:
+		car.rotation = PI * 0.5 if direction.y > 0.0 else -PI * 0.5
+		if sprite != null:
+			sprite.flip_h = false
+
+
 func random_exterior_point(rng: RandomNumberGenerator) -> Vector2:
 	if rng.randf() < 0.5:
 		var y: int = HORIZONTAL_ROAD_Y[rng.randi() % HORIZONTAL_ROAD_Y.size()]
