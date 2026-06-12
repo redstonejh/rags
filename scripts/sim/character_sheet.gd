@@ -38,6 +38,8 @@ var rent_strikes: int = 0
 var weight_kg: float = 75.0
 var lives_lived: int = 1         # which life in this world this is
 var alive: bool = true
+var credit_score: int = 30       # the bank's opinion of you, 0-100
+var furniture: Array = []        # furniture ids owned (home comfort + quality)
 
 
 func _init() -> void:
@@ -125,7 +127,16 @@ func mood() -> float:
 		m -= 5.0
 	if housing_id == "":
 		m -= 10.0
+	else:
+		# Home quality is a mood floor: tier + furniture, scaled down.
+		m += Housing.comfort_total(self) * 0.3
 	return clampf(m, 0.0, 100.0)
+
+
+## The status your clothes project. Landlords and bouncers read it first.
+func outfit_tier() -> int:
+	var item := ContentDB.get_item(str(flags.get("outfit", "")))
+	return item.status_tier if item else 0
 
 
 func job() -> JobDef:
@@ -223,6 +234,8 @@ func to_dict() -> Dictionary:
 		"weight_kg": weight_kg,
 		"lives_lived": lives_lived,
 		"alive": alive,
+		"credit_score": credit_score,
+		"furniture": furniture.duplicate(),
 		"flags": flags.duplicate(true),
 		"needs": needs.to_dict(),
 	}
@@ -254,6 +267,8 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 	sheet.weight_kg = float(d.get("weight_kg", 75.0))
 	sheet.lives_lived = int(d.get("lives_lived", 1))
 	sheet.alive = d.get("alive", true)
+	sheet.credit_score = int(d.get("credit_score", 30))
+	sheet.furniture = d.get("furniture", []).duplicate()
 	sheet.flags = d.get("flags", {}).duplicate(true)
 	sheet.needs = Needs.from_dict(d.get("needs", {}))
 	return sheet

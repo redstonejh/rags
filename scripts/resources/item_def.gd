@@ -9,5 +9,8 @@ extends Resource
 @export var value_cents: int = 0
 ## Needs restored when consumed/used, e.g. {"hunger": 35.0}. Empty = not usable.
 @export var need_effects: Dictionary = {}
-## "consumable", "clothing", "weapon", "tool", "valuable", ...
+## "consumable", "clothing", "weapon", "tool", "valuable", "disguise", ...
 @export var tags: Array = []
+## For clothing: the status the outfit projects (0 hoodie .. 3 great suit).
+## Landlords, bouncers, and interviewers read it at a glance.
+@export var status_tier: int = 0

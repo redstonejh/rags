@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FurnitureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "pillowtop"
+display_name = "Pillowtop Royale"
+cost_cents = 300000
+kind = "bed"
+quality = 1.6
+comfort = 6.0
+blurb = "Sleep like the people who caused the recession."

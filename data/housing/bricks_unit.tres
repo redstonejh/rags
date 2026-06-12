@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="HousingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/housing_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bricks_unit"
+display_name = "Unit at the Bricks"
+tier = 2
+weekly_rent_cents = 9000
+deposit_cents = 18000
+buy_price_cents = 0
+down_payment_cents = 0
+min_credit_to_buy = 0
+requires_id = true
+min_outfit_tier = 0
+min_weeks_employed = 0
+min_clean_rent_weeks = 0
+quality = 1.0
+comfort = 4.0
+blurb = "Thin walls, honest rent. The radiator has opinions. ID and a deposit gets you a door that locks."

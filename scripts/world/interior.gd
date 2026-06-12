@@ -118,7 +118,12 @@ func _ready() -> void:
 				"b":
 					set_ground(cell, FLOOR)
 					var bed := Amenity.new()
-					bed.configure("bed", 1.0, "your bed", "Sleep in", Color(0.5, 0.55, 0.75))
+					var sheet: CharacterSheet = WorldState.player_sheet
+					var bed_q := 1.0
+					if sheet != null:
+						var home := ContentDB.get_housing(sheet.housing_id)
+						bed_q = (home.quality if home else 1.0) * Housing.furniture_quality(sheet, "bed")
+					bed.configure("bed", bed_q, "your bed", "Sleep in", Color(0.5, 0.55, 0.75))
 					bed.position = cell_to_world(cell)
 					add_child(bed)
 				"h":
@@ -130,7 +135,10 @@ func _ready() -> void:
 				"T":
 					set_ground(cell, FLOOR)
 					var tv := Amenity.new()
-					tv.configure("tv", 1.0, "the TV", "Watch", Color(0.2, 0.2, 0.25))
+					var tv_q := 1.0
+					if WorldState.player_sheet != null and location_id == "loc_bricks":
+						tv_q = Housing.furniture_quality(WorldState.player_sheet, "tv")
+					tv.configure("tv", tv_q, "the TV", "Watch", Color(0.2, 0.2, 0.25))
 					tv.position = cell_to_world(cell)
 					add_child(tv)
 				"D":

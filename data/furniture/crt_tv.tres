@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FurnitureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "crt_tv"
+display_name = "CRT Television"
+cost_cents = 3000
+kind = "tv"
+quality = 1.0
+comfort = 1.0
+blurb = "Weighs more than you. Gets four channels, three of them static."

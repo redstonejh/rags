@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FurnitureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "flatscreen"
+display_name = "Flatscreen TV"
+cost_cents = 60000
+kind = "tv"
+quality = 1.3
+comfort = 4.0
+blurb = "The poverty line has a picture quality, and this is above it."

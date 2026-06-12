@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="HousingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/housing_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "shelter_cot"
+display_name = "Shelter Cot"
+tier = 0
+weekly_rent_cents = 0
+deposit_cents = 0
+buy_price_cents = 0
+down_payment_cents = 0
+min_credit_to_buy = 0
+requires_id = false
+min_outfit_tier = 0
+min_weeks_employed = 0
+min_clean_rent_weeks = 0
+quality = 0.5
+comfort = 0.0
+blurb = "Free. Lights out at 10. Somebody is always coughing. It beats the bench."

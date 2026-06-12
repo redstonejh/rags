@@ -108,6 +108,9 @@ static func id_confidence(witness: NPCRecord, sheet: CharacterSheet) -> float:
 		conf += 0.15 # they KNOW you
 	if sheet.has_tag("forgettable_face"):
 		conf *= 0.5
+	var outfit := ContentDB.get_item(str(sheet.flags.get("outfit", "")))
+	if outfit and "disguise" in outfit.tags:
+		conf *= 0.3 # the mask works; wearing one on the street is its own problem
 	return clampf(conf, 0.0, 1.0)
 
 

@@ -6,15 +6,10 @@ extends Node
 ## Every day: the body tick — weight follows calories, and starvation is a
 ## telegraphed, multi-day death (fat is a buffer; then it isn't).
 
-const RENTS := {
-	"bricks_unit": 9000,        # $90/wk — the Bricks
-	"decent_apartment": 20000,  # $200/wk — the exec's old life, prorated
-}
-const HOUSING_NAMES := {
-	"bricks_unit": "your unit at the Bricks",
-	"decent_apartment": "the decent apartment",
-}
 const EVICTION_STRIKES := 3
+const CREDIT_ON_TIME := 1
+const CREDIT_MISSED := -5
+const CREDIT_EVICTED := -15
 
 const MICKEY_WEEKLY_INTEREST := 0.20
 const MICKEY_BEATING_THRESHOLD_CENTS := 150000  # $1,500: Mickey sends the boys
@@ -37,6 +32,8 @@ func _on_day_passed(day: int) -> void:
 	if not sheet.alive:
 		return
 	if day % 7 == 0: # Monday. Of course it's Monday.
+		if sheet.job_id != "":
+			sheet.flags["weeks_employed"] = int(sheet.flags.get("weeks_employed", 0)) + 1
 		_collect_rent(sheet)
 		_mickey_tick(sheet)
 
@@ -44,26 +41,32 @@ func _on_day_passed(day: int) -> void:
 # ---------------------------------------------------------------- housing
 
 func _collect_rent(sheet: CharacterSheet) -> void:
-	if not RENTS.has(sheet.housing_id):
+	var def := ContentDB.get_housing(sheet.housing_id)
+	if def == null or def.weekly_rent_cents <= 0:
 		return
-	var rent: int = RENTS[sheet.housing_id]
-	var home: String = HOUSING_NAMES.get(sheet.housing_id, "home")
+	var rent := def.weekly_rent_cents
 	var prepaid := int(sheet.flags.get("rent_prepaid_weeks", 0))
 	if prepaid > 0:
 		sheet.flags["rent_prepaid_weeks"] = prepaid - 1
 		EventBus.toast.emit("Rent on %s: covered. %d prepaid week%s left." % [
-			home, prepaid - 1, "" if prepaid - 1 == 1 else "s"])
+			def.display_name, prepaid - 1, "" if prepaid - 1 == 1 else "s"])
 		return
 	if sheet.cash_cents >= rent:
 		sheet.add_cash(-rent)
-		if sheet.rent_strikes > 0:
-			sheet.rent_strikes = 0
-		EventBus.toast.emit("Rent paid: $%.2f. The roof remains, technically, yours." % (rent / 100.0))
+		sheet.rent_strikes = 0
+		sheet.credit_score = clampi(sheet.credit_score + CREDIT_ON_TIME, 0, 100)
+		sheet.flags["clean_rent_weeks"] = int(sheet.flags.get("clean_rent_weeks", 0)) + 1
+		EventBus.toast.emit("%s: $%.2f. The roof remains, technically, yours." % [
+			"Mortgage paid" if sheet.flags.get("home_owned", false) else "Rent paid", rent / 100.0])
 		return
 	sheet.rent_strikes += 1
+	sheet.credit_score = clampi(sheet.credit_score + CREDIT_MISSED, 0, 100)
+	sheet.flags["clean_rent_weeks"] = 0
 	if sheet.rent_strikes >= EVICTION_STRIKES:
 		sheet.housing_id = ""
 		sheet.rent_strikes = 0
+		sheet.flags.erase("home_owned")
+		sheet.credit_score = clampi(sheet.credit_score + CREDIT_EVICTED, 0, 100)
 		EventBus.toast.emit("The locks have been changed. The landlord kept the deposit, and the high ground.")
 	else:
 		EventBus.toast.emit("Rent missed (%d/%d). The landlord's patience is not a renewable resource." % [

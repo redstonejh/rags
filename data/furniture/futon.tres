@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FurnitureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "futon"
+display_name = "Curbside Futon"
+cost_cents = 4000
+kind = "bed"
+quality = 1.0
+comfort = 1.0
+blurb = "One previous owner. Maybe two. Smells almost gone."

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FurnitureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "houseplant"
+display_name = "Houseplant"
+cost_cents = 2500
+kind = "deco"
+quality = 1.0
+comfort = 2.0
+blurb = "Something alive that depends on you. Practice."

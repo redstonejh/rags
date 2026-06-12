@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="HousingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/housing_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "small_house"
+display_name = "House on Cedar St"
+tier = 4
+weekly_rent_cents = 40000
+deposit_cents = 80000
+buy_price_cents = 9000000
+down_payment_cents = 1800000
+min_credit_to_buy = 50
+requires_id = true
+min_outfit_tier = 1
+min_weeks_employed = 8
+min_clean_rent_weeks = 0
+quality = 1.4
+comfort = 12.0
+blurb = "A yard. A mailbox with YOUR name. Buying takes credit 50 and 20% down; the bank owns the rest of you."

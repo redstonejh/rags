@@ -9,6 +9,7 @@ const BANK_STEP_CENTS := 5000
 
 var _tabs: TabContainer
 var _jobs_box: VBoxContainer
+var _home_box: VBoxContainer
 var _bank_box: VBoxContainer
 var _mickey_box: VBoxContainer
 var _paths_box: VBoxContainer
@@ -67,6 +68,7 @@ func _build_ui() -> void:
 	vbox.add_child(_tabs)
 
 	_jobs_box = _make_tab("Jobs")
+	_home_box = _make_tab("Home")
 	_bank_box = _make_tab("Bank")
 	_mickey_box = _make_tab("Mickey")
 	_paths_box = _make_tab("Paths")
@@ -86,6 +88,7 @@ func _make_tab(tab_name: String) -> VBoxContainer:
 
 func _refresh_all() -> void:
 	_refresh_jobs()
+	_refresh_home()
 	_refresh_bank()
 	_refresh_mickey()
 	_refresh_paths()
@@ -163,6 +166,104 @@ func _days_string(days: Array) -> String:
 	for d in days:
 		names.append(DAY_NAMES[int(d) % 7])
 	return "/".join(names)
+
+
+# ------------------------------------------------------------------- home
+
+func _refresh_home() -> void:
+	_clear(_home_box)
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var current := ContentDB.get_housing(sheet.housing_id)
+	var status := Label.new()
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.text = "Home: %s%s    Credit: %d    Outfit tier: %d" % [
+		current.display_name if current else "the street",
+		" (owned)" if sheet.flags.get("home_owned", false) else "",
+		sheet.credit_score, sheet.outfit_tier()]
+	status.add_theme_font_size_override("font_size", 13)
+	_home_box.add_child(status)
+
+	var market := Label.new()
+	market.text = "— THE MARKET (rent Mondays; landlords judge shoes) —"
+	market.add_theme_font_size_override("font_size", 11)
+	market.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
+	_home_box.add_child(market)
+
+	for def in ContentDB.all_housings():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		_home_box.add_child(row)
+		var info := Label.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info.add_theme_font_size_override("font_size", 12)
+		var price := "$%d/wk + $%d deposit" % [def.weekly_rent_cents / 100, def.deposit_cents / 100] \
+				if def.weekly_rent_cents > 0 else "free"
+		info.text = "T%d %s — %s\n%s" % [def.tier, def.display_name, price, def.blurb]
+		row.add_child(info)
+
+		var rent_btn := Button.new()
+		rent_btn.custom_minimum_size = Vector2(120, 0)
+		var blocker := Housing.rent_blocker(sheet, def)
+		if blocker == "":
+			rent_btn.text = "Move in"
+			rent_btn.pressed.connect(func() -> void:
+				Housing.move_in(sheet, def)
+				_refresh_home())
+		else:
+			rent_btn.text = blocker
+			rent_btn.disabled = true
+		row.add_child(rent_btn)
+
+		if def.buy_price_cents > 0:
+			var buy_btn := Button.new()
+			buy_btn.custom_minimum_size = Vector2(140, 0)
+			var buy_blocker := Housing.buy_blocker(sheet, def)
+			if buy_blocker == "":
+				buy_btn.text = "Buy ($%dk down)" % (def.down_payment_cents / 100000)
+				buy_btn.pressed.connect(func() -> void:
+					Housing.buy(sheet, def)
+					_refresh_home())
+			else:
+				buy_btn.text = buy_blocker
+				buy_btn.disabled = true
+			row.add_child(buy_btn)
+
+	var shop := Label.new()
+	shop.text = "— FURNITURE (a $30 mattress and a $3,000 bed are different lives) —"
+	shop.add_theme_font_size_override("font_size", 11)
+	shop.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
+	_home_box.add_child(shop)
+
+	for f in ContentDB.all_furniture():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		_home_box.add_child(row)
+		var info := Label.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info.add_theme_font_size_override("font_size", 12)
+		info.text = "%s — $%.2f\n%s" % [f.display_name, f.cost_cents / 100.0, f.blurb]
+		row.add_child(info)
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(120, 0)
+		if f.id in sheet.furniture:
+			btn.text = "Owned ✓"
+			btn.disabled = true
+		elif sheet.housing_id == "":
+			btn.text = "no home"
+			btn.disabled = true
+		elif sheet.cash_cents < f.cost_cents:
+			btn.text = "can't afford"
+			btn.disabled = true
+		else:
+			btn.text = "Buy"
+			btn.pressed.connect(func() -> void:
+				sheet.add_cash(-f.cost_cents)
+				sheet.furniture.append(f.id)
+				EventBus.toast.emit("Delivered: %s. Home gains a personality." % f.display_name)
+				_refresh_home())
+		row.add_child(btn)
 
 
 # ------------------------------------------------------------------- bank

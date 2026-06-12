@@ -10,3 +10,4 @@ description = "Italian wool, tailored. The last artifact of a previous civilizat
 value_cents = 120000
 need_effects = {}
 tags = ["clothing", "status"]
+status_tier = 3

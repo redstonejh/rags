@@ -12,6 +12,8 @@ var items: Dictionary = {}
 var archetypes: Dictionary = {}
 var jobs: Dictionary = {}
 var crimes: Dictionary = {}
+var housings: Dictionary = {}
+var furnitures: Dictionary = {}
 
 ## class -> destination index
 @onready var _index_for_type := {
@@ -22,6 +24,8 @@ var crimes: Dictionary = {}
 	"ArchetypeDef": archetypes,
 	"JobDef": jobs,
 	"CrimeDef": crimes,
+	"HousingDef": housings,
+	"FurnitureDef": furnitures,
 }
 
 
@@ -82,6 +86,28 @@ func get_job(id: String) -> JobDef:
 
 func get_crime(id: String) -> CrimeDef:
 	return crimes.get(id)
+
+
+func get_housing(id: String) -> HousingDef:
+	return housings.get(id)
+
+
+func get_furniture(id: String) -> FurnitureDef:
+	return furnitures.get(id)
+
+
+func all_housings() -> Array:
+	var list := housings.values()
+	list.sort_custom(func(a: HousingDef, b: HousingDef) -> bool:
+		return a.tier < b.tier)
+	return list
+
+
+func all_furniture() -> Array:
+	var list := furnitures.values()
+	list.sort_custom(func(a: FurnitureDef, b: FurnitureDef) -> bool:
+		return a.cost_cents < b.cost_cents)
+	return list
 
 
 func all_jobs() -> Array:

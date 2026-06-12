@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="HousingDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/housing_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "penthouse"
+display_name = "Vantage Tower Penthouse"
+tier = 5
+weekly_rent_cents = 150000
+deposit_cents = 300000
+buy_price_cents = 75000000
+down_payment_cents = 22500000
+min_credit_to_buy = 70
+requires_id = true
+min_outfit_tier = 2
+min_weeks_employed = 0
+min_clean_rent_weeks = 0
+quality = 1.6
+comfort = 20.0
+blurb = "The town looks better from up here, mostly because you can't hear it. Clean money only — the doorman can smell the other kind."

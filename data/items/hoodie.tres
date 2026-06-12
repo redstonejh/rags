@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hoodie"
+display_name = "Gray Hoodie"
+description = "Anonymous by design. Bouncers and landlords both notice that."
+value_cents = 1200
+need_effects = {}
+tags = ["clothing"]
+status_tier = 0

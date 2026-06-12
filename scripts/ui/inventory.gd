@@ -89,6 +89,14 @@ func _refresh() -> void:
 			btn.custom_minimum_size = Vector2(70, 0)
 			btn.pressed.connect(_use.bind(item_id))
 			row.add_child(btn)
+		elif item and "clothing" in item.tags:
+			var worn: bool = str(sheet.flags.get("outfit", "")) == item_id
+			var wear := Button.new()
+			wear.text = "Worn ✓" if worn else "Wear"
+			wear.disabled = worn
+			wear.custom_minimum_size = Vector2(70, 0)
+			wear.pressed.connect(_wear.bind(item_id))
+			row.add_child(wear)
 
 
 func _use(item_id: String) -> void:
@@ -96,4 +104,13 @@ func _use(item_id: String) -> void:
 	if sheet.consume_item(item_id):
 		var item := ContentDB.get_item(item_id)
 		EventBus.toast.emit("Used %s." % (item.display_name if item else item_id))
+	_refresh()
+
+
+func _wear(item_id: String) -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	sheet.flags["outfit"] = item_id
+	var item := ContentDB.get_item(item_id)
+	EventBus.toast.emit("Wearing the %s now. Status tier %d. The town notices clothes." % [
+			item.display_name if item else item_id, sheet.outfit_tier()])
 	_refresh()

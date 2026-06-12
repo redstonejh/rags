@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FurnitureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/furniture_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sofa"
+display_name = "Thrift Store Sofa"
+cost_cents = 25000
+kind = "deco"
+quality = 1.0
+comfort = 4.0
+blurb = "Burnt orange. Aggressively comfortable. The cushions hold loose change and secrets."
