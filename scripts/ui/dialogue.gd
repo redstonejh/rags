@@ -340,15 +340,23 @@ func _dialogue_rumor_text(npc: NPCRecord) -> String:
 	var story := npc.top_gossip(3.0)
 	if story.is_empty() or str(story.get("subject", "")) != "player":
 		return ""
-	var phrase := str(story.get("text", "did something"))
+	var phrase := _dialogue_memory_phrase(npc, story)
 	if story.get("secondhand", false):
-		return "Rumor: %s heard from %s that you %s." % [
+		return "Rumor: %s heard from %s that %s." % [
 			npc.display_name.get_slice(" ", 0),
 			_dialogue_gossip_source_chain(story),
 			phrase]
-	return "Memory: %s remembers you %s." % [
+	return "Memory: %s remembers %s." % [
 		npc.display_name.get_slice(" ", 0),
 		phrase]
+
+
+func _dialogue_memory_phrase(npc: NPCRecord, story: Dictionary) -> String:
+	var text := str(story.get("text", "did something"))
+	var npc_first := npc.display_name.get_slice(" ", 0)
+	text = text.replace("misjudged you", "misjudged %s" % npc_first)
+	text = text.replace("you put them right", "%s put you right" % npc_first)
+	return "you %s" % text
 
 
 func _dialogue_gossip_source_chain(story: Dictionary) -> String:

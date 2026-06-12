@@ -394,6 +394,8 @@ func _verify_social_playthrough() -> void:
 	var rumor := _find_named_descendant(dialogue, "DialogueRumor")
 	_check(rumor is Label and witness.display_name in str(rumor.text),
 			"dialogue previews sourced gossip")
+	_check(rumor is Label and not str(rumor.text).contains("misjudged you in public"),
+			"dialogue phrases player memories from the player's view")
 	dialogue.call("_do_action_with_roll", "chat")
 	await get_tree().process_frame
 	var result := _find_named_descendant(dialogue, "DialogueResult")
