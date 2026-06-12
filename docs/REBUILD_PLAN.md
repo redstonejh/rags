@@ -39,6 +39,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 1. Art pipeline above, plus generated assets for everything currently on screen.
    - Started 2026-06-12: `tools/artgen/generate_assets.py` creates the first committed terrain atlas at `assets/tiles/terrain_atlas.png`; `TileWorld` loads it with a procedural fallback.
 2. **World rebuild:** `tile_world.gd` switches to atlas TileSets; buildings become facade+roof props with Y-sort and collision (roof fades when the player walks behind); `town.gd` re-laid out organically — winding roads, plazas, alleys, district flavors (Downtown + the Bricks core; the diner/store/bar strip; Site 9/docks edge); props everywhere. `interior.gd` rooms get real floors, walls, and furniture sprites.
+   - Started 2026-06-12: generated door, shop-counter, and parked-car sprites now replace code-drawn polygons for those core interactables. Building facades, organic layout, roof depth, and broader prop coverage remain.
 3. **Characters:** `npc_agent.gd` and `Player.tscn` render paper-doll animated sprites (4-direction walk); NPC looks derive from `appearance_tags`; the player's outfit changes the sprite.
    - Started 2026-06-12: generated 32x48 body/outfit layers now replace placeholder player and NPC polygons. NPC archetype color tints the outfit layer; directional animation and outfit-specific player visuals remain.
 4. **Click-to-move** on the player (NavigationAgent2D): click ground = walk, click Interactable = walk-then-interact. WASD unchanged.

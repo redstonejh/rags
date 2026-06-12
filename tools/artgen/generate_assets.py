@@ -13,10 +13,14 @@ ROOT = Path(__file__).resolve().parents[2]
 TILE = 32
 TILES_DIR = ROOT / "assets" / "tiles"
 CHARS_DIR = ROOT / "assets" / "chars"
+PROPS_DIR = ROOT / "assets" / "props"
 TERRAIN_PATH = TILES_DIR / "terrain_atlas.png"
 BODY_PATH = CHARS_DIR / "body_base.png"
 PLAYER_OUTFIT_PATH = CHARS_DIR / "outfit_player.png"
 NPC_OUTFIT_PATH = CHARS_DIR / "outfit_npc.png"
+DOOR_PATH = PROPS_DIR / "door.png"
+SHOP_COUNTER_PATH = PROPS_DIR / "shop_counter.png"
+PARKED_CAR_PATH = PROPS_DIR / "parked_car.png"
 SEED = 741_2026
 
 
@@ -181,10 +185,61 @@ def generate_characters() -> None:
     draw_outfit(NPC_OUTFIT_PATH, (210, 210, 210), (250, 250, 250))
 
 
+def draw_door() -> None:
+    img = Image.new("RGBA", (32, 48), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((7, 8, 25, 43), fill=(78, 48, 31, 255))
+    draw.rectangle((9, 10, 23, 41), fill=(116, 72, 43, 255))
+    draw.rectangle((11, 13, 21, 24), fill=(73, 42, 30, 255))
+    draw.rectangle((11, 28, 21, 38), fill=(73, 42, 30, 255))
+    draw.rectangle((22, 25, 24, 28), fill=(212, 181, 70, 255))
+    draw.rectangle((6, 43, 26, 45), fill=(52, 34, 27, 255))
+    DOOR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    img.save(DOOR_PATH)
+    print(f"wrote {DOOR_PATH.relative_to(ROOT)}")
+
+
+def draw_shop_counter() -> None:
+    img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((4, 10, 44, 25), fill=(65, 105, 116, 255))
+    draw.rectangle((4, 8, 44, 13), fill=(92, 142, 151, 255))
+    draw.rectangle((8, 14, 19, 23), fill=(43, 76, 85, 255))
+    draw.rectangle((27, 14, 39, 23), fill=(43, 76, 85, 255))
+    draw.rectangle((31, 4, 42, 9), fill=(190, 192, 166, 255))
+    draw.rectangle((33, 2, 40, 5), fill=(88, 91, 82, 255))
+    SHOP_COUNTER_PATH.parent.mkdir(parents=True, exist_ok=True)
+    img.save(SHOP_COUNTER_PATH)
+    print(f"wrote {SHOP_COUNTER_PATH.relative_to(ROOT)}")
+
+
+def draw_parked_car() -> None:
+    img = Image.new("RGBA", (64, 40), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((7, 12, 57, 29), fill=(214, 214, 218, 255))
+    draw.rectangle((12, 8, 52, 18), fill=(232, 232, 235, 255))
+    draw.rectangle((17, 10, 28, 17), fill=(45, 57, 68, 255))
+    draw.rectangle((36, 10, 47, 17), fill=(45, 57, 68, 255))
+    draw.rectangle((9, 25, 17, 33), fill=(30, 30, 32, 255))
+    draw.rectangle((47, 25, 55, 33), fill=(30, 30, 32, 255))
+    draw.rectangle((5, 16, 8, 23), fill=(222, 196, 87, 255))
+    draw.rectangle((56, 16, 59, 23), fill=(180, 54, 48, 255))
+    PARKED_CAR_PATH.parent.mkdir(parents=True, exist_ok=True)
+    img.save(PARKED_CAR_PATH)
+    print(f"wrote {PARKED_CAR_PATH.relative_to(ROOT)}")
+
+
+def generate_props() -> None:
+    draw_door()
+    draw_shop_counter()
+    draw_parked_car()
+
+
 def main() -> None:
     rng = random.Random(SEED)
     generate_terrain(rng)
     generate_characters()
+    generate_props()
 
 
 if __name__ == "__main__":

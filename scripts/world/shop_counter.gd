@@ -2,6 +2,8 @@ class_name ShopCounter
 extends Interactable
 ## Opens the shop UI. Stock is a list of item ids (infinite quantity in M3).
 
+const COUNTER_TEXTURE_PATH := "res://assets/props/shop_counter.png"
+
 @export var stock: Array = []
 
 
@@ -13,11 +15,19 @@ func _init() -> void:
 	rect.size = Vector2(34, 34)
 	shape.shape = rect
 	add_child(shape)
-	var visual := Polygon2D.new()
-	visual.polygon = PackedVector2Array([
-		Vector2(-14, -8), Vector2(14, -8), Vector2(14, 10), Vector2(-14, 10)])
-	visual.color = Color(0.3, 0.5, 0.6)
-	add_child(visual)
+	var texture: Texture2D = load(COUNTER_TEXTURE_PATH)
+	if texture:
+		var sprite := Sprite2D.new()
+		sprite.texture = texture
+		sprite.texture_filter = 1
+		sprite.position = Vector2(0, -3)
+		add_child(sprite)
+	else:
+		var visual := Polygon2D.new()
+		visual.polygon = PackedVector2Array([
+			Vector2(-14, -8), Vector2(14, -8), Vector2(14, 10), Vector2(-14, 10)])
+		visual.color = Color(0.3, 0.5, 0.6)
+		add_child(visual)
 
 
 func interact(_actor: Node) -> void:

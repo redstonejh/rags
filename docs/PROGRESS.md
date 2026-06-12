@@ -19,6 +19,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Scripted playtest harness:** added `PlaytestDriver.tscn`, which runs the real gameplay scene through spawn, movement, diner travel, phone, inventory, store travel, shop interaction, and pause-menu checkpoints. Headless mode validates flow and reports screenshot skips; windowed mode saves PNG checkpoints to `user://playtests`.
 - **Generated art pipeline started:** `tools/artgen/generate_assets.py` deterministically writes `assets/tiles/terrain_atlas.png` (grass, road, floor, wall, solid floor). `TileWorld` loads that atlas while retaining the old procedural fallback.
 - **Generated character sprites started:** the same art pipeline now writes layered 32x48 character sprites (`body_base`, player outfit, NPC outfit). `Player.tscn` and `NPCAgent.tscn` render those sprites, and NPC archetype color now tints the outfit layer.
+- **Generated prop sprites started:** doors, shop counters, and parked cars now use generated sprites from `assets/props/` with their existing collision and interaction behavior intact.
 
 ## Systems implemented (headless-tested only — see status note above)
 

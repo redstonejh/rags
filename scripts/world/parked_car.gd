@@ -8,6 +8,7 @@ extends Interactable
 const CHOP_MIN_CENTS := 15000
 const CHOP_MAX_CENTS := 30000
 const OCCUPIED_CHANCE := 0.3
+const CAR_TEXTURE_PATH := "res://assets/props/parked_car.png"
 
 
 func _init() -> void:
@@ -18,17 +19,21 @@ func _init() -> void:
 	rect.size = Vector2(52, 30)
 	shape.shape = rect
 	add_child(shape)
-	var body := Polygon2D.new()
-	body.polygon = PackedVector2Array([
-		Vector2(-24, -10), Vector2(24, -10), Vector2(24, 10), Vector2(-24, 10)])
-	body.color = [Color(0.45, 0.2, 0.2), Color(0.2, 0.3, 0.45), Color(0.5, 0.5, 0.52),
-			Color(0.25, 0.35, 0.25)].pick_random()
-	add_child(body)
-	var roof := Polygon2D.new()
-	roof.polygon = PackedVector2Array([
-		Vector2(-12, -7), Vector2(12, -7), Vector2(12, 7), Vector2(-12, 7)])
-	roof.color = Color(0.12, 0.12, 0.14)
-	add_child(roof)
+	var color = [Color(0.75, 0.32, 0.32), Color(0.32, 0.42, 0.72),
+			Color(0.8, 0.8, 0.82), Color(0.36, 0.55, 0.36)].pick_random()
+	var texture: Texture2D = load(CAR_TEXTURE_PATH)
+	if texture:
+		var sprite := Sprite2D.new()
+		sprite.texture = texture
+		sprite.texture_filter = 1
+		sprite.modulate = color
+		add_child(sprite)
+	else:
+		var body := Polygon2D.new()
+		body.polygon = PackedVector2Array([
+			Vector2(-24, -10), Vector2(24, -10), Vector2(24, 10), Vector2(-24, 10)])
+		body.color = color
+		add_child(body)
 
 
 func interact(_actor: Node) -> void:
