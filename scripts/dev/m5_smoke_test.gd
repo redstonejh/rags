@@ -361,6 +361,7 @@ func _test_arrest_paths() -> void:
 	var partner := _mk_npc("w_partner", "loc_home", 50)
 	partner.relationships["player"] = 80.0
 	partner.flags["dating_player"] = true
+	_mk_npc("w_cellmate", "loc_home", 40, 9, 45, "barfly")
 	sheet.children = [{"name": "Dot", "born_day": GameClock.day - 1, "traits": []}]
 	CrimeSystem.commit("shoplift", "loc_scene_g")
 	var cop: NPCRecord = WorldState.npcs["w_law1"]
@@ -371,6 +372,8 @@ func _test_arrest_paths() -> void:
 	_check(float(sheet.skills.get("fitness", 0.0)) > 0.0, "yard weights: fitness XP in jail")
 	_check(str(result.get("text", "")).contains("Jail days:"),
 			"arrest result summarizes jail days")
+	_check(str(result.get("text", "")).contains("Inside:"),
+			"arrest result summarizes inmate contact")
 	_check(str(result.get("text", "")).contains("Outside:"),
 			"arrest result summarizes outside consequences")
 	var jail_events: Array = sheet.flags.get("last_jail_events", [])
@@ -382,6 +385,18 @@ func _test_arrest_paths() -> void:
 		_check(str(jail_event.get("text", "")) != "",
 				"jail event includes player-facing text")
 	var jail_consequences: Dictionary = sheet.flags.get("last_jail_consequences", {})
+	var jail_contacts: Array = sheet.flags.get("last_jail_contacts", [])
+	_check(jail_contacts.size() == 1, "serving records an inmate contact")
+	if not jail_contacts.is_empty():
+		var contact_id := str(jail_contacts[0].get("id", ""))
+		var contact: NPCRecord = WorldState.npcs.get(contact_id)
+		_check(contact != null and contact.flags.get("met_player_in_jail", false),
+				"inmate contact persists on the NPC record")
+		_check(contact != null and contact.knows_memory("player",
+				"did time with you and traded names before release"),
+				"inmate contact remembers the jail introduction")
+		_check(contact_id in sheet.flags.get("underworld_contact_ids", []),
+				"inmate contact opens an underworld contact")
 	_check(partner.rel("player") < 80.0, "jail strains outside relationships")
 	_check(int(jail_consequences.get("relationships_strained", 0)) == 1,
 			"serving records strained relationship count")
@@ -398,6 +413,13 @@ func _test_arrest_paths() -> void:
 			"jail relationship strain survives save/load")
 	_check(int(WorldState.player_sheet.flags.get("child_services_file", 0)) == 1,
 			"Child Services file survives save/load")
+	if not jail_contacts.is_empty():
+		var loaded_contact_id := str(jail_contacts[0].get("id", ""))
+		var loaded_contact: NPCRecord = WorldState.npcs.get(loaded_contact_id)
+		_check(loaded_contact != null and loaded_contact.flags.get("met_player_in_jail", false),
+				"inmate contact survives save/load")
+		_check(loaded_contact_id in WorldState.player_sheet.flags.get("underworld_contact_ids", []),
+				"underworld contact id survives save/load")
 	SaveManager.set_in_game(false)
 	sheet = WorldState.player_sheet
 	cop = WorldState.npcs["w_law1"]

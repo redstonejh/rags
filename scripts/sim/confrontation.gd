@@ -177,6 +177,9 @@ static func _sentence_text(sheet: CharacterSheet, lead: String) -> String:
 	var event_text := CrimeSystem.jail_event_summary(sheet.flags.get("last_jail_events", []))
 	if event_text != "":
 		parts.append("Jail days: %s." % event_text)
+	var contact_text := CrimeSystem.jail_contact_summary(sheet.flags.get("last_jail_contacts", []))
+	if contact_text != "":
+		parts.append("Inside: %s." % contact_text)
 	var consequence_text := CrimeSystem.jail_consequence_summary(
 			sheet.flags.get("last_jail_consequences", {}))
 	if consequence_text != "":

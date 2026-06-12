@@ -362,12 +362,17 @@ static func serve_sentence() -> int:
 		events.append(_apply_jail_day_event(sheet, events.size() + 1))
 	sheet.flags["last_jail_events"] = events
 	sheet.flags["jail_days_served_total"] = int(sheet.flags.get("jail_days_served_total", 0)) + days
+	var contacts := _apply_jail_inmate_contacts(sheet, days)
+	sheet.flags["last_jail_contacts"] = contacts
 	var consequences := _apply_jail_absence_consequences(sheet, days)
 	sheet.flags["last_jail_consequences"] = consequences
 	sheet.flags.erase("jailed")
 	_close_warrants()
 	var event_text := jail_event_summary(events)
 	var detail := " Jail days: %s." % event_text if event_text != "" else ""
+	var contact_text := jail_contact_summary(contacts)
+	if contact_text != "":
+		detail += " Inside: %s." % contact_text
 	var consequence_text := jail_consequence_summary(consequences)
 	if consequence_text != "":
 		detail += " Outside: %s." % consequence_text
@@ -426,6 +431,45 @@ static func jail_consequence_summary(consequences: Dictionary) -> String:
 	return "; ".join(parts)
 
 
+static func jail_contact_summary(contacts: Array) -> String:
+	if contacts.is_empty():
+		return ""
+	var labels: Array = []
+	for contact in contacts:
+		labels.append(str(contact.get("name", "somebody")))
+	return "met %s" % ", ".join(labels)
+
+
+static func _apply_jail_inmate_contacts(sheet: CharacterSheet, days: int) -> Array:
+	var candidates: Array = []
+	for npc in WorldState.npcs.values():
+		if not npc.alive or npc.is_cop():
+			continue
+		if npc.flags.get("dating_player", false) or npc.flags.get("married_to_player", false):
+			continue
+		var arch: ArchetypeDef = npc.archetype()
+		if arch == null or not ("criminal_leaning" in arch.tags):
+			continue
+		candidates.append(npc)
+	if candidates.is_empty():
+		return []
+	candidates.sort_custom(func(a: NPCRecord, b: NPCRecord) -> bool:
+		return a.id < b.id)
+	var contact: NPCRecord = candidates[random_int(0, candidates.size() - 1)]
+	var rel_gain := minf(5.0 + days, 15.0)
+	contact.change_rel("player", rel_gain)
+	contact.flags["met_player_in_jail"] = true
+	contact.add_memory("jail_contact", "player",
+			"did time with you and traded names before release", 0.35, 7.5)
+	_append_unique_flag_id(sheet, "jail_contact_ids", contact.id)
+	_append_unique_flag_id(sheet, "underworld_contact_ids", contact.id)
+	return [{
+		"id": contact.id,
+		"name": contact.display_name,
+		"relationship_gain": rel_gain,
+	}]
+
+
 static func _apply_jail_absence_consequences(sheet: CharacterSheet, days: int) -> Dictionary:
 	var strained_names: Array = []
 	var rel_loss := minf(days * JAIL_RELATIONSHIP_LOSS_PER_DAY, JAIL_RELATIONSHIP_LOSS_CAP)
@@ -451,6 +495,13 @@ static func _apply_jail_absence_consequences(sheet: CharacterSheet, days: int) -
 		"child_services_file": int(sheet.flags.get("child_services_file", 0)),
 		"child_services_warning": sheet.flags.get("child_services_warning", false),
 	}
+
+
+static func _append_unique_flag_id(sheet: CharacterSheet, flag_id: String, value: String) -> void:
+	var values: Array = sheet.flags.get(flag_id, []).duplicate()
+	if value not in values:
+		values.append(value)
+	sheet.flags[flag_id] = values
 
 
 static func _close_warrants() -> void:
