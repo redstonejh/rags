@@ -81,6 +81,7 @@ func new_world(sheet: CharacterSheet) -> void:
 	player_sheet = sheet
 	sheet.rebuild_needs_multipliers()
 	_start_origin_clocks(sheet)
+	_set_origin_start_marker(sheet)
 	player_location_id = "exterior"
 	world_seed = randi()
 	npcs = WorldGen.generate(world_seed)
@@ -100,6 +101,7 @@ func start_life(sheet: CharacterSheet) -> void:
 	player_sheet = sheet
 	sheet.rebuild_needs_multipliers()
 	_start_origin_clocks(sheet)
+	_set_origin_start_marker(sheet)
 	player_location_id = "exterior"
 
 
@@ -107,6 +109,15 @@ func start_life(sheet: CharacterSheet) -> void:
 func _start_origin_clocks(sheet: CharacterSheet) -> void:
 	if sheet.has_tag("parole") and not sheet.flags.has("parole_start_day"):
 		sheet.flags["parole_start_day"] = GameClock.day
+
+
+func _set_origin_start_marker(sheet: CharacterSheet) -> void:
+	if sheet == null or sheet.flags.has("start_location_id"):
+		return
+	var origin := ContentDB.get_origin(sheet.origin_id)
+	var start_id := origin.starting_location_id if origin else ""
+	if start_id != "":
+		sheet.flags["start_location_id"] = start_id
 
 
 ## Back-compat alias (M1/M2 tests and tools call this).

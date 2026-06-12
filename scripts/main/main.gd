@@ -28,6 +28,7 @@ func _ready() -> void:
 	SimEngine.player_node = player
 	# Resume wherever the save says the player was; new games start outside.
 	_enter_location(WorldState.player_location_id, true)
+	_show_opening_beat.call_deferred()
 
 
 func _exit_tree() -> void:
@@ -54,7 +55,7 @@ func _enter_location(location_id: String, initial: bool) -> void:
 		current_world = TOWN_SCENE.instantiate()
 		world_root.add_child(current_world)
 		if initial:
-			player.global_position = current_world.player_spawn
+			player.global_position = _initial_exterior_spawn(location_id)
 		else:
 			# Step out of the building we just left.
 			player.global_position = Locations.door_pos(came_from) \
@@ -67,6 +68,30 @@ func _enter_location(location_id: String, initial: bool) -> void:
 		player.global_position = interior.entry_point
 
 	SimEngine.spawn_host = current_world
+
+
+func _initial_exterior_spawn(requested_location_id: String) -> Vector2:
+	var marker_id := requested_location_id
+	var sheet := WorldState.player_sheet
+	if (marker_id == "" or marker_id == "exterior") and sheet != null:
+		marker_id = str(sheet.flags.get("start_location_id", ""))
+	var marker_pos := Locations.door_pos(marker_id)
+	return marker_pos if marker_pos != Vector2.ZERO else current_world.player_spawn
+
+
+func _show_opening_beat() -> void:
+	var sheet := WorldState.player_sheet
+	if sheet == null or not sheet.alive:
+		return
+	var life_number := int(sheet.lives_lived)
+	if int(sheet.flags.get("opening_seen_life", 0)) == life_number:
+		return
+	sheet.flags["opening_seen_life"] = life_number
+	var origin := ContentDB.get_origin(sheet.origin_id)
+	var origin_name := origin.display_name if origin else "This life"
+	var start_name := Locations.display_name(str(sheet.flags.get("start_location_id", "exterior")))
+	EventBus.toast.emit("%s begins at %s. Check the HUD objective; rent, food, and work do not wait." % [
+			origin_name, start_name])
 
 
 func _unhandled_input(event: InputEvent) -> void:

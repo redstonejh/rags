@@ -29,6 +29,7 @@ Long-session regression: `godot --headless --path . res://scenes/dev/LongSession
 Economy telemetry regression: `godot --headless --path . res://scenes/dev/EconomyTelemetrySmokeTest.tscn`
 Work shift regression: `godot --headless --path . res://scenes/dev/WorkShiftSmokeTest.tscn`
 Rest amenity regression: `godot --headless --path . res://scenes/dev/RestAmenitySmokeTest.tscn`
+Opening beat regression: `godot --headless --path . res://scenes/dev/OpeningBeatSmokeTest.tscn`
 Scripted playtest: `godot --headless --path . res://scenes/dev/PlaytestDriver.tscn` validates the flow; omit `--headless` to dump PNG checkpoints under Godot's `user://playtests`.
 Generate art assets: `python tools/artgen/generate_assets.py`
 

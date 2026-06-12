@@ -11,6 +11,9 @@ const TILE := 32
 
 static var defs := {
 	"exterior": {"display_name": "the street", "kind": "exterior"},
+	"loc_bus_stop": {"display_name": "the bus stop", "kind": "exterior_marker"},
+	"loc_gas_station_rear": {"display_name": "behind the gas station", "kind": "exterior_marker"},
+	"loc_decent_apartment": {"display_name": "the decent apartments", "kind": "exterior_marker"},
 	"loc_diner": {"display_name": "Mel's Diner", "kind": "interior"},
 	"loc_store": {"display_name": "QuikStop Corner Store", "kind": "interior"},
 	"loc_bricks": {"display_name": "The Bricks (lobby)", "kind": "interior"},

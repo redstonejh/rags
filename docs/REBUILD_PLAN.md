@@ -98,6 +98,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 ### Phase 2 — Survival loop to 100%
 - Origin opening beats (arrive by bus / wake behind the gas station…), HUD goal tracker fed by the existing `LifePaths`, tutorialized first day.
   - Started 2026-06-12: the HUD now shows the current Life Path blocker as a compact objective. `LifePaths` includes a First Week path for getting hired, keeping rent ready, and staying fed before longer-term goals.
+  - Continued 2026-06-12: origin `starting_location_id` now drives exterior start markers for first lives, and Main emits a once-per-life opening beat naming the origin/start place and pointing players to the HUD objective.
 - Work shifts become visible montages (fast clock, workplace vignette, mid-shift dilemmas); sleeping/eating get fades and feedback.
   - Started 2026-06-12: `WorkShiftSmokeTest.tscn` now verifies a real diner work-spot interaction through player input, including shift-end time skip, pay, shift count, skill XP, and optional dilemma pause handling. Early clock-ins now skip to the actual shift end instead of ending early.
   - Continued 2026-06-12: inventory food use now reports concrete need gains and calories logged, with scripted playtest coverage for pressing the real Use button and consuming a food item.
