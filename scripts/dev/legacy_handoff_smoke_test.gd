@@ -45,6 +45,7 @@ func _test_character_creation_rejoins_existing_town() -> void:
 	_check(header != null and "Life #%d" % (previous_life_number + 1) in header.text \
 			and "Rust Harbor" in header.text,
 			"character creation labels the next life in the same town")
+	_test_origin_detail_summary(creation)
 
 	var name_edit := creation.get_node("%NameEdit") as LineEdit
 	var start_button := creation.get_node("%StartButton") as Button
@@ -61,6 +62,18 @@ func _test_character_creation_rejoins_existing_town() -> void:
 			"next life increments the life counter")
 	_check(WorldState.world_seed == seed_before and WorldState.npcs.has(old_self.id),
 			"next life keeps the existing town and old self")
+
+
+func _test_origin_detail_summary(creation: Control) -> void:
+	var origin := ContentDB.get_origin(str(creation.get("origin_id")))
+	var info := creation.get_node("%OriginInfo") as RichTextLabel
+	var text := info.text if info else ""
+	var start_name := Locations.display_name(origin.starting_location_id) if origin else ""
+	_check(origin != null and origin.opening_line in text,
+			"origin details show the authored arrival beat")
+	_check(origin != null and "[b]Start:[/b] %s" % start_name in text \
+			and "[b]Housing:[/b]" in text and "[b]Gear:[/b]" in text,
+			"origin details summarize start location, housing, and gear")
 
 
 func _check(ok: bool, what: String) -> void:

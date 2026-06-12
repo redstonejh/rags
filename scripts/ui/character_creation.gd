@@ -68,13 +68,38 @@ func _select_origin(id: String) -> void:
 	for oid in _origin_buttons:
 		_origin_buttons[oid].button_pressed = (oid == id)
 	var origin := ContentDB.get_origin(id)
-	origin_info.text = "[b]%s[/b]\n[i]\"%s\"[/i]\n\n%s\n\n[b]Starting cash:[/b] $%.2f" % [
-		origin.display_name, origin.title, origin.blurb,
-		origin.starting_cash_cents / 100.0]
+	origin_info.text = "[b]%s[/b]\n[i]\"%s\"[/i]\n\n%s\n\n[i]%s[/i]\n\n%s" % [
+		origin.display_name, origin.title, origin.blurb, origin.opening_line,
+		_origin_start_summary(origin)]
 	# Origin changes can invalidate trait picks (locked/free lists differ).
 	trait_ids = trait_ids.filter(func(tid: String) -> bool:
 		return tid not in origin.locked_traits and tid not in origin.free_traits)
 	_refresh()
+
+
+func _origin_start_summary(origin: OriginDef) -> String:
+	var start_name := Locations.display_name(origin.starting_location_id)
+	var housing_name := _housing_name(origin.starting_housing_id)
+	var gear := _item_names(origin.starting_items)
+	return "[b]Start:[/b] %s\n[b]Housing:[/b] %s\n[b]Starting cash:[/b] $%.2f\n[b]Gear:[/b] %s" % [
+		start_name, housing_name, origin.starting_cash_cents / 100.0, gear]
+
+
+func _housing_name(housing_id: String) -> String:
+	if housing_id == "":
+		return "None"
+	var housing := ContentDB.get_housing(housing_id)
+	return housing.display_name if housing else housing_id
+
+
+func _item_names(item_ids: Array) -> String:
+	if item_ids.is_empty():
+		return "None"
+	var names: Array[String] = []
+	for item_id in item_ids:
+		var item := ContentDB.get_item(str(item_id))
+		names.append(item.display_name if item else str(item_id))
+	return ", ".join(names)
 
 
 # ---------------------------------------------------------------- stats
