@@ -112,6 +112,8 @@ func _instantiate_main() -> void:
 	await get_tree().physics_frame
 	_player = _main.get_node("Player")
 	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
+	_verify_exterior_camera_limits()
+	_verify_opening_prompt()
 	await _verify_player_outfit_switch()
 	_verify_hud_time_hint_fit()
 	await _verify_hud_objective_tracker()
@@ -338,6 +340,19 @@ func _player_has_walk_sheets() -> bool:
 	var outfit: Sprite2D = _player.get_node("OutfitSprite")
 	return body.hframes == 4 and body.vframes == 4 \
 			and outfit.hframes == 4 and outfit.vframes == 4
+
+
+func _verify_exterior_camera_limits() -> void:
+	var camera := _player.get_node_or_null("Camera2D") as Camera2D
+	_check(camera != null and camera.limit_left == 0 and camera.limit_top == 0 \
+			and camera.limit_right > 1000 and camera.limit_bottom > 700,
+			"exterior camera clamps to the playable map bounds")
+
+
+func _verify_opening_prompt() -> void:
+	var prompt := _main.get_node_or_null("HUD/PromptLabel") as Label
+	_check(prompt != null and not str(prompt.text).contains("Jack"),
+			"opening spawn avoids an immediate carjack prompt")
 
 
 func _verify_player_outfit_switch() -> void:

@@ -102,6 +102,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
   - Started 2026-06-12: the HUD now shows the current Life Path blocker as a compact objective. `LifePaths` includes a First Week path for getting hired, keeping rent ready, and staying fed before longer-term goals.
   - Continued 2026-06-12: First Week now includes an explicit first-shift blocker after hiring, so the HUD keeps new players on the survival loop until they actually earn a paycheck.
   - Continued 2026-06-12: origin `starting_location_id` now drives exterior start markers for first lives, and Main emits a once-per-life opening beat naming the origin/start place and pointing players to the HUD objective.
+  - Continued 2026-06-12: exterior camera limits now clamp to playable tile bounds, and the Off the Bus marker is framed clear of the HUD and parked-car prompts. Windowed screenshot review verifies the spawn frame no longer opens on off-map void.
 - Work shifts become visible montages (fast clock, workplace vignette, mid-shift dilemmas); sleeping/eating get fades and feedback.
   - Started 2026-06-12: `WorkShiftSmokeTest.tscn` now verifies a real diner work-spot interaction through player input, including shift-end time skip, pay, shift count, skill XP, and optional dilemma pause handling. Early clock-ins now skip to the actual shift end instead of ending early.
   - Continued 2026-06-12: inventory food use now reports concrete need gains and calories logged, with scripted playtest coverage for pressing the real Use button and consuming a food item.

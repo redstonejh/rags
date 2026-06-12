@@ -68,6 +68,29 @@ func _enter_location(location_id: String, initial: bool) -> void:
 		player.global_position = interior.entry_point
 
 	SimEngine.spawn_host = current_world
+	_apply_camera_limits()
+
+
+func _apply_camera_limits() -> void:
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	if camera == null:
+		return
+	if WorldState.player_location_id != "exterior" or current_world == null:
+		camera.limit_left = -10000000
+		camera.limit_top = -10000000
+		camera.limit_right = 10000000
+		camera.limit_bottom = 10000000
+		return
+	var ground: TileMapLayer = current_world.get("ground")
+	if ground == null:
+		return
+	var used := ground.get_used_rect()
+	camera.limit_left = used.position.x * TileWorld.TILE
+	camera.limit_top = used.position.y * TileWorld.TILE
+	camera.limit_right = (used.position.x + used.size.x) * TileWorld.TILE
+	camera.limit_bottom = (used.position.y + used.size.y) * TileWorld.TILE
+	if camera.has_method("reset_smoothing"):
+		camera.reset_smoothing()
 
 
 func _initial_exterior_spawn(requested_location_id: String) -> Vector2:

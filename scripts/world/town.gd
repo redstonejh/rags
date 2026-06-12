@@ -82,7 +82,7 @@ func _ready() -> void:
 	_place_street_props()
 	player_spawn = cell_to_world(Vector2i(22, 13))
 	Locations.register_door("exterior", player_spawn)
-	Locations.register_door("loc_bus_stop", cell_to_world(Vector2i(1, 12)))
+	Locations.register_door("loc_bus_stop", cell_to_world(Vector2i(12, 12)))
 	Locations.register_door("loc_gas_station_rear", cell_to_world(Vector2i(5, 24)))
 	Locations.register_door("loc_decent_apartment", cell_to_world(Vector2i(37, 28)))
 

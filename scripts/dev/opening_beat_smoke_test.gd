@@ -46,6 +46,8 @@ func _test_origin_start_and_opening_beat() -> void:
 	_check(start_marker == "loc_bus_stop", "origin start marker is stored on the sheet")
 	_check(player.global_position.distance_to(expected) <= 1.0,
 			"first-life exterior spawn uses the origin start marker")
+	_check(expected.x >= 288.0,
+			"origin start marker is clear of the HUD at the west camera limit")
 	_check(WorldState.player_location_id == "exterior",
 			"exterior start marker preserves simulation location")
 	_check(int(WorldState.player_sheet.flags.get("opening_seen_life", 0)) \
