@@ -39,7 +39,7 @@ func _init() -> void:
 
 
 func interact(_actor: Node) -> void:
-	if randf() < occupied_chance:
+	if CrimeSystem.roll_chance(occupied_chance):
 		var occupant := _pick_occupant()
 		if occupant != null:
 			EventBus.confrontation_started.emit({
@@ -47,7 +47,7 @@ func interact(_actor: Node) -> void:
 				"text": "The door opens and %s gets out of it. All of them." % occupant.display_name,
 			})
 			return
-	var loot := randi_range(CHOP_MIN_CENTS, CHOP_MAX_CENTS)
+	var loot := CrimeSystem.random_int(CHOP_MIN_CENTS, CHOP_MAX_CENTS)
 	WorldState.player_sheet.add_dirty_cash(loot)
 	CrimeSystem.commit("car_theft", "exterior", null, global_position)
 	EventBus.toast.emit("Empty. Twenty minutes later it's $%.2f at the chop shop. Beater rates." % (loot / 100.0))
@@ -65,4 +65,7 @@ func _pick_occupant() -> NPCRecord:
 	for npc in WorldState.npcs.values():
 		if npc.alive and npc.current_activity != "sleeping":
 			pool.append(npc)
-	return pool.pick_random() if not pool.is_empty() else null
+	if pool.is_empty():
+		return null
+	pool.sort_custom(func(a: NPCRecord, b: NPCRecord) -> bool: return a.id < b.id)
+	return pool[CrimeSystem.random_int(0, pool.size() - 1)]

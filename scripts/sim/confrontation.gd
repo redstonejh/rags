@@ -49,7 +49,7 @@ static func options(kind: String, sheet: CharacterSheet, npc: NPCRecord) -> Arra
 ## Resolve a choice. Returns {text, done, follow_up (payload or {}), success}.
 static func resolve(kind: String, choice: String, sheet: CharacterSheet,
 		npc: NPCRecord, forced_roll := -1.0) -> Dictionary:
-	var roll := forced_roll if forced_roll >= 0.0 else randf()
+	var roll := forced_roll if forced_roll >= 0.0 else CrimeSystem.random_float()
 	match kind:
 		"carjack":
 			return _resolve_carjack(choice, sheet, npc, roll)
@@ -95,7 +95,7 @@ static func _resolve_carjack(choice: String, sheet: CharacterSheet,
 			# You started it; you lose it. Reality Check rules apply.
 			sheet.needs.change("energy", -35.0)
 			sheet.needs.change("fun", -10.0)
-			Body.add_wound(sheet, "fracture" if randf() < 0.25 else "bruise")
+			Body.add_wound(sheet, "fracture" if CrimeSystem.roll_chance(0.25) else "bruise")
 			if perceived >= Social.RC_PERCEIVED_FLOOR and actual <= Social.RC_TRUE_CEILING:
 				EventBus.reality_check.emit(perceived, actual, npc.id)
 				EventBus.toast.emit("%d%% became %d%% somewhere around the second punch." % [

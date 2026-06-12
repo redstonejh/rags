@@ -38,6 +38,7 @@ func _ready() -> void:
 	_test_fence()
 	_test_dead_npcs()
 	_test_save_roundtrip()
+	_test_parked_car_rng_save_roundtrip()
 	SaveManager.set_in_game(false)
 	_save_guard.restore()
 	print("M5 smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
@@ -240,6 +241,7 @@ func _test_crime_rng_public_rolls_roundtrip() -> void:
 	SaveManager.set_in_game(true)
 	_check(SaveManager.save_game(), "save_game reports success with public crime RNG state")
 	var expected := [
+		CrimeSystem.random_float(),
 		CrimeSystem.roll_chance(0.20),
 		CrimeSystem.random_int(20000, 60000),
 		CrimeSystem.roll_chance(0.05),
@@ -248,6 +250,7 @@ func _test_crime_rng_public_rolls_roundtrip() -> void:
 	WorldState.crime_rng_state = 0
 	_check(SaveManager.load_game(), "load_game restores public crime RNG state")
 	var actual := [
+		CrimeSystem.random_float(),
 		CrimeSystem.roll_chance(0.20),
 		CrimeSystem.random_int(20000, 60000),
 		CrimeSystem.roll_chance(0.05),
@@ -256,6 +259,83 @@ func _test_crime_rng_public_rolls_roundtrip() -> void:
 	_check(actual == expected, "loaded public crime rolls repeat shop outcomes")
 	SaveManager.set_in_game(false)
 	WorldState.player_sheet = sheet
+
+
+func _test_parked_car_rng_save_roundtrip() -> void:
+	print("[Save round trip: parked car crime RNG]")
+	var sheet := _fresh_sheet()
+	WorldState.world_seed = 612025
+	WorldState.reset_crime_rng()
+	WorldState.crime_cases.clear()
+	WorldState.npcs.clear()
+	WorldState.town_fear = 0.0
+	WorldState.player_location_id = "exterior"
+	_mk_npc("car_b", "exterior", 60, 10, 50)
+	_mk_npc("car_a", "exterior", 60, 10, 50)
+	_mk_npc("car_sleep", "exterior", 60, 10, 50).current_activity = "sleeping"
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success before occupied carjack")
+	var expected_occupied := _parked_car_occupied_signature()
+	WorldState.npcs.clear()
+	WorldState.crime_rng_state = 0
+	_check(SaveManager.load_game(), "load_game restores occupied carjack RNG state")
+	var actual_occupied := _parked_car_occupied_signature()
+	_check(actual_occupied == expected_occupied,
+			"loaded occupied carjack repeats occupant selection")
+
+	sheet = _fresh_sheet()
+	WorldState.world_seed = 612026
+	WorldState.reset_crime_rng()
+	WorldState.crime_cases.clear()
+	WorldState.npcs.clear()
+	sheet.dirty_cents = 0
+	SaveManager.set_in_game(true)
+	_check(SaveManager.save_game(), "save_game reports success before empty carjack")
+	var expected_empty := _parked_car_empty_signature()
+	WorldState.crime_cases.clear()
+	WorldState.crime_rng_state = 0
+	WorldState.player_sheet = null
+	_check(SaveManager.load_game(), "load_game restores empty carjack RNG state")
+	var actual_empty := _parked_car_empty_signature()
+	_check(actual_empty == expected_empty,
+			"loaded empty carjack repeats payout and car-theft case")
+	SaveManager.set_in_game(false)
+	WorldState.player_sheet = sheet
+
+
+func _parked_car_occupied_signature() -> Dictionary:
+	var car := ParkedCar.new()
+	add_child(car)
+	car.occupied_chance = 1.0
+	var payload := {}
+	var handler := func(data: Dictionary) -> void:
+		payload = data.duplicate(true)
+	EventBus.confrontation_started.connect(handler)
+	car.interact(null)
+	EventBus.confrontation_started.disconnect(handler)
+	car.queue_free()
+	return {
+		"npc_id": str(payload.get("npc_id", "")),
+		"crime_rng_state": str(WorldState.crime_rng_state),
+	}
+
+
+func _parked_car_empty_signature() -> Dictionary:
+	var car := ParkedCar.new()
+	add_child(car)
+	car.occupied_chance = 0.0
+	var dirty_before := WorldState.player_sheet.dirty_cents
+	car.interact(null)
+	var ids := WorldState.crime_cases.keys()
+	ids.sort()
+	var case: CrimeCase = WorldState.crime_cases.get(str(ids[0])) if not ids.is_empty() else null
+	return {
+		"dirty_gain": WorldState.player_sheet.dirty_cents - dirty_before,
+		"case_count": WorldState.crime_cases.size(),
+		"crime_id": case.crime_id if case != null else "",
+		"status": case.status if case != null else "",
+		"crime_rng_state": str(WorldState.crime_rng_state),
+	}
 
 
 func _crime_signature() -> String:

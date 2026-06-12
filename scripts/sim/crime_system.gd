@@ -152,7 +152,11 @@ static func wanted_stars() -> int:
 
 
 static func roll_chance(chance: float) -> bool:
-	return _randf() < clampf(chance, 0.0, 1.0)
+	return random_float() < clampf(chance, 0.0, 1.0)
+
+
+static func random_float() -> float:
+	return _randf()
 
 
 static func random_int(min_value: int, max_value: int) -> int:
