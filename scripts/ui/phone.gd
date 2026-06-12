@@ -885,9 +885,12 @@ func _refresh_town() -> void:
 func _refresh_paths() -> void:
 	_clear(_paths_box)
 	var sheet: CharacterSheet = WorldState.player_sheet
+	var paths := LifePaths.evaluate(sheet)
+	_add_paths_list(paths)
 	# Night school: the Education path's enroll button lives here.
 	if not sheet.flags.get("ged", false) and not sheet.flags.has("ged_done_day"):
 		var ged := Button.new()
+		ged.name = "GedEnrollButton"
 		ged.text = "Enroll: GED night classes ($200, 14 days)"
 		ged.disabled = sheet.cash_cents < 20000
 		ged.pressed.connect(func() -> void:
@@ -938,7 +941,9 @@ func _refresh_paths() -> void:
 			EventBus.toast.emit("%s's life goes on without you at the wheel." % npc.display_name)
 			GameFlow.call_deferred("to_character_creation"))
 	_paths_box.add_child(walk)
-	var paths := LifePaths.evaluate(sheet)
+
+
+func _add_paths_list(paths: Array) -> void:
 	if paths.is_empty():
 		var none := Label.new()
 		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -947,6 +952,7 @@ func _refresh_paths() -> void:
 		return
 	for path in paths:
 		var name_label := Label.new()
+		name_label.name = "PathHeading_%s" % _node_safe_id(str(path.name))
 		name_label.text = path.name.to_upper()
 		name_label.add_theme_font_size_override("font_size", 14)
 		_paths_box.add_child(name_label)
@@ -962,3 +968,7 @@ func _refresh_paths() -> void:
 			else:
 				step_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
 			_paths_box.add_child(step_label)
+
+
+func _node_safe_id(text: String) -> String:
+	return text.to_lower().replace(" ", "_").replace("/", "_").replace("(", "").replace(")", "")

@@ -185,6 +185,18 @@ func _open_phone() -> void:
 			"People tab shows a compact story history")
 	_check(not _descendant_text_contains(people_content, "misjudged you in public"),
 			"People tab phrases player memories from the player's view")
+	_check(phone.call("open_tab", "Paths"), "phone Paths tab selectable")
+	await get_tree().process_frame
+	var paths_content := _find_named_descendant(phone, "PathsContent")
+	var first_week_heading := _find_named_descendant(phone, "PathHeading_first_week")
+	var ged_button := _find_named_descendant(phone, "GedEnrollButton")
+	_check(paths_content != null and first_week_heading != null \
+			and _descendant_text_contains(paths_content, "FIRST WEEK"),
+			"Paths tab shows the active First Week checklist")
+	_check(paths_content != null and first_week_heading != null and ged_button != null \
+			and _direct_child_index(paths_content, first_week_heading) \
+					< _direct_child_index(paths_content, ged_button),
+			"Paths tab lists active objectives before secondary actions")
 
 
 func _verify_date_scene_ui() -> void:
@@ -627,6 +639,14 @@ func _descendant_text_contains_all(node: Node, pieces: Array[String]) -> bool:
 		if _descendant_text_contains_all(child, pieces):
 			return true
 	return false
+
+
+func _direct_child_index(parent: Node, child: Node) -> int:
+	var children := parent.get_children()
+	for i in children.size():
+		if children[i] == child:
+			return i
+	return 999999
 
 
 func _exterior_facade_count() -> int:
