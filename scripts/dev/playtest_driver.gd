@@ -8,6 +8,7 @@ extends Node
 
 const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
 const OUT_DIR := "user://playtests"
+const CHECKPOINT_SETTLE_SECONDS := 5.0
 
 var failures: int = 0
 var _main: Node = null
@@ -35,6 +36,8 @@ func _ready() -> void:
 	await _checkpoint("07_shop")
 	await _open_pause_menu()
 	await _checkpoint("08_pause_menu")
+	await _close_pause_menu()
+	await _verify_social_playthrough()
 	_report()
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -117,7 +120,6 @@ func _instantiate_main() -> void:
 	await _verify_player_outfit_switch()
 	_verify_hud_time_hint_fit()
 	await _verify_hud_objective_tracker()
-	await _verify_social_playthrough()
 	_check(_exterior_ground_tile_count(Vector2i(5, 0)) > 0, "exterior sidewalks spawned")
 	_check(_exterior_ground_tile_count(Vector2i(6, 0)) > 0, "exterior dirt lots spawned")
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
@@ -295,6 +297,16 @@ func _open_pause_menu() -> void:
 	_check(stack.call("is_modal_open", "pause_menu") and GameClock.paused, "pause menu opened from Esc")
 
 
+func _close_pause_menu() -> void:
+	var stack: Node = _main.get_node("UIStack")
+	if stack.call("is_modal_open", "pause_menu"):
+		_main._unhandled_input(_action("ui_cancel"))
+		await get_tree().process_frame
+	_check(not stack.call("is_modal_open", "pause_menu"),
+			"pause menu closes before social checkpoint")
+	await get_tree().create_timer(CHECKPOINT_SETTLE_SECONDS).timeout
+
+
 func _checkpoint(id: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -442,7 +454,7 @@ func _verify_social_playthrough() -> void:
 			and int(sting.get_meta("reality_check_stings", 0)) > before_stings \
 			and str(sting.get_meta("last_reality_check_target", "")) == target.id,
 			"Reality Check plays the generated sting")
-	await _checkpoint("00_dialogue")
+	await _checkpoint("09_dialogue")
 	dialogue._unhandled_input(_action("ui_cancel"))
 	await get_tree().process_frame
 
