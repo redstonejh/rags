@@ -13,12 +13,14 @@ const SPEEDS: Array[float] = [1.0, 4.0, 12.0] # keys 1 / 2 / 3
 ## At 1x speed: 1 real second = 1 game minute (a full day ≈ 24 real minutes).
 var time_scale: float = 1.0
 var paused: bool = false
+var manual_paused: bool = false
 
 ## Total game minutes elapsed since the start of day 1, 00:00.
 ## Starts at day 1, 7:00 AM.
 var total_minutes: int = MINUTES_PER_DAY + 7 * 60
 
 var _accumulator: float = 0.0
+var _pause_locks := {}
 
 var day: int:
 	get: return total_minutes / MINUTES_PER_DAY
@@ -48,13 +50,54 @@ func _advance_minute() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("time_pause"):
-		paused = not paused
-		EventBus.time_scale_changed.emit(0.0 if paused else time_scale)
+		manual_paused = not manual_paused
+		_sync_pause_state()
 	for i in SPEEDS.size():
 		if event.is_action_pressed("time_speed_%d" % (i + 1)):
 			time_scale = SPEEDS[i]
-			paused = false
-			EventBus.time_scale_changed.emit(time_scale)
+			manual_paused = false
+			_sync_pause_state()
+
+
+func push_pause_lock(lock_id: String) -> void:
+	if lock_id == "":
+		return
+	_pause_locks[lock_id] = true
+	_sync_pause_state()
+
+
+func release_pause_lock(lock_id: String) -> void:
+	if lock_id == "":
+		return
+	_pause_locks.erase(lock_id)
+	_sync_pause_state()
+
+
+func clear_pause_locks() -> void:
+	_pause_locks.clear()
+	_sync_pause_state()
+
+
+func has_pause_lock(lock_id: String) -> bool:
+	return _pause_locks.has(lock_id)
+
+
+func pause_lock_count() -> int:
+	return _pause_locks.size()
+
+
+func set_manual_paused(value: bool) -> void:
+	manual_paused = value
+	_sync_pause_state()
+
+
+func _sync_pause_state() -> void:
+	var next_paused := manual_paused or not _pause_locks.is_empty()
+	if paused == next_paused:
+		EventBus.time_scale_changed.emit(0.0 if paused else time_scale)
+		return
+	paused = next_paused
+	EventBus.time_scale_changed.emit(0.0 if paused else time_scale)
 
 
 ## Fast-forward time synchronously (sleep, work shifts, queues). Fires every
@@ -81,3 +124,6 @@ func to_dict() -> Dictionary:
 func load_dict(d: Dictionary) -> void:
 	total_minutes = int(d.get("total_minutes", MINUTES_PER_DAY + 7 * 60))
 	time_scale = float(d.get("time_scale", 1.0))
+	manual_paused = false
+	_pause_locks.clear()
+	_sync_pause_state()

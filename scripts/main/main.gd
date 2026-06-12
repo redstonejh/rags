@@ -8,6 +8,7 @@ var current_world: Node2D = null
 
 @onready var world_root: Node2D = $WorldRoot
 @onready var player: Player = $Player
+@onready var ui_stack: CanvasLayer = $UIStack
 
 
 func _ready() -> void:
@@ -60,7 +61,8 @@ func _enter_location(location_id: String, initial: bool) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		GameFlow.to_main_menu()
+		ui_stack.call("toggle_pause_menu")
+		get_viewport().set_input_as_handled()
 
 
 # ---------------------------------------------------------------- death
@@ -68,6 +70,7 @@ func _unhandled_input(event: InputEvent) -> void:
 const DEATH_LINES := {
 	"starvation": "Starved. The dollar menu was right there.",
 }
+const DEATH_MODAL_ID := "death_screen"
 
 var _death_screen: CanvasLayer = null
 
@@ -77,8 +80,7 @@ var _death_screen: CanvasLayer = null
 func _on_player_died(cause: String) -> void:
 	if _death_screen != null:
 		return
-	GameClock.paused = true
-	EventBus.time_scale_changed.emit(0.0)
+	GameClock.push_pause_lock(DEATH_MODAL_ID)
 
 	_death_screen = CanvasLayer.new()
 	_death_screen.layer = 50
@@ -130,8 +132,7 @@ func _on_player_died(cause: String) -> void:
 	button.custom_minimum_size = Vector2(240, 40)
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	button.pressed.connect(func() -> void:
-		GameClock.paused = false
-		EventBus.time_scale_changed.emit(GameClock.time_scale)
+		GameClock.release_pause_lock(DEATH_MODAL_ID)
 		GameFlow.to_character_creation())
 	vbox.add_child(button)
 
@@ -142,7 +143,6 @@ func _on_player_died(cause: String) -> void:
 		heir_btn.custom_minimum_size = Vector2(240, 40)
 		heir_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		heir_btn.pressed.connect(func() -> void:
-			GameClock.paused = false
-			EventBus.time_scale_changed.emit(GameClock.time_scale)
+			GameClock.release_pause_lock(DEATH_MODAL_ID)
 			GameFlow.continue_as_heir(kid))
 		vbox.add_child(heir_btn)

@@ -6,6 +6,7 @@ extends CanvasLayer
 var _panel: PanelContainer
 var _rows_box: VBoxContainer
 var _cash_label: Label
+const MODAL_ID := "shop"
 
 
 func _ready() -> void:
@@ -17,8 +18,20 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("interact")):
-		visible = false
+		_close()
 		get_viewport().set_input_as_handled()
+
+
+func _close() -> void:
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("close_modal", MODAL_ID)
+	else:
+		visible = false
+
+
+func _ui_stack() -> Node:
+	return get_parent().get_node_or_null("UIStack") if get_parent() != null else null
 
 
 func _build_ui() -> void:
@@ -45,7 +58,7 @@ func _build_ui() -> void:
 	header.add_child(title)
 	var close := Button.new()
 	close.text = "✕"
-	close.pressed.connect(func() -> void: visible = false)
+	close.pressed.connect(_close)
 	header.add_child(close)
 
 	_cash_label = Label.new()
@@ -93,7 +106,11 @@ func _open(stock: Array) -> void:
 	rob.pressed.connect(_rob_register)
 	_rows_box.add_child(rob)
 	_update_cash()
-	visible = true
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("open_modal", MODAL_ID, self, true)
+	else:
+		visible = true
 
 
 func _buy(item: ItemDef) -> void:
@@ -131,7 +148,7 @@ func _rob_register() -> void:
 	sheet.dirty_cents += loot
 	CrimeSystem.commit("armed_robbery", WorldState.player_location_id)
 	EventBus.toast.emit("$%.2f in a paper bag. Everyone in the store memorized your face." % (loot / 100.0))
-	visible = false
+	_close()
 
 
 func _update_cash() -> void:

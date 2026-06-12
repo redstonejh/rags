@@ -1,6 +1,6 @@
 # RAGS — Build Progress
 
-*Last updated: 2026-06-11. Repo: https://github.com/redstonejh/rags*
+*Last updated: 2026-06-12. Repo: https://github.com/redstonejh/rags*
 
 ## Honest status: systems prototype — NOT yet a playable game
 
@@ -9,6 +9,12 @@ M0–M8 below are **simulation systems verified by headless, function-level test
 What IS solid: the architecture (data-driven defs, record/view separation, EventBus, ironman saves that round-trip everything) and the design's signature mechanics implemented at the math layer.
 
 **The path from here to a functional game is `docs/REBUILD_PLAN.md`** — 3/4 angled perspective, generated pixel art, WASD + click-to-move, and one system at a time taken to interactively-verified 100%.
+
+## Phase 0 progress
+
+- **UIStack foundation started (2026-06-12):** `Main.tscn` now owns a `UIStack` node that centralizes modal open/close and named clock pause locks. Esc opens an in-game pause menu (Resume / Save / Walk Away / Settings placeholder / Quit to Menu) instead of immediately returning to the title screen.
+- **Modal pause safety:** phone, inventory, shop, dialogue, dilemma, confrontation, and death screen flows now use composable pause locks, so closing one modal cannot accidentally resume time while another modal or manual pause is still active.
+- **Regression coverage:** added `UIStackSmokeTest.tscn`, which instantiates the real main scene, opens overlapping panels, verifies speed keys cannot break modal pause, and checks Esc pause-menu toggling.
 
 ## Systems implemented (headless-tested only — see status note above)
 
@@ -24,14 +30,14 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 | M7 body/substances/family/aging | ✅ 8-substance catalog (tolerance/addiction/OD/teeth/LSD), Recovery + Education paths, wounds that heal wrong, clinics + plastic surgery, aging (5d=1yr) + elder turnover, marriage → baby gauntlet → kid traits → heirs, obituaries, Walk Away, beater car |
 | M8 the living town | ✅ TownLife (autonomous NPC events + NPC crime), the Rust Harbor Gazette, town fear equilibrium, fame/infamy, bodies + detectives, elections (buyable, dirty money welcome) + mayor police-budget lever, businesses + laundering, lifestyle stat drift, 3 new origins (Ex-Con/Gambler/Doctor) with Going Straight path, perks (Silver Tongue/Iron Liver/Brawler/People Reader) |
 
-Run tests: `godot --headless --path <abs> res://scenes/dev/M<N>SmokeTest.tscn` (N = 1..8; ~250 checks, all green).
+Run tests: `godot --headless --path <abs> res://scenes/dev/M<N>SmokeTest.tscn` (N = 1..8; ~250 checks, all green). UI/modal regression: `godot --headless --path <abs> res://scenes/dev/UIStackSmokeTest.tscn`.
 Godot exe: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_*\Godot_v4.6.3-stable_win64.exe`
 IMPORTANT (headless): run `godot --headless --path <abs> --import` after adding new class_name scripts, or scenes hang on parse errors with no visible output.
 
 ## System map
 
 - **Autoloads (7, unchanged):** EventBus, GameClock, ContentDB, WorldState, SimEngine, SaveManager, GameFlow.
-- **Plain system Nodes in Main.tscn:** ShiftSystem, EconomySystem (drives Body daily ticks + stat drift), GossipSystem, CrimeSystem, TownLife. All EventBus-driven; headless tests instantiate them directly.
+- **Plain system Nodes in Main.tscn:** ShiftSystem, EconomySystem (drives Body daily ticks + stat drift), GossipSystem, CrimeSystem, TownLife, UIStack. Sim systems are EventBus-driven; headless tests instantiate them directly.
 - **Static libraries:** Perception, Social, Confrontation, Body, Housing, LifePaths, Coherence, WorldGen, Locations.
 - **Data (`data/**`, all .tres):** origins ×6, traits ×18, jobs ×8, items ×22, crimes ×8, housing ×6, furniture ×7, substances ×8, perks ×4, npc_archetypes ×11.
 - **UI:** HUD (dynamic bars, toasts, wanted stars), phone (Jobs/Home/Bank/Mickey/Health/Paths/Town), shop, inventory, dialogue, dilemma, confrontation, death screen (obituary + heir), character creation (Life #N).

@@ -21,7 +21,8 @@ Open the project in Godot 4.4+ and run, or:
 godot --path . 
 ```
 
-Dev smoke tests: `godot --headless res://scenes/dev/M1SmokeTest.tscn`
+Dev smoke tests: `godot --headless --path . res://scenes/dev/M8SmokeTest.tscn`
+UI/modal regression: `godot --headless --path . res://scenes/dev/UIStackSmokeTest.tscn`
 
 ## Controls
 

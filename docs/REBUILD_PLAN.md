@@ -41,6 +41,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 3. **Characters:** `npc_agent.gd` and `Player.tscn` render paper-doll animated sprites (4-direction walk); NPC looks derive from `appearance_tags`; the player's outfit changes the sprite.
 4. **Click-to-move** on the player (NavigationAgent2D): click ground = walk, click Interactable = walk-then-interact. WASD unchanged.
 5. **UI shell:** a `UIStack` manager node in Main (not an autoload) owning modal open/close and a single source of clock-pause truth — fixes the six-modals-each-pausing-the-clock hazard. Esc opens a pause menu (Resume / Save / Walk Away / Settings / Quit) instead of hard-exiting to the main menu. Consistent theme from `assets/ui/`.
+   - Started 2026-06-12: `UIStack` now owns modal open/close, named clock pause locks, and the Esc pause menu. Existing modal panels are wired through it; visual theme work remains.
 6. **Playtest harness:** `scripts/dev/playtest_driver.gd` injects real InputEvents to run scripted playthroughs windowed and dumps screenshots at checkpoints (spawn → walk to diner → enter → interact → phone → shop). Everything it surfaces gets fixed.
 - **Definition of done:** the town reads as a 3/4 pixel-art town in screenshots; both control schemes work; every existing modal opens/closes with no pause or input conflicts; M1–M8 suites still green.
 

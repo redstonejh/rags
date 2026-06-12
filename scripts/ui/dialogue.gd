@@ -10,7 +10,7 @@ var _read_label: Label
 var _result_label: Label
 var _actions_box: VBoxContainer
 var _npc: NPCRecord = null
-var _was_paused := false
+const MODAL_ID := "dialogue"
 
 
 func _ready() -> void:
@@ -76,18 +76,29 @@ func _open(npc_id: String) -> void:
 	_npc = WorldState.npcs.get(npc_id)
 	if _npc == null:
 		return
-	_was_paused = GameClock.paused
-	GameClock.paused = true
 	_result_label.text = ""
 	_read_label.text = "( %s )" % Perception.read_line(WorldState.player_sheet, _npc)
 	_refresh()
-	visible = true
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("open_modal", MODAL_ID, self, true)
+	else:
+		visible = true
+		GameClock.push_pause_lock(MODAL_ID)
 
 
 func _close() -> void:
-	GameClock.paused = _was_paused
-	visible = false
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("close_modal", MODAL_ID)
+	else:
+		GameClock.release_pause_lock(MODAL_ID)
+		visible = false
 	_npc = null
+
+
+func _ui_stack() -> Node:
+	return get_parent().get_node_or_null("UIStack") if get_parent() != null else null
 
 
 func _refresh() -> void:

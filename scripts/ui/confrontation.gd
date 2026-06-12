@@ -9,7 +9,7 @@ var _text_label: Label
 var _options_box: VBoxContainer
 var _kind := ""
 var _npc: NPCRecord = null
-var _was_paused := false
+const MODAL_ID := "confrontation"
 
 
 func _ready() -> void:
@@ -55,11 +55,14 @@ func _open(payload: Dictionary) -> void:
 	_kind = str(payload.get("kind", ""))
 	_npc = WorldState.npcs.get(str(payload.get("npc_id", "")))
 	_text_label.text = str(payload.get("text", ""))
-	if not visible:
-		_was_paused = GameClock.paused
-		GameClock.paused = true
 	_render_options()
-	visible = true
+	if not visible:
+		var stack := _ui_stack()
+		if stack != null:
+			stack.call("open_modal", MODAL_ID, self, true)
+		else:
+			visible = true
+			GameClock.push_pause_lock(MODAL_ID)
 
 
 func _render_options() -> void:
@@ -93,6 +96,14 @@ func _choose(choice: String) -> void:
 
 
 func _close() -> void:
-	GameClock.paused = _was_paused
-	visible = false
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("close_modal", MODAL_ID)
+	else:
+		GameClock.release_pause_lock(MODAL_ID)
+		visible = false
 	_npc = null
+
+
+func _ui_stack() -> Node:
+	return get_parent().get_node_or_null("UIStack") if get_parent() != null else null

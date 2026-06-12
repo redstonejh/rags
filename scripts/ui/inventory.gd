@@ -3,6 +3,7 @@ extends CanvasLayer
 ## effects apply and calories go on the daily ledger.
 
 var _rows_box: VBoxContainer
+const MODAL_ID := "inventory"
 
 
 func _ready() -> void:
@@ -13,13 +14,35 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("inventory"):
-		visible = not visible
 		if visible:
-			_refresh()
+			_close()
+		else:
+			_open()
 		get_viewport().set_input_as_handled()
 	elif visible and event.is_action_pressed("ui_cancel"):
-		visible = false
+		_close()
 		get_viewport().set_input_as_handled()
+
+
+func _open() -> void:
+	_refresh()
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("open_modal", MODAL_ID, self, true)
+	else:
+		visible = true
+
+
+func _close() -> void:
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("close_modal", MODAL_ID)
+	else:
+		visible = false
+
+
+func _ui_stack() -> Node:
+	return get_parent().get_node_or_null("UIStack") if get_parent() != null else null
 
 
 func _build_ui() -> void:
@@ -46,7 +69,7 @@ func _build_ui() -> void:
 	header.add_child(title)
 	var close := Button.new()
 	close.text = "✕  [I]"
-	close.pressed.connect(func() -> void: visible = false)
+	close.pressed.connect(_close)
 	header.add_child(close)
 
 	var scroll := ScrollContainer.new()

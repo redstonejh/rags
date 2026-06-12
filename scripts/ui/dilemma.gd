@@ -6,7 +6,7 @@ extends CanvasLayer
 var _panel: PanelContainer
 var _text_label: Label
 var _choices_box: VBoxContainer
-var _was_paused := false
+const MODAL_ID := "dilemma"
 
 
 func _ready() -> void:
@@ -65,9 +65,12 @@ func _show_dilemma(dilemma: Dictionary) -> void:
 		btn.disabled = cash < 0 and sheet.cash_cents < -cash
 		btn.pressed.connect(_choose.bind(choice))
 		_choices_box.add_child(btn)
-	_was_paused = GameClock.paused
-	GameClock.paused = true
-	visible = true
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("open_modal", MODAL_ID, self, true)
+	else:
+		visible = true
+		GameClock.push_pause_lock(MODAL_ID)
 
 
 func _choose(choice: Dictionary) -> void:
@@ -79,5 +82,13 @@ func _choose(choice: Dictionary) -> void:
 	for need_id in need_deltas:
 		sheet.needs.change(need_id, float(need_deltas[need_id]))
 	EventBus.toast.emit(str(choice.get("result", "")))
-	GameClock.paused = _was_paused
-	visible = false
+	var stack := _ui_stack()
+	if stack != null:
+		stack.call("close_modal", MODAL_ID)
+	else:
+		GameClock.release_pause_lock(MODAL_ID)
+		visible = false
+
+
+func _ui_stack() -> Node:
+	return get_parent().get_node_or_null("UIStack") if get_parent() != null else null
