@@ -142,6 +142,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 
 ### Phase 4 — Housing + furnishing to 100%
 - Per-tier home interiors (cot hall → motel room → Bricks unit → decent apartment → house → penthouse), furniture placement mode in owned homes, furniture sprites per tier, comfort visualized.
+  - Started 2026-06-12: the phone Home tab now visualizes total comfort, furniture contribution, and bed/TV quality; furniture rows preview comfort gains, purchases use the shared `Housing` helper, and duplicate furniture entries are blocked from stacking comfort.
 
 ### Phase 5 — Body + substances to 100%
 - Visible states: drunk wobble and tint, LSD palette/post-FX, weight and age reflected on the paper-doll; clinic and hospital interiors; recovery meetings as scheduled place-events; withdrawal events.

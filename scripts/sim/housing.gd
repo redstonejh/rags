@@ -66,6 +66,28 @@ static func buy(sheet: CharacterSheet, def: HousingDef) -> bool:
 	return true
 
 
+static func furniture_blocker(sheet: CharacterSheet, def: FurnitureDef) -> String:
+	if def == null:
+		return "unknown item"
+	if def.id in sheet.furniture:
+		return "owned"
+	if sheet.housing_id == "":
+		return "no home"
+	if sheet.cash_cents < def.cost_cents:
+		return "can't afford"
+	return ""
+
+
+static func buy_furniture(sheet: CharacterSheet, def: FurnitureDef) -> bool:
+	if furniture_blocker(sheet, def) != "":
+		return false
+	sheet.add_cash(-def.cost_cents)
+	sheet.furniture.append(def.id)
+	EventBus.path_updated.emit()
+	EventBus.toast.emit("Delivered: %s. Home gains a personality." % def.display_name)
+	return true
+
+
 ## Best owned furniture quality of a kind ("bed"/"tv"), floor 1.0.
 static func furniture_quality(sheet: CharacterSheet, kind: String) -> float:
 	var best := 1.0
@@ -82,7 +104,11 @@ static func comfort_total(sheet: CharacterSheet) -> float:
 	if def == null:
 		return 0.0
 	var total := def.comfort
+	var seen := {}
 	for fid in sheet.furniture:
+		if seen.has(fid):
+			continue
+		seen[fid] = true
 		var f := ContentDB.get_furniture(fid)
 		if f:
 			total += f.comfort

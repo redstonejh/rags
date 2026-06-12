@@ -158,6 +158,23 @@ func _test_furniture_and_mood() -> void:
 	var sheet := _fresh_sheet()
 	sheet.housing_id = "bricks_unit"
 	_check(is_equal_approx(Housing.furniture_quality(sheet, "bed"), 1.0), "no bed = baseline 1.0")
+	var futon := ContentDB.get_furniture("futon")
+	var bricks := ContentDB.get_housing("bricks_unit")
+	sheet.cash_cents = futon.cost_cents + 1000
+	var buy_events := _count_path_updates(func() -> void:
+		Housing.buy_furniture(sheet, futon))
+	_check(sheet.furniture == ["futon"] and sheet.cash_cents == 1000,
+			"furniture purchase helper charges once and delivers one item")
+	_check(buy_events > 0, "furniture purchase refreshes comfort-dependent status")
+	var duplicate_cash := sheet.cash_cents
+	var duplicate_events := _count_path_updates(func() -> void:
+		Housing.buy_furniture(sheet, futon))
+	_check(sheet.furniture == ["futon"] and sheet.cash_cents == duplicate_cash,
+			"duplicate furniture purchase is blocked defensively")
+	_check(duplicate_events == 0, "blocked duplicate furniture purchase emits no refresh")
+	sheet.furniture.append("futon")
+	_check(is_equal_approx(Housing.comfort_total(sheet), bricks.comfort + futon.comfort),
+			"duplicate furniture entries do not stack comfort")
 	sheet.furniture = ["futon", "pillowtop", "crt_tv"]
 	_check(is_equal_approx(Housing.furniture_quality(sheet, "bed"), 1.6), "best bed wins (1.6)")
 	_check(is_equal_approx(Housing.furniture_quality(sheet, "tv"), 1.0), "CRT is baseline")

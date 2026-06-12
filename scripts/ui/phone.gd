@@ -274,10 +274,17 @@ func _refresh_home() -> void:
 	var current := ContentDB.get_housing(sheet.housing_id)
 	var status := Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var total_comfort := Housing.comfort_total(sheet)
+	var base_comfort := current.comfort if current else 0.0
+	var furniture_comfort := maxf(0.0, total_comfort - base_comfort)
 	status.text = "Home: %s%s    Credit: %d    Outfit tier: %d" % [
 		current.display_name if current else "the street",
 		" (owned)" if sheet.flags.get("home_owned", false) else "",
 		sheet.credit_score, sheet.outfit_tier()]
+	status.text += "\nComfort: %.1f (home %.1f + furniture %.1f)    Bed %.1fx    TV %.1fx" % [
+		total_comfort, base_comfort, furniture_comfort,
+		Housing.furniture_quality(sheet, "bed"),
+		Housing.furniture_quality(sheet, "tv")]
 	status.add_theme_font_size_override("font_size", 13)
 	_home_box.add_child(status)
 
@@ -353,27 +360,26 @@ func _refresh_home() -> void:
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info.add_theme_font_size_override("font_size", 12)
-		info.text = "%s — $%.2f\n%s" % [f.display_name, f.cost_cents / 100.0, f.blurb]
+		var quality_text := ""
+		if f.kind == "bed" or f.kind == "tv":
+			quality_text = "    %s %.1fx" % [f.kind.capitalize(), f.quality]
+		info.text = "%s — $%.2f\n%s\nComfort +%.1f%s" % [
+			f.display_name, f.cost_cents / 100.0, f.blurb, f.comfort, quality_text]
 		row.add_child(info)
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(120, 0)
-		if f.id in sheet.furniture:
+		var furniture_blocker := Housing.furniture_blocker(sheet, f)
+		if furniture_blocker == "owned":
 			btn.text = "Owned ✓"
 			btn.disabled = true
-		elif sheet.housing_id == "":
-			btn.text = "no home"
-			btn.disabled = true
-		elif sheet.cash_cents < f.cost_cents:
-			btn.text = "can't afford"
+		elif furniture_blocker != "":
+			btn.text = furniture_blocker
 			btn.disabled = true
 		else:
 			btn.text = "Buy"
 			btn.pressed.connect(func() -> void:
-				sheet.add_cash(-f.cost_cents)
-				sheet.furniture.append(f.id)
-				EventBus.path_updated.emit()
-				EventBus.toast.emit("Delivered: %s. Home gains a personality." % f.display_name)
-				_refresh_home())
+				if Housing.buy_furniture(sheet, f):
+					_refresh_home())
 		row.add_child(btn)
 
 

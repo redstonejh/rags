@@ -248,6 +248,11 @@ func _verify_phone_tab_refresh(phone: CanvasLayer) -> void:
 	sheet.furniture.clear()
 	phone.call("open_tab", "Home")
 	await _ui_frames(2)
+	home_content = _find_named_descendant(phone, "HomeContent")
+	_check(home_content != null and _descendant_text_contains(home_content, "Comfort:"),
+			"Home tab visualizes current comfort")
+	_check(home_content != null and _descendant_text_contains(home_content, "Comfort +"),
+			"Home furniture rows preview comfort gains")
 	var furniture_buy := _find_button_with_text(phone, "Buy")
 	_check(furniture_buy != null and not furniture_buy.disabled,
 			"Home tab exposes affordable furniture purchases")
@@ -262,6 +267,9 @@ func _verify_phone_tab_refresh(phone: CanvasLayer) -> void:
 	_check(not sheet.furniture.is_empty(), "Home furniture purchase delivers an item")
 	_check(int(furniture_events.path) > 0,
 			"Home furniture purchase refreshes comfort-dependent status")
+	home_content = _find_named_descendant(phone, "HomeContent")
+	_check(home_content != null and _descendant_text_contains(home_content, "Owned"),
+			"Home furniture purchase refreshes owned state")
 	sheet.flags.erase("outfit")
 	sheet.inventory = _without_clothing(sheet.inventory)
 	if "thrift_blazer" not in sheet.inventory:
