@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CrimeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/crime_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bribery"
+display_name = "Bribery of an Officer"
+witness_text = "saw you try to buy a cop"
+severity = 3
+evidence_decay_per_day = 6.0
+gossip_salience = 6.0
+sentence_days_min = 3
+sentence_days_max = 10
+bailable = true

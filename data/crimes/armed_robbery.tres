@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CrimeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/crime_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "armed_robbery"
+display_name = "Armed Robbery"
+witness_text = "saw you rob the register"
+severity = 6
+evidence_decay_per_day = 3.0
+gossip_salience = 9.0
+sentence_days_min = 20
+sentence_days_max = 40
+bailable = true

@@ -12,6 +12,13 @@ var world_seed: int = 0
 var npcs: Dictionary = {} # id -> NPCRecord
 ## True once a town has been generated; survives the player's death.
 var world_exists: bool = false
+var crime_cases: Dictionary = {} # id -> CrimeCase
+var _case_serial: int = 0
+
+
+func next_case_serial() -> int:
+	_case_serial += 1
+	return _case_serial
 
 
 func _ready() -> void:
@@ -32,6 +39,8 @@ func new_world(sheet: CharacterSheet) -> void:
 	player_location_id = "exterior"
 	world_seed = randi()
 	npcs = WorldGen.generate(world_seed)
+	crime_cases = {}
+	_case_serial = 0
 	world_exists = true
 	GameClock.total_minutes = GameClock.MINUTES_PER_DAY + 7 * 60 # day 1, 7 AM
 
@@ -66,12 +75,17 @@ func to_dict() -> Dictionary:
 	var npc_dicts: Dictionary = {}
 	for id in npcs:
 		npc_dicts[id] = npcs[id].to_dict()
+	var case_dicts: Dictionary = {}
+	for id in crime_cases:
+		case_dicts[id] = crime_cases[id].to_dict()
 	return {
 		"player": player_sheet.to_dict() if player_sheet else {},
 		"player_location_id": player_location_id,
 		"world_seed": world_seed,
 		"world_exists": world_exists,
 		"npcs": npc_dicts,
+		"crime_cases": case_dicts,
+		"case_serial": _case_serial,
 	}
 
 
@@ -87,3 +101,8 @@ func load_dict(d: Dictionary) -> void:
 	for id in npc_dicts:
 		npcs[id] = NPCRecord.from_dict(npc_dicts[id])
 	world_exists = d.get("world_exists", not npcs.is_empty())
+	crime_cases.clear()
+	var case_dicts: Dictionary = d.get("crime_cases", {})
+	for id in case_dicts:
+		crime_cases[id] = CrimeCase.from_dict(case_dicts[id])
+	_case_serial = int(d.get("case_serial", crime_cases.size()))

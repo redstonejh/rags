@@ -22,7 +22,7 @@ func _ready() -> void:
 func _on_hour_passed(_hour: int) -> void:
 	var groups: Dictionary = {}
 	for npc in WorldState.npcs.values():
-		if npc.current_activity == "sleeping" or npc.traveling:
+		if not npc.alive or npc.current_activity == "sleeping" or npc.traveling:
 			continue
 		var loc: String = npc.current_location_id
 		if not groups.has(loc):
@@ -65,6 +65,8 @@ static func share(speaker: NPCRecord, listener: NPCRecord) -> bool:
 	listener.add_memory(str(story.get("kind", "gossip")), subject, text,
 			float(story.get("tone", 0.0)),
 			float(story.get("salience", 0.0)) * SECONDHAND_FACTOR, true)
+	if story.has("case_id"): # crime stories keep their case — cops act on hearsay
+		listener.memories.back()["case_id"] = story.case_id
 	if subject != listener.id: # hearing about yourself works differently
 		listener.change_rel(subject, float(story.get("tone", 0.0)) * REL_PER_TONE)
 	return true

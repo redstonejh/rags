@@ -4,7 +4,7 @@ extends TileWorld
 ## Legend: 'w' wall · 'f' floor · 'X' exit door · 's' NPC spawn spot ·
 ##         'C' counter (solid) · 'F' fridge · 'W' work spot · 'R' records desk ·
 ##         'S' shop counter · 'B' bar counter · 'b' bed · 'h' shower · 'T' TV ·
-##         'D' street dealer
+##         'D' street dealer · 'G' the fence
 
 @export var location_id: String = ""
 
@@ -51,7 +51,7 @@ const MAPS := {
 	],
 	"loc_site": [
 		"wwwwwwwwwwwwww",
-		"wfsffffffffffw",
+		"wfsffffffffGfw",
 		"wfWffsffWffffw",
 		"wffffffffffsfw",
 		"wfffWffffffDfw",
@@ -138,6 +138,11 @@ func _ready() -> void:
 					var dealer := DealerSpot.new()
 					dealer.position = cell_to_world(cell)
 					add_child(dealer)
+				"G":
+					set_ground(cell, FLOOR)
+					var fence := FenceSpot.new()
+					fence.position = cell_to_world(cell)
+					add_child(fence)
 				"X":
 					place_door(cell, "exterior", "Leave")
 					entry_point = cell_to_world(cell + Vector2i(0, -1))

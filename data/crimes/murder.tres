@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CrimeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/crime_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "murder"
+display_name = "Murder"
+witness_text = "saw you kill somebody"
+severity = 10
+evidence_decay_per_day = 0.0
+gossip_salience = 10.0
+sentence_days_min = 180
+sentence_days_max = 365
+bailable = false

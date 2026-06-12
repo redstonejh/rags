@@ -37,6 +37,12 @@ func _ready() -> void:
 	# Buildings.
 	for b in BUILDINGS:
 		_stamp_building(b.rect, b.door, b.id, b.label)
+	# Street parking: the carjack gamble, distributed around town.
+	for cell in [Vector2i(8, 13), Vector2i(27, 13), Vector2i(40, 10),
+			Vector2i(54, 13), Vector2i(12, 28), Vector2i(48, 25)]:
+		var car := ParkedCar.new()
+		car.position = cell_to_world(cell)
+		add_child(car)
 	player_spawn = cell_to_world(Vector2i(22, 13))
 	Locations.register_door("exterior", player_spawn)
 

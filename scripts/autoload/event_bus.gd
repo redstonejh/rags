@@ -33,3 +33,12 @@ signal player_job_changed(job_id: String)
 signal dialogue_requested(npc_id: String)           # player wants to talk
 signal relationship_changed(npc_id: String, value: float)
 signal reality_check(perceived: float, actual: float, npc_id: String)
+
+# -- Crime & consequences (M5) --
+signal crime_committed(case_id: String)
+signal crime_witnessed(npc_id: String, case_id: String)
+signal warrant_issued(case_id: String)
+signal wanted_changed(stars: int)
+signal arrest_made(sentence_days: int)
+signal confrontation_started(payload: Dictionary)   # {kind, npc_id, text}
+signal npc_died(npc_id: String, cause: String)

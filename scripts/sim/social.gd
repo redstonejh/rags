@@ -27,6 +27,8 @@ const ACTIONS := {
 	"insult": {"label": "Insult", "roll": false},
 	"threaten": {"label": "Threaten", "roll": true,
 		"atk_stat": "STR", "atk_skill": "streetwise", "def_stat": "STR", "def_bravery": true},
+	"pickpocket": {"label": "Pickpocket", "roll": true,
+		"atk_stat": "DEX", "atk_skill": "stealth", "def_stat": "WIS"},
 }
 
 
@@ -119,6 +121,18 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 			sheet.needs.change("fun", 3.0) # being awful is, briefly, fun
 			result.text = "You say the thing. It cannot be unsaid."
 			_witness_event(sheet, npc, "watched the player tear into %s" % npc.display_name, -0.4, 4.0)
+		"pickpocket":
+			if success:
+				var take: int = clampi(npc.money_cents / 10, 500, 4500)
+				take = mini(take, npc.money_cents)
+				npc.money_cents -= take
+				sheet.dirty_cents += take
+				sheet.add_skill_xp("stealth", 2.0)
+				result.text = "$%.2f migrates pockets. Nobody felt a thing." % (take / 100.0)
+			else:
+				CrimeSystem.commit("pickpocket", npc.current_location_id, npc,
+						npc.abstract_position(GameClock.total_minutes))
+				result.text = "Your hand is in their coat when they turn around. Words are exchanged. Loud ones."
 		"threaten":
 			if success:
 				npc.change_rel("player", -20.0)
@@ -177,13 +191,19 @@ static func _apply(sheet: CharacterSheet, npc: NPCRecord, success: bool,
 	return lose_text
 
 
-## Everyone else in the room remembers what they saw.
+## Everyone else in the room remembers what they saw. Outside, only people
+## actually near the scene count — the street is big.
 static func _witness_event(_sheet: CharacterSheet, target: NPCRecord,
 		text: String, tone: float, salience: float) -> void:
+	var now := GameClock.total_minutes
+	var scene := target.abstract_position(now)
 	for npc in WorldState.npcs.values():
-		if npc == target or npc.current_location_id != target.current_location_id:
+		if npc == target or not npc.alive or npc.current_activity == "sleeping":
 			continue
-		if npc.current_activity == "sleeping":
+		if npc.current_location_id != target.current_location_id:
+			continue
+		if target.current_location_id == "exterior" \
+				and npc.abstract_position(now).distance_to(scene) > 320.0:
 			continue
 		npc.add_memory("witnessed", "player", text, tone, salience)
 		npc.change_rel("player", tone * 3.0)

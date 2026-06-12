@@ -21,6 +21,7 @@ const MAX_TOASTS := 3
 @onready var mood_label: Label = %MoodLabel
 @onready var weight_label: Label = %WeightLabel
 @onready var job_label: Label = %JobLabel
+@onready var wanted_label: Label = %WantedLabel
 @onready var clock_label: Label = %ClockLabel
 @onready var speed_label: Label = %SpeedLabel
 @onready var bars_box: VBoxContainer = %BarsBox
@@ -37,6 +38,7 @@ func _ready() -> void:
 	EventBus.money_changed.connect(func(_c: int) -> void: _update_money())
 	EventBus.interact_target_changed.connect(func(p: String) -> void: prompt_label.text = p)
 	EventBus.player_job_changed.connect(func(_id: String) -> void: _update_job_label())
+	EventBus.wanted_changed.connect(_on_wanted_changed)
 	EventBus.toast.connect(_on_toast)
 
 	_build_bars()
@@ -118,6 +120,11 @@ func _update_slow_labels() -> void:
 	mood_label.text = "Mood %d" % int(sheet.mood())
 	weight_label.text = "%.1f kg" % sheet.weight_kg
 	_update_money() # dirty cash has no signal; piggyback the minute tick
+
+
+func _on_wanted_changed(stars: int) -> void:
+	wanted_label.visible = stars > 0
+	wanted_label.text = "★".repeat(stars) + "  WANTED"
 
 
 func _update_job_label() -> void:

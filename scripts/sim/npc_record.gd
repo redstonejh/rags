@@ -38,6 +38,9 @@ var hunger: float = 100.0
 var relationships: Dictionary = {}  # other id ("player" or npc id) -> -100..100
 var memories: Array = []            # M4: Memory dicts
 var flags: Dictionary = {}
+## Dead NPCs stay in WorldState forever — the town remembers — but stop
+## ticking, working, and gossiping. Their job opens up.
+var alive: bool = true
 
 ## Not serialized — the live puppet, if embodied.
 var agent: Node = null
@@ -47,6 +50,11 @@ const MEMORY_CAP := 24
 
 func archetype() -> ArchetypeDef:
 	return ContentDB.archetypes.get(archetype_id)
+
+
+func is_cop() -> bool:
+	var arch := archetype()
+	return arch != null and "cop" in arch.tags
 
 
 func rel(other_id: String) -> float:
@@ -141,6 +149,7 @@ func to_dict() -> Dictionary:
 		"relationships": relationships.duplicate(),
 		"memories": memories.duplicate(true),
 		"flags": flags.duplicate(true),
+		"alive": alive,
 	}
 
 
@@ -175,4 +184,5 @@ static func from_dict(d: Dictionary) -> NPCRecord:
 	n.relationships = d.get("relationships", {}).duplicate()
 	n.memories = d.get("memories", []).duplicate(true)
 	n.flags = d.get("flags", {}).duplicate(true)
+	n.alive = d.get("alive", true)
 	return n

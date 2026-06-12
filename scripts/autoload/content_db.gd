@@ -11,6 +11,7 @@ var perks: Dictionary = {}
 var items: Dictionary = {}
 var archetypes: Dictionary = {}
 var jobs: Dictionary = {}
+var crimes: Dictionary = {}
 
 ## class -> destination index
 @onready var _index_for_type := {
@@ -20,6 +21,7 @@ var jobs: Dictionary = {}
 	"ItemDef": items,
 	"ArchetypeDef": archetypes,
 	"JobDef": jobs,
+	"CrimeDef": crimes,
 }
 
 
@@ -76,6 +78,10 @@ func get_item(id: String) -> ItemDef:
 
 func get_job(id: String) -> JobDef:
 	return jobs.get(id)
+
+
+func get_crime(id: String) -> CrimeDef:
+	return crimes.get(id)
 
 
 func all_jobs() -> Array:

@@ -82,6 +82,16 @@ func _open(stock: Array) -> void:
 		btn.custom_minimum_size = Vector2(70, 0)
 		btn.pressed.connect(_buy.bind(item))
 		row.add_child(btn)
+		var pocket := Button.new()
+		pocket.text = "Pocket"
+		pocket.tooltip_text = "Five-finger discount. The camera is fake. Probably."
+		pocket.custom_minimum_size = Vector2(70, 0)
+		pocket.pressed.connect(_shoplift.bind(item))
+		row.add_child(pocket)
+	var rob := Button.new()
+	rob.text = "🔫  Rob the register"
+	rob.pressed.connect(_rob_register)
+	_rows_box.add_child(rob)
 	_update_cash()
 	visible = true
 
@@ -99,6 +109,29 @@ func _buy(item: ItemDef) -> void:
 	sheet.inventory.append(item.id)
 	EventBus.toast.emit("Bought %s. (I to use it.)" % item.display_name)
 	_update_cash()
+
+
+## Catch chance 20% minus 2.5% per Stealth level. Stealth is crime's tuition.
+func _shoplift(item: ItemDef) -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var catch_chance := clampf(0.20 - 0.025 * sheet.skill_level("stealth"), 0.05, 1.0)
+	if randf() < catch_chance:
+		CrimeSystem.commit("shoplift", WorldState.player_location_id)
+		EventBus.toast.emit("\"HEY!\" The whole store turns. The %s stays." % item.display_name)
+	else:
+		sheet.inventory.append(item.id)
+		sheet.add_skill_xp("stealth", 1.0)
+		EventBus.toast.emit("The %s was always yours, officer." % item.display_name)
+
+
+## Always witnesses. ALWAYS. That's what the 'armed' part buys you.
+func _rob_register() -> void:
+	var sheet: CharacterSheet = WorldState.player_sheet
+	var loot := randi_range(20000, 60000)
+	sheet.dirty_cents += loot
+	CrimeSystem.commit("armed_robbery", WorldState.player_location_id)
+	EventBus.toast.emit("$%.2f in a paper bag. Everyone in the store memorized your face." % (loot / 100.0))
+	visible = false
 
 
 func _update_cash() -> void:

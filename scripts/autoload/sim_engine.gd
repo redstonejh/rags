@@ -48,6 +48,9 @@ func _on_minute_passed(total_minutes: int) -> void:
 
 
 func _tick_npc(npc: NPCRecord, now: int, minute_of_day: int) -> void:
+	if not npc.alive:
+		npc.current_activity = "dead"
+		return
 	# Arrivals.
 	if npc.traveling and now >= npc.travel_arrive_min:
 		npc.traveling = false
@@ -111,7 +114,7 @@ func compute_desired_embodied() -> Array:
 			return []
 		var ppos := player_node.global_position
 		for npc in WorldState.npcs.values():
-			if npc.current_location_id != "exterior":
+			if not npc.alive or npc.current_location_id != "exterior":
 				continue
 			var radius := EXTERIOR_DESPAWN_RADIUS if npc.agent != null else EXTERIOR_EMBODY_RADIUS
 			if npc.abstract_position(now).distance_to(ppos) <= radius:
@@ -120,7 +123,7 @@ func compute_desired_embodied() -> Array:
 			return a.abstract_position(now).distance_to(ppos) < b.abstract_position(now).distance_to(ppos))
 	else:
 		for npc in WorldState.npcs.values():
-			if npc.current_location_id == player_loc:
+			if npc.alive and npc.current_location_id == player_loc:
 				picks.append(npc)
 	if picks.size() > MAX_EMBODIED:
 		picks.resize(MAX_EMBODIED)
