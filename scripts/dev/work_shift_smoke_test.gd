@@ -72,6 +72,9 @@ func _test_diner_shift_interaction() -> void:
 			"work interaction shows a paycheck cue")
 	_check(_survival_feedback_kind() == "work",
 			"work interaction shows the survival feedback vignette")
+	_check(_survival_feedback_detail().contains("Gross pay: $54.00") \
+			and _survival_feedback_detail().contains("10:00 PM"),
+			"work vignette reports pay and clock-out")
 	_check(GameClock.day == day_before and GameClock.hour == 22 and GameClock.minute == 0,
 			"work interaction fast-forwards to shift end")
 	_check(sheet.cash_cents == cash_before + job.wage_cents_per_shift,
@@ -133,6 +136,11 @@ func _hud_has_toast(needle: String) -> bool:
 func _survival_feedback_kind() -> String:
 	var feedback := _main.get_node_or_null("SurvivalFeedback")
 	return str(feedback.get_meta("last_survival_kind", "")) if feedback != null else ""
+
+
+func _survival_feedback_detail() -> String:
+	var feedback := _main.get_node_or_null("SurvivalFeedback")
+	return str(feedback.get_meta("last_survival_detail", "")) if feedback != null else ""
 
 
 func _node_tree_has_label_text(node: Node, needle: String) -> bool:

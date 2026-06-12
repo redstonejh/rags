@@ -60,16 +60,20 @@ func interact(actor: Node) -> void:
 	match kind:
 		"shower":
 			var before := sheet.needs.get_value("hygiene")
-			EventBus.survival_feedback.emit("shower", "Clean Up", "Twenty minutes and a borrowed mirror.")
 			GameClock.skip_minutes(20)
 			sheet.needs.change("hygiene", 70.0 * quality)
-			EventBus.toast.emit("Cleaned up. Hygiene +%d." % int(round(sheet.needs.get_value("hygiene") - before)))
+			var gain := int(round(sheet.needs.get_value("hygiene") - before))
+			EventBus.survival_feedback.emit("shower", "Clean Up",
+					"20 minutes. Hygiene %+d." % gain)
+			EventBus.toast.emit("Cleaned up. Hygiene +%d." % gain)
 		"tv":
 			var before := sheet.needs.get_value("fun")
-			EventBus.survival_feedback.emit("fun", "Kill Time", "Forty-five minutes of someone else's problems.")
 			GameClock.skip_minutes(45)
 			sheet.needs.change("fun", 30.0 * quality)
-			EventBus.toast.emit("Killed 45 minutes. Fun +%d." % int(round(sheet.needs.get_value("fun") - before)))
+			var gain := int(round(sheet.needs.get_value("fun") - before))
+			EventBus.survival_feedback.emit("fun", "Kill Time",
+					"45 minutes. Fun %+d." % gain)
+			EventBus.toast.emit("Killed 45 minutes. Fun +%d." % gain)
 		"bed":
 			if sheet.housing_id == "":
 				EventBus.toast.emit("You don't live here. The bed knows.")
@@ -89,10 +93,13 @@ func _sleep(sheet: CharacterSheet, restore_per_hour: float) -> void:
 		to_seven = 60
 	var hours := to_seven / 60.0
 	var energy_before := sheet.needs.get_value("energy")
-	EventBus.survival_feedback.emit("sleep", "Sleep",
-			"%.1f hour%s until 7 AM." % [hours, "" if is_equal_approx(hours, 1.0) else "s"])
 	GameClock.skip_minutes(to_seven)
 	sheet.needs.change("energy", restore_per_hour * hours)
 	var energy_gain := sheet.needs.get_value("energy") - energy_before
+	EventBus.survival_feedback.emit("sleep", "Sleep",
+			"%.1f hour%s until 7 AM. Energy %+d." % [
+				hours,
+				"" if is_equal_approx(hours, 1.0) else "s",
+				int(round(energy_gain))])
 	EventBus.toast.emit("Slept %.1f hour%s. Energy +%d. It is, regrettably, tomorrow." % [
 			hours, "" if is_equal_approx(hours, 1.0) else "s", int(round(energy_gain))])

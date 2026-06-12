@@ -229,6 +229,9 @@ func _close_phone_open_inventory() -> void:
 			"inventory Use removes one consumed item")
 	_check(_survival_feedback_kind() == "eat",
 			"inventory Use shows the survival feedback vignette")
+	_check(_survival_feedback_detail().contains("Hunger +") \
+			and _survival_feedback_detail().contains("kcal logged"),
+			"inventory Use vignette reports food effects")
 
 
 func _enter_store_move_to_counter() -> void:
@@ -503,6 +506,11 @@ func _find_named_descendant(node: Node, node_name: String) -> Node:
 func _survival_feedback_kind() -> String:
 	var feedback := _main.get_node_or_null("SurvivalFeedback")
 	return str(feedback.get_meta("last_survival_kind", "")) if feedback != null else ""
+
+
+func _survival_feedback_detail() -> String:
+	var feedback := _main.get_node_or_null("SurvivalFeedback")
+	return str(feedback.get_meta("last_survival_detail", "")) if feedback != null else ""
 
 
 func _find_button_with_text(node: Node, text: String) -> Button:

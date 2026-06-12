@@ -14,6 +14,8 @@ func _ready() -> void:
 	_setup_world()
 	await _instantiate_main()
 	await _test_bed_sleep_interaction()
+	await _test_shower_interaction()
+	await _test_tv_interaction()
 	print("Rest amenity smoke test: %s" % ("ALL PASS" if failures == 0 else "%d FAILURES" % failures))
 	get_tree().quit(0 if failures == 0 else 1)
 
@@ -68,8 +70,54 @@ func _test_bed_sleep_interaction() -> void:
 			"bed sleep restores energy")
 	_check(_survival_feedback_kind() == "sleep",
 			"bed sleep shows the survival feedback vignette")
+	_check(_survival_feedback_detail().contains("Energy +"),
+			"bed sleep vignette reports energy gain")
 	_check(not GameClock.paused and GameClock.pause_lock_count() == 0,
 			"bed sleep returns control without pause locks")
+
+
+func _test_shower_interaction() -> void:
+	var shower := _find_amenity("shower")
+	_check(shower != null, "owned home shower exists")
+	if shower == null:
+		return
+	var sheet := WorldState.player_sheet
+	sheet.needs.values["hygiene"] = 15.0
+	var hygiene_before := sheet.needs.get_value("hygiene")
+	_interact_with(shower)
+	await get_tree().process_frame
+	_check(sheet.needs.get_value("hygiene") > hygiene_before,
+			"shower restores hygiene")
+	_check(_survival_feedback_kind() == "shower",
+			"shower shows the survival feedback vignette")
+	_check(_survival_feedback_detail().contains("Hygiene +"),
+			"shower vignette reports hygiene gain")
+	_check(not GameClock.paused and GameClock.pause_lock_count() == 0,
+			"shower leaves no pause locks")
+
+
+func _test_tv_interaction() -> void:
+	var tv := _find_amenity("tv")
+	_check(tv != null, "owned home TV exists")
+	if tv == null:
+		return
+	var sheet := WorldState.player_sheet
+	sheet.needs.values["fun"] = 10.0
+	var fun_before := sheet.needs.get_value("fun")
+	_interact_with(tv)
+	await get_tree().process_frame
+	_check(sheet.needs.get_value("fun") > fun_before,
+			"TV restores fun")
+	_check(_survival_feedback_kind() == "fun",
+			"TV shows the survival feedback vignette")
+	_check(_survival_feedback_detail().contains("Fun +"),
+			"TV vignette reports fun gain")
+	_check(not GameClock.paused and GameClock.pause_lock_count() == 0,
+			"TV leaves no pause locks")
+
+
+func _interact_with(amenity: Amenity) -> void:
+	amenity.interact(_player)
 
 
 func _find_amenity(kind: String) -> Amenity:
@@ -92,6 +140,11 @@ func _find_amenity_in(node: Node, kind: String) -> Amenity:
 func _survival_feedback_kind() -> String:
 	var feedback := _main.get_node_or_null("SurvivalFeedback")
 	return str(feedback.get_meta("last_survival_kind", "")) if feedback != null else ""
+
+
+func _survival_feedback_detail() -> String:
+	var feedback := _main.get_node_or_null("SurvivalFeedback")
+	return str(feedback.get_meta("last_survival_detail", "")) if feedback != null else ""
 
 
 func _action(name: String) -> InputEventAction:
