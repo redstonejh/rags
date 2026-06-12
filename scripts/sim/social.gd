@@ -172,32 +172,38 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 			date_location = "loc_diner"
 			result.text = _date_activity(sheet, npc, "loc_diner", 90, 8.0, 24.0, 5.0,
 					"felt heard over pancakes at Mel's",
-					"You let them talk until the coffee goes cold. It is cheaper than therapy and more useful.")
+					"You let them talk until the coffee goes cold. It is cheaper than therapy and more useful.",
+					"listen")
 		"date_mels_joke":
 			date_location = "loc_diner"
 			result.text = _date_activity(sheet, npc, "loc_diner", 90, 5.0, 16.0, 14.0,
 					"laughed with you in a Mel's booth",
-					"The booth becomes a two-person comedy club. The waitress does not tip you back.")
+					"The booth becomes a two-person comedy club. The waitress does not tip you back.",
+					"joke")
 		"date_mels_future":
 			date_location = "loc_diner"
 			result.text = _date_activity(sheet, npc, "loc_diner", 90, 6.0, 18.0, 6.0,
 					"talked future plans with you at Mel's",
-					"You talk about next week like rent, weather, and fate can be negotiated.")
+					"You talk about next week like rent, weather, and fate can be negotiated.",
+					"future")
 		"date_anchor_round":
 			date_location = "loc_bar"
 			result.text = _date_activity(sheet, npc, "loc_bar", 120, 4.0, 14.0, 18.0,
 					"had a round with you at the Rusty Anchor",
-					"The next round buys warmth, noise, and a mercifully blurry memory of the bill.")
+					"The next round buys warmth, noise, and a mercifully blurry memory of the bill.",
+					"round")
 		"date_anchor_corner":
 			date_location = "loc_bar"
 			result.text = _date_activity(sheet, npc, "loc_bar", 120, 8.0, 24.0, 8.0,
 					"shared a quiet corner with you at the Rusty Anchor",
-					"You find the least sticky corner and talk like the rest of the bar is weather.")
+					"You find the least sticky corner and talk like the rest of the bar is weather.",
+					"corner")
 		"date_anchor_darts":
 			date_location = "loc_bar"
 			result.text = _date_activity(sheet, npc, "loc_bar", 120, 5.0, 16.0, 20.0,
 					"played darts with you at the Rusty Anchor",
-					"You both learn that confidence and aim are separate skill trees.")
+					"You both learn that confidence and aim are separate skill trees.",
+					"darts")
 		"propose":
 			if success:
 				npc.flags["married_to_player"] = true
@@ -324,19 +330,80 @@ static func _apply(sheet: CharacterSheet, npc: NPCRecord, success: bool,
 
 static func _date_activity(sheet: CharacterSheet, npc: NPCRecord, location_id: String,
 		minutes: int, rel_gain: float, social_gain: float, fun_gain: float,
-		memory_text: String, result_text: String) -> String:
+		memory_text: String, result_text: String, date_style := "") -> String:
 	if WorldState.player_location_id != location_id:
 		EventBus.travel_requested.emit(location_id)
 	GameClock.skip_minutes(minutes)
+	var adjustment := _date_personality_adjustment(npc, date_style)
 	WorldState.player_location_id = location_id
 	npc.current_location_id = location_id
 	npc.current_activity = "date"
 	npc.traveling = false
-	npc.change_rel("player", rel_gain)
-	sheet.needs.change("social", social_gain)
-	sheet.needs.change("fun", fun_gain)
-	npc.add_memory("date", "player", memory_text, 0.7, 6.5)
-	return result_text
+	npc.change_rel("player", rel_gain + float(adjustment.get("rel", 0.0)))
+	sheet.needs.change("social", social_gain + float(adjustment.get("social", 0.0)))
+	sheet.needs.change("fun", fun_gain + float(adjustment.get("fun", 0.0)))
+	npc.add_memory("date", "player", memory_text + str(adjustment.get("memory_suffix", "")), 0.7, 6.5)
+	var note := str(adjustment.get("note", ""))
+	return "%s %s" % [result_text, note] if note != "" else result_text
+
+
+static func _date_personality_adjustment(npc: NPCRecord, date_style: String) -> Dictionary:
+	match date_style:
+		"listen":
+			if _personality(npc, "chattiness") >= 65:
+				return {"rel": 2.0, "social": 4.0,
+						"note": "They had more to say than they expected.",
+						"memory_suffix": "; you let them talk"}
+			if _personality(npc, "chattiness") <= 25:
+				return {"rel": 1.0,
+						"note": "They appreciate that you do not pry when the answer gets short.",
+						"memory_suffix": "; you did not push"}
+		"joke":
+			if _personality(npc, "chattiness") >= 60 or _personality(npc, "kindness") >= 65:
+				return {"rel": 2.0, "fun": 4.0,
+						"note": "Their laugh arrives first and stays late.",
+						"memory_suffix": "; the jokes landed"}
+			if _personality(npc, "kindness") <= 30:
+				return {"rel": -1.0, "fun": -2.0,
+						"note": "They smile politely, which is worse.",
+						"memory_suffix": "; the jokes did not land"}
+		"future":
+			if _personality(npc, "kindness") >= 65 and _personality(npc, "jealousy") <= 55:
+				return {"rel": 2.0, "social": 2.0,
+						"note": "They start using 'we' and pretend not to notice.",
+						"memory_suffix": "; the future sounded possible"}
+			if _personality(npc, "jealousy") >= 70:
+				return {"rel": -2.0, "social": -3.0,
+						"note": "The future talk trips a wire they do not name.",
+						"memory_suffix": "; future talk made them guarded"}
+		"round":
+			if str(npc.flags.get("vice", "")) == "booze":
+				return {"rel": 1.0, "fun": 5.0,
+						"note": "They know exactly what to order and exactly why.",
+						"memory_suffix": "; you remembered their drink"}
+			if _personality(npc, "greed") <= 25:
+				return {"rel": 1.0,
+						"note": "They notice the gesture more than the tab.",
+						"memory_suffix": "; you bought the round"}
+		"corner":
+			if _personality(npc, "chattiness") <= 35 or _personality(npc, "kindness") >= 70:
+				return {"rel": 2.0, "social": 4.0,
+						"note": "The quieter table does more work than the music ever could.",
+						"memory_suffix": "; the quiet helped"}
+		"darts":
+			if _personality(npc, "bravery") >= 65:
+				return {"rel": 2.0, "fun": 4.0,
+						"note": "They play to win, then like you better for trying.",
+						"memory_suffix": "; the darts got competitive"}
+			if _personality(npc, "bravery") <= 25:
+				return {"rel": -1.0, "fun": -2.0,
+						"note": "They laugh, but only after the sharp things are back on the wall.",
+						"memory_suffix": "; darts were a lot"}
+	return {}
+
+
+static func _personality(npc: NPCRecord, key: String) -> int:
+	return int(npc.personality.get(key, 50))
 
 
 ## Everyone else in the room remembers what they saw. Outside, only people

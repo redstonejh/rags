@@ -72,7 +72,8 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 - Dating becomes activities (a drink at the Anchor, a meal at Mel's — short scenes with choices), not a button.
   - Started 2026-06-12: dating now unlocks named activities (`Date: meal at Mel's`, `Date: drink at the Anchor`) instead of generic spend-time, with venue-specific time skips, need effects, relationship gains, and memories.
   - Continued 2026-06-12: date activities now request the live world travel path before resolving the venue date, keeping the active scene and saved player location in sync.
-  - Continued 2026-06-12: the dialogue UI now opens venue date scenes with three player choices at Mel's or the Rusty Anchor, and each choice has distinct relationship/need/memory outcomes. Richer personality-driven date branches and balance remain.
+  - Continued 2026-06-12: the dialogue UI now opens venue date scenes with three player choices at Mel's or the Rusty Anchor, and each choice has distinct relationship/need/memory outcomes.
+  - Continued 2026-06-12: date choices now read NPC personality and vice flags, producing small relationship/need modifiers plus result-text and memory flavor when the choice fits or grates. Deeper multi-step date scenes and broader balance remain.
 - People Reader perk reveals true stats in the read line. Balance pass on all social odds.
   - Started 2026-06-12: `Perception.read_line()` now gives People Reader a true-stat readout (`STR/DEX/CON/INT/WIS/CHA`) in dialogue, with M4 coverage for the visible text. Full social odds balance remains.
   - Continued 2026-06-12: M4 now has social odds guardrails for average, favorable, and hostile interactions, and the chance spread was widened so strong social builds help without immediately pinning the 95% cap. Broader play-balance telemetry remains.

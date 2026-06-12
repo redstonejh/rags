@@ -241,6 +241,18 @@ func _test_dating() -> void:
 		return m.get("kind", "") == "date" and "Mel's" in str(m.get("text", ""))),
 			"date activity leaves a specific memory")
 
+	var talker := _mk_npc("npc_date_talker", "loc_diner", ["plain"], 8, 50, 90)
+	var quiet := _mk_npc("npc_date_quiet", "loc_diner", ["plain"], 8, 50, 10)
+	talker.relationships["player"] = 50.0
+	quiet.relationships["player"] = 50.0
+	WorldState.player_location_id = "loc_diner"
+	var talk_text := str(Social.interact(viewer, talker, "date_mels_listen").text)
+	var quiet_text := str(Social.interact(viewer, quiet, "date_mels_listen").text)
+	_check(talker.rel("player") > quiet.rel("player"),
+			"personality shapes date choice relationship gains")
+	_check("more to say" in talk_text and "do not pry" in quiet_text,
+			"date result text reflects personality fit")
+
 
 func _test_save_roundtrip() -> void:
 	print("[Save round trip: the town remembers]")
