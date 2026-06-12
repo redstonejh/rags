@@ -9,8 +9,10 @@ var _rel_label: Label
 var _read_label: Label
 var _result_label: Label
 var _actions_box: VBoxContainer
+var _portrait: TextureRect
 var _npc: NPCRecord = null
 const MODAL_ID := "dialogue"
+const PORTRAIT_DIR := "res://assets/portraits/"
 
 
 func _ready() -> void:
@@ -34,13 +36,26 @@ func _build_ui() -> void:
 
 	_panel = PanelContainer.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_panel.custom_minimum_size = Vector2(560, 0)
-	_panel.position = Vector2(-280, -340)
+	_panel.custom_minimum_size = Vector2(680, 0)
+	_panel.position = Vector2(-340, -340)
 	blocker.add_child(_panel)
 
+	var root := HBoxContainer.new()
+	root.add_theme_constant_override("separation", 12)
+	_panel.add_child(root)
+
+	_portrait = TextureRect.new()
+	_portrait.name = "Portrait"
+	_portrait.custom_minimum_size = Vector2(96, 96)
+	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait.texture_filter = 1
+	root.add_child(_portrait)
+
 	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 8)
-	_panel.add_child(vbox)
+	root.add_child(vbox)
 
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
@@ -77,6 +92,7 @@ func _open(npc_id: String) -> void:
 	if _npc == null:
 		return
 	_result_label.text = ""
+	_set_portrait(_npc)
 	_read_label.text = "( %s )" % Perception.read_line(WorldState.player_sheet, _npc)
 	_refresh()
 	var stack := _ui_stack()
@@ -120,6 +136,16 @@ func _refresh() -> void:
 			btn.text = str(def.get("label", action_id))
 		btn.pressed.connect(_do_action.bind(action_id))
 		_actions_box.add_child(btn)
+
+
+func _set_portrait(npc: NPCRecord) -> void:
+	var texture: Texture2D = load(PORTRAIT_DIR + npc.archetype_id + ".png")
+	if texture == null:
+		_portrait.texture = null
+		_portrait.visible = false
+		return
+	_portrait.texture = texture
+	_portrait.visible = true
 
 
 func _do_action(action_id: String) -> void:

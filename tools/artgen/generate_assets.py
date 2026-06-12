@@ -16,6 +16,7 @@ CHARS_DIR = ROOT / "assets" / "chars"
 PROPS_DIR = ROOT / "assets" / "props"
 UI_DIR = ROOT / "assets" / "ui"
 BUILDINGS_DIR = ROOT / "assets" / "buildings"
+PORTRAITS_DIR = ROOT / "assets" / "portraits"
 TERRAIN_PATH = TILES_DIR / "terrain_atlas.png"
 BODY_PATH = CHARS_DIR / "body_base.png"
 PLAYER_OUTFIT_PATH = CHARS_DIR / "outfit_player.png"
@@ -69,6 +70,19 @@ UI_ICON_PATHS = {
     "save": UI_DIR / "icon_save.png",
     "walk": UI_DIR / "icon_walk.png",
     "quit": UI_DIR / "icon_quit.png",
+}
+ARCHETYPE_PORTRAITS = {
+    "barfly": ((153, 89, 128), (83, 52, 72), "B"),
+    "cop": ((76, 115, 217), (35, 49, 88), "P"),
+    "diner_cook": ((217, 115, 51), (91, 55, 35), "C"),
+    "diner_waiter": ((230, 179, 76), (108, 82, 42), "W"),
+    "drifter": ((128, 153, 115), (55, 72, 53), "D"),
+    "homemaker": ((191, 140, 166), (90, 62, 78), "H"),
+    "laborer": ((204, 153, 89), (98, 72, 42), "L"),
+    "night_shift": ((115, 128, 153), (49, 56, 76), "N"),
+    "office_worker": ((140, 140, 191), (64, 65, 94), "O"),
+    "retiree": ((179, 179, 153), (86, 84, 72), "R"),
+    "store_clerk": ((102, 179, 230), (42, 82, 105), "S"),
 }
 SEED = 741_2026
 
@@ -733,12 +747,50 @@ def generate_ui() -> None:
     _save_icon(UI_ICON_PATHS["quit"], quit_icon)
 
 
+def draw_portrait(path: Path, main: tuple[int, int, int], dark: tuple[int, int, int], initial: str) -> None:
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((0, 0, 63, 63), fill=(31, 29, 30, 255))
+    draw.rectangle((3, 3, 60, 60), fill=(*dark, 255))
+    for y in range(5, 60, 6):
+        draw.line((5, y, 58, y), fill=tuple(max(0, c - 22) for c in dark) + (255,))
+    skin = (190, 136, 98, 255)
+    skin_shadow = (127, 84, 64, 255)
+    hair = (48, 34, 30, 255)
+    # Shoulders and shirt.
+    draw.rectangle((16, 44, 48, 58), fill=(*main, 255))
+    draw.rectangle((13, 50, 51, 60), fill=tuple(max(0, c - 35) for c in main) + (255,))
+    draw.rectangle((28, 41, 36, 47), fill=skin_shadow)
+    # Face.
+    draw.rectangle((20, 16, 44, 42), fill=skin)
+    draw.rectangle((21, 36, 43, 43), fill=skin_shadow)
+    draw.rectangle((18, 13, 46, 21), fill=hair)
+    draw.rectangle((17, 20, 23, 32), fill=hair)
+    draw.rectangle((41, 20, 47, 32), fill=hair)
+    draw.rectangle((25, 26, 29, 29), fill=(30, 24, 22, 255))
+    draw.rectangle((35, 26, 39, 29), fill=(30, 24, 22, 255))
+    draw.line((28, 36, 38, 36), fill=(116, 65, 61, 255), width=2)
+    draw.rectangle((4, 4, 18, 18), fill=(43, 39, 43, 220))
+    font = ImageFont.load_default()
+    draw.text((8, 6), initial, font=font, fill=(238, 230, 196, 255))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(path)
+    print(f"wrote {path.relative_to(ROOT)}")
+
+
+def generate_portraits() -> None:
+    for archetype_id, spec in ARCHETYPE_PORTRAITS.items():
+        main, dark, initial = spec
+        draw_portrait(PORTRAITS_DIR / ("%s.png" % archetype_id), main, dark, initial)
+
+
 def main() -> None:
     rng = random.Random(SEED)
     generate_terrain(rng)
     generate_buildings()
     generate_characters()
     generate_props()
+    generate_portraits()
     generate_ui()
 
 

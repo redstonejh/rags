@@ -59,6 +59,7 @@ func _instantiate_main() -> void:
 	_player = _main.get_node("Player")
 	_check(_player_has_walk_sheets(), "player uses layered walk sheets")
 	await _verify_player_outfit_switch()
+	await _verify_dialogue_portrait()
 	_check(_exterior_ground_tile_count(Vector2i(5, 0)) > 0, "exterior sidewalks spawned")
 	_check(_exterior_ground_tile_count(Vector2i(6, 0)) > 0, "exterior dirt lots spawned")
 	_check(_exterior_facade_count() > 0, "exterior building facades spawned")
@@ -210,6 +211,29 @@ func _verify_player_outfit_switch() -> void:
 	_check(outfit.texture != null \
 			and outfit.texture.resource_path.ends_with("outfit_nice_suit_walk.png"),
 			"player outfit sprite follows worn clothing")
+
+
+func _verify_dialogue_portrait() -> void:
+	var npc: NPCRecord = WorldState.npcs.values().front()
+	EventBus.dialogue_requested.emit(npc.id)
+	await get_tree().process_frame
+	var dialogue: CanvasLayer = _main.get_node("Dialogue")
+	var portrait := _find_named_descendant(dialogue, "Portrait")
+	_check(dialogue.visible and portrait is TextureRect and portrait.texture != null,
+			"dialogue opens with NPC portrait")
+	await _checkpoint("00_dialogue")
+	dialogue._unhandled_input(_action("ui_cancel"))
+	await get_tree().process_frame
+
+
+func _find_named_descendant(node: Node, node_name: String) -> Node:
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named_descendant(child, node_name)
+		if found != null:
+			return found
+	return null
 
 
 func _exterior_facade_count() -> int:
