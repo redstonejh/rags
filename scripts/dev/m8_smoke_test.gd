@@ -237,12 +237,20 @@ func _test_new_origins() -> void:
 func _test_perks() -> void:
 	print("[Perks: new verbs every two levels]")
 	var sheet := _fresh_sheet()
+	var path_events := {"count": 0}
+	var on_path := func() -> void:
+		path_events["count"] = int(path_events.count) + 1
+	EventBus.path_updated.connect(on_path)
 	sheet.add_xp(100) # level 2
 	_check(sheet.level == 2 and int(sheet.flags.get("perk_points", 0)) == 1,
 			"level 2 grants a perk point")
+	_check(int(path_events.count) > 0, "leveling refreshes path/perk UI")
 	var mark := _mk_npc("p_mark", "loc_perk_room", 50)
 	var before := Social.true_chance(sheet, mark, "compliment")
+	path_events["count"] = 0
 	_check(sheet.take_perk("silver_tongue"), "took Silver Tongue")
+	_check(int(path_events.count) > 0, "taking a perk refreshes path/perk UI")
+	EventBus.path_updated.disconnect(on_path)
 	_check(Social.true_chance(sheet, mark, "compliment") > before, "+5%% on every social roll")
 	# The top of the perception tree: truth, finally.
 	sheet.level = 6

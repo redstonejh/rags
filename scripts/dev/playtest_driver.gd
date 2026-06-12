@@ -197,6 +197,26 @@ func _open_phone() -> void:
 			and _direct_child_index(paths_content, first_week_heading) \
 					< _direct_child_index(paths_content, ged_button),
 			"Paths tab lists active objectives before secondary actions")
+	sheet.level = 1
+	sheet.xp = 0
+	sheet.flags["perk_points"] = 0
+	sheet.perk_ids.clear()
+	sheet.add_xp(100)
+	await _ui_frames(2)
+	paths_content = _find_named_descendant(phone, "PathsContent")
+	_check(paths_content != null and _descendant_text_contains(paths_content, "LEVEL 2") \
+			and _descendant_text_contains(paths_content, "1 perk point"),
+			"Paths tab refreshes when leveling grants a perk point")
+	var take_perk := _find_button_with_text(phone, "Take")
+	_check(take_perk != null and not take_perk.disabled,
+			"Paths tab exposes newly unlocked perk choices")
+	if take_perk != null:
+		take_perk.pressed.emit()
+	await _ui_frames(2)
+	paths_content = _find_named_descendant(phone, "PathsContent")
+	_check(paths_content != null and _descendant_text_contains(paths_content, "0 perk points") \
+			and _descendant_text_contains(paths_content, "Taken"),
+			"Paths tab refreshes after taking a perk")
 	await _verify_phone_tab_refresh(phone)
 
 

@@ -220,6 +220,8 @@ func add_skill_xp(skill: String, amount: float) -> void:
 
 ## Character XP: levels at 100, 200, 300... A perk point on every even level.
 func add_xp(amount: int) -> void:
+	if amount == 0:
+		return
 	xp += amount
 	while xp >= level * 100:
 		xp -= level * 100
@@ -229,6 +231,7 @@ func add_xp(amount: int) -> void:
 			EventBus.toast.emit("Level %d. A perk is waiting on your phone (Paths)." % level)
 		else:
 			EventBus.toast.emit("Level %d. You feel marginally more like a protagonist." % level)
+	EventBus.path_updated.emit()
 
 
 func take_perk(perk_id: String) -> bool:
@@ -242,6 +245,7 @@ func take_perk(perk_id: String) -> bool:
 			return false
 	perk_ids.append(perk_id)
 	flags["perk_points"] = int(flags.get("perk_points", 0)) - 1
+	EventBus.path_updated.emit()
 	return true
 
 
