@@ -656,14 +656,25 @@ func _test_arrest_paths() -> void:
 	_check(ok and sheet.cash_cents == 20000 - bail, "bail posted ($%d)" % (bail / 100))
 	_check(CrimeSystem.wanted_stars() == 0, "bail clears the warrant")
 	# Bribe: depends entirely on the officer.
-	CrimeSystem.commit("shoplift", "loc_scene_g")
+	var bribed_case := CrimeSystem.commit("shoplift", "loc_scene_g")
+	bribed_case.evidence = CrimeCase.WARRANT_EVIDENCE + 5.0
+	bribed_case.status = CrimeCase.WARRANT
+	bribed_case.suspect_id = "player"
 	cop.flags["corruption"] = 80
 	sheet.cash_cents = 50000
+	var bribe_price := Confrontation._bribe_cents(sheet)
 	var bribed := Confrontation.resolve("arrest", "bribe", sheet, cop)
 	_check(bribed.success and int(cop.flags.get("bribed_until_day", -1)) >= GameClock.day,
 			"the corrupt cop develops amnesia")
+	_check(sheet.cash_cents == 50000 - bribe_price, "corrupt cop bribe spends clean cash")
+	_check(bribed_case.status == CrimeCase.OPEN and bribed_case.evidence < CrimeCase.WARRANT_EVIDENCE,
+			"corrupt cop mishandles evidence below warrant grade")
+	_check(CrimeSystem.wanted_stars() == 0, "corrupt cop evidence mishandling clears wanted stars")
+	_check(cop.knows_memory("player", "took money and misplaced evidence for you"),
+			"corrupt cop remembers the evidence favor")
 	var honest := _mk_npc("w_law2", "loc_scene_g", 100, 10, 80, "cop")
 	honest.flags["corruption"] = 5
+	CrimeSystem.commit("shoplift", "loc_scene_g")
 	var cases_before := WorldState.crime_cases.size()
 	var refused := Confrontation.resolve("arrest", "bribe", sheet, honest)
 	_check(not refused.success and WorldState.crime_cases.size() == cases_before + 1,

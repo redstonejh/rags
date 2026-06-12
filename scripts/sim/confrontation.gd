@@ -163,7 +163,10 @@ static func _resolve_arrest(choice: String, sheet: CharacterSheet,
 			if int(cop.flags.get("corruption", 0)) >= 50:
 				sheet.add_cash(-price)
 				cop.flags["bribed_until_day"] = GameClock.day + 1
-				return {"text": "Officer %s develops sudden, profound amnesia. Expensive amnesia." % cop.display_name,
+				var files_touched := CrimeSystem.mishandle_warrant_evidence(cop)
+				var file_text := " Evidence gets lighter in the drawer." if files_touched > 0 else ""
+				return {"text": "Officer %s develops sudden, profound amnesia. Expensive amnesia.%s" % [
+						cop.display_name, file_text],
 						"done": true, "follow_up": {}, "success": true}
 			CrimeSystem.commit("bribery", WorldState.player_location_id, cop)
 			var days := CrimeSystem.serve_sentence()

@@ -14,6 +14,7 @@ const REPORT_EVIDENCE_PER_CONFIDENCE := 50.0
 const ANONYMOUS_BASELINE_EVIDENCE := 10.0
 const GOSSIP_EVIDENCE_FACTOR := 25.0
 const WITNESS_SUPPRESSION_EVIDENCE_REDUCTION := 35.0
+const CORRUPT_COP_EVIDENCE_REDUCTION := 10.0
 const BAIL_CENTS_PER_DAY := 5000
 const MAX_STARS := 5
 const COP_CHECK_MINUTES := 5
@@ -292,6 +293,27 @@ static func suppress_witness_report(witness: NPCRecord, case_id: String) -> bool
 		case.status = CrimeCase.OPEN
 		EventBus.wanted_changed.emit(wanted_stars())
 	return case.evidence < before
+
+
+static func mishandle_warrant_evidence(cop: NPCRecord,
+		amount := CORRUPT_COP_EVIDENCE_REDUCTION) -> int:
+	var touched := 0
+	for case in WorldState.crime_cases.values():
+		if not case.is_active_warrant():
+			continue
+		case.evidence = maxf(case.evidence - amount, ANONYMOUS_BASELINE_EVIDENCE)
+		if case.evidence < CrimeCase.WARRANT_EVIDENCE:
+			case.status = CrimeCase.OPEN
+		touched += 1
+	if touched > 0:
+		var sheet: CharacterSheet = WorldState.player_sheet
+		if sheet != null:
+			sheet.flags["last_evidence_mishandled_day"] = GameClock.day
+		if cop != null:
+			cop.add_memory("evidence_mishandled", "player",
+					"took money and misplaced evidence for you", -0.2, 6.0)
+		EventBus.wanted_changed.emit(wanted_stars())
+	return touched
 
 
 # ------------------------------------------------------------ the law's day
