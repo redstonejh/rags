@@ -269,6 +269,7 @@ func _open_shop_from_counter() -> void:
 	await get_tree().process_frame
 	var shop: CanvasLayer = _main.get_node("Shop")
 	_check(shop.visible and GameClock.paused, "shop opened from interact input")
+	_check(_prompt_text() == "", "shop modal hides the interaction prompt")
 	_check(_survival_feedback_layer() < shop.layer,
 			"survival feedback stays behind the shop modal")
 	var buy_noodles := _find_named_descendant(shop, "Buy_instant_noodles") as Button
@@ -295,6 +296,7 @@ func _open_pause_menu() -> void:
 	await get_tree().process_frame
 	var stack: Node = _main.get_node("UIStack")
 	_check(stack.call("is_modal_open", "pause_menu") and GameClock.paused, "pause menu opened from Esc")
+	_check(_prompt_text() == "", "pause menu hides the interaction prompt")
 
 
 func _close_pause_menu() -> void:
@@ -547,6 +549,11 @@ func _survival_feedback_detail() -> String:
 func _survival_feedback_layer() -> int:
 	var feedback := _main.get_node_or_null("SurvivalFeedback") as CanvasLayer
 	return feedback.layer if feedback != null else 0
+
+
+func _prompt_text() -> String:
+	var prompt := _main.get_node_or_null("HUD/PromptLabel") as Label
+	return str(prompt.text) if prompt != null else ""
 
 
 func _find_button_with_text(node: Node, text: String) -> Button:

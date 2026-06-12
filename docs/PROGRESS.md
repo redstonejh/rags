@@ -76,6 +76,7 @@ What IS solid: the architecture (data-driven defs, record/view separation, Event
 - **Street furniture started:** generated bench, street lamp, trash can, dumpster, and news-box sprites now populate the exterior. Benches use the existing `Amenity` rest behavior, while the other props render through a non-colliding `StreetPropLayer`; the scripted playtest asserts that street props spawn.
 - **UI shell theme started:** generated pause-menu command icons now live in `assets/ui/`, and `UIStack` applies a consistent dark panel/button/label theme to gameplay UI controls as they are created.
 - **HUD hint polish:** the top-left time-control hint now uses compact wording and a subtle backing panel so it stays readable over busy world art, with scripted playtest coverage for the layout.
+- **Prompt/modal clarity:** the HUD interaction prompt now hides while modal pause locks are active, preventing stale `[E]` prompts from peeking under shop, dialogue, and pause UI. The scripted playtest covers shop and pause-menu prompts.
 
 ## Systems implemented (headless-tested only — see status note above)
 

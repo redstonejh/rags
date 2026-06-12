@@ -30,6 +30,7 @@ const MAX_TOASTS := 3
 @onready var toast_box: VBoxContainer = %ToastBox
 
 var _bars: Dictionary = {}
+var _current_prompt := ""
 
 
 func _ready() -> void:
@@ -39,7 +40,7 @@ func _ready() -> void:
 	EventBus.money_changed.connect(func(_c: int) -> void:
 		_update_money()
 		_update_objective_label())
-	EventBus.interact_target_changed.connect(func(p: String) -> void: prompt_label.text = p)
+	EventBus.interact_target_changed.connect(_set_prompt)
 	EventBus.player_job_changed.connect(func(_id: String) -> void:
 		_update_job_label()
 		_update_objective_label())
@@ -165,6 +166,17 @@ func _on_time_scale_changed(scale: float) -> void:
 		speed_label.text = "Paused  Space / 1 2 3"
 	else:
 		speed_label.text = "%dx  Space / 1 2 3" % int(scale)
+	_sync_prompt_label()
+
+
+func _set_prompt(prompt: String) -> void:
+	_current_prompt = prompt
+	_sync_prompt_label()
+
+
+func _sync_prompt_label() -> void:
+	prompt_label.text = "" if GameClock.paused else _current_prompt
+	prompt_label.visible = not GameClock.paused and _current_prompt != ""
 
 
 # ------------------------------------------------------------------- toasts

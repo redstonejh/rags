@@ -53,6 +53,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
    - Started 2026-06-12: `Player.tscn` has a `NavigationAgent2D`; click ground movement works, click-to-interact follow-through is covered by the Phase 0 smoke harness, and WASD cancels the path.
 5. **UI shell:** a `UIStack` manager node in Main (not an autoload) owning modal open/close and a single source of clock-pause truth — fixes the six-modals-each-pausing-the-clock hazard. Esc opens a pause menu (Resume / Save / Walk Away / Settings / Quit) instead of hard-exiting to the main menu. Consistent theme from `assets/ui/`.
    - Started 2026-06-12: `UIStack` now owns modal open/close, named clock pause locks, the Esc pause menu, generated command icons, and a runtime dark UI theme. Broader custom UI art and pixel-font work remain.
+   - Continued 2026-06-12: HUD interaction prompts now hide while modal pause locks are active, keeping shop/dialogue/pause screenshots free of stale `[E]` prompts.
    - Continued 2026-06-12: the pause-menu Walk Away button is now exercised by the UIStack smoke suite, proving the UI path converts the controlled life into a persistent NPC before deferred character creation.
    - Continued 2026-06-12: `LegacyHandoffSmokeTest.tscn` now drives the real character creation UI after Walk Away and verifies the next life rejoins the existing town with the former-player NPC intact.
    - Continued 2026-06-12: `DeathHeirSmokeTest.tscn` now drives the real death screen heir button and verifies the grown child inherits into the same persistent town.
