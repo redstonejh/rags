@@ -50,6 +50,7 @@ TRASH_CAN_PATH = PROPS_DIR / "trash_can.png"
 DUMPSTER_PATH = PROPS_DIR / "dumpster.png"
 NEWS_BOX_PATH = PROPS_DIR / "news_box.png"
 BUS_STOP_PATH = PROPS_DIR / "bus_stop.png"
+STREET_CAMP_PATH = PROPS_DIR / "street_camp.png"
 BAR_COUNTER_PATH = PROPS_DIR / "bar_counter.png"
 RECORDS_DESK_PATH = PROPS_DIR / "records_desk.png"
 WORK_SPOT_PATH = PROPS_DIR / "work_spot.png"
@@ -605,6 +606,33 @@ def draw_bus_stop() -> None:
     print(f"wrote {BUS_STOP_PATH.relative_to(ROOT)}")
 
 
+def draw_street_camp() -> None:
+    img = Image.new("RGBA", (64, 40), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    # Flattened cardboard and tarp bedding.
+    draw.polygon([(4, 26), (42, 18), (60, 27), (21, 36)], fill=(91, 63, 42, 255))
+    draw.line((8, 27, 48, 20), fill=(135, 92, 55, 255), width=2)
+    draw.polygon([(12, 20), (38, 15), (54, 22), (28, 30)], fill=(54, 80, 93, 255))
+    draw.polygon([(15, 21), (37, 17), (49, 22), (28, 27)], fill=(83, 126, 139, 255))
+    draw.rectangle((9, 28, 20, 33), fill=(130, 86, 47, 255))
+    # Milk crate, blanket roll, and bottles.
+    draw.rectangle((43, 26, 55, 35), fill=(62, 69, 76, 255))
+    for x in [46, 51]:
+        draw.line((x, 27, x, 34), fill=(38, 42, 48, 255))
+    draw.ellipse((20, 12, 36, 20), fill=(88, 71, 92, 255))
+    draw.ellipse((22, 13, 34, 19), fill=(128, 103, 138, 255))
+    for x in [7, 12, 57]:
+        draw.rectangle((x, 21, x + 2, 28), fill=(67, 95, 76, 255))
+        draw.point((x + 1, 20), fill=(178, 202, 198, 255))
+    # Small shopping-cart hint without implying inventory access.
+    draw.line((2, 16, 13, 18), fill=(165, 170, 166, 255), width=2)
+    draw.line((4, 18, 13, 24), fill=(115, 120, 118, 255))
+    draw.ellipse((5, 24, 9, 28), fill=(40, 42, 43, 255))
+    draw.ellipse((13, 25, 17, 29), fill=(40, 42, 43, 255))
+    img.save(STREET_CAMP_PATH)
+    print(f"wrote {STREET_CAMP_PATH.relative_to(ROOT)}")
+
+
 def draw_bar_counter() -> None:
     img = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -687,6 +715,7 @@ def generate_props() -> None:
     draw_dumpster()
     draw_news_box()
     draw_bus_stop()
+    draw_street_camp()
     draw_bar_counter()
     draw_records_desk()
     draw_work_spot()
