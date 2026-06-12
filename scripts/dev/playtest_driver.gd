@@ -222,6 +222,25 @@ func _verify_phone_tab_refresh(phone: CanvasLayer) -> void:
 	await _ui_frames(2)
 	_check(home_content != null and _descendant_text_contains(home_content, "Move in"),
 			"Home tab refreshes affordability after bank withdrawal")
+	sheet.housing_id = "bricks_unit"
+	sheet.cash_cents = 100000
+	sheet.furniture.clear()
+	phone.call("open_tab", "Home")
+	await _ui_frames(2)
+	var furniture_buy := _find_button_with_text(phone, "Buy")
+	_check(furniture_buy != null and not furniture_buy.disabled,
+			"Home tab exposes affordable furniture purchases")
+	var furniture_events := {"path": 0}
+	var furniture_signal := func() -> void:
+		furniture_events["path"] = int(furniture_events.path) + 1
+	EventBus.path_updated.connect(furniture_signal)
+	if furniture_buy != null:
+		furniture_buy.pressed.emit()
+	await _ui_frames(2)
+	EventBus.path_updated.disconnect(furniture_signal)
+	_check(not sheet.furniture.is_empty(), "Home furniture purchase delivers an item")
+	_check(int(furniture_events.path) > 0,
+			"Home furniture purchase refreshes comfort-dependent status")
 
 
 func _verify_date_scene_ui() -> void:

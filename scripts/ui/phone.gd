@@ -371,6 +371,7 @@ func _refresh_home() -> void:
 			btn.pressed.connect(func() -> void:
 				sheet.add_cash(-f.cost_cents)
 				sheet.furniture.append(f.id)
+				EventBus.path_updated.emit()
 				EventBus.toast.emit("Delivered: %s. Home gains a personality." % f.display_name)
 				_refresh_home())
 		row.add_child(btn)
