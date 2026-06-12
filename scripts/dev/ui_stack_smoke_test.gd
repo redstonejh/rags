@@ -25,6 +25,7 @@ func _ready() -> void:
 	await _test_click_move()
 	await _test_wasd_cancels_click_move()
 	_test_empty_carjack_removes_car()
+	await _test_closed_doors_block_body()
 	_test_click_move_interacts()
 	_test_pause_menu_walk_away()
 	_restore_settings_file()
@@ -205,6 +206,26 @@ func _test_click_move_interacts() -> void:
 	_player.call("_physics_process", 0.0)
 	_check(_travel_requested_location == "loc_diner", "click target interacts after walking into range")
 	_check(not _player.call("has_click_target"), "click path clears after interaction")
+
+
+func _test_closed_doors_block_body() -> void:
+	print("[Closed doors]")
+	GameClock.clear_pause_locks()
+	GameClock.set_manual_paused(false)
+	var diner_door := _find_exterior_door("loc_diner")
+	if diner_door == null:
+		_check(false, "diner door exists for collision")
+		return
+	_check(_find_named_descendant(diner_door, "ClosedDoorBody") != null,
+			"door has a physical closed body")
+	_player.set("global_position", diner_door.get("global_position") + Vector2(0, 48))
+	_player.set("velocity", Vector2(0, -420))
+	for _i in 10:
+		_player.move_and_slide()
+		await get_tree().physics_frame
+	_player.set("velocity", Vector2.ZERO)
+	_check(_player.get("global_position").y > diner_door.get("global_position").y + 16.0,
+			"player body cannot walk through a closed door")
 
 
 func _test_pause_menu_walk_away() -> void:

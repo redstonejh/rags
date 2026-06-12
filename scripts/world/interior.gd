@@ -10,6 +10,7 @@ extends TileWorld
 
 var entry_point: Vector2
 var npc_spawn_points: Array[Vector2] = []
+var layout_id: String = ""
 
 const MAPS := {
 	"loc_diner": [
@@ -64,6 +65,61 @@ const MAPS := {
 		"wffffffffsfw",
 		"wfsfffffffTw",
 		"wwwwwXwwwwww",
+	],
+}
+
+const HOME_MAPS := {
+	"shelter_cot": [
+		"wwwwwwwwwwwwww",
+		"wbsfbfsfbfsffw",
+		"wffffffffffffw",
+		"wffwwwwwwffffw",
+		"wfhffffffffsfw",
+		"wwwwwwXwwwwwww",
+	],
+	"weekly_motel": [
+		"wwwwwwwwwwww",
+		"wffffbffffhw",
+		"wffffffffffw",
+		"wffffTfffffw",
+		"wfffFffffsfw",
+		"wwwwwXwwwwww",
+	],
+	"bricks_unit": [
+		"wwwwwwwwwwwwww",
+		"wfsffffffwbfhw",
+		"wffffffffwfffw",
+		"wffwwffwwwfTfw",
+		"wfsffffffffffw",
+		"wfFffffffffsfw",
+		"wwwwwwwXwwwwww",
+	],
+	"decent_apartment": [
+		"wwwwwwwwwwwwwwww",
+		"wfsfffffwbbfffhw",
+		"wffffffwfffffffw",
+		"wffFfffwwwfffTfw",
+		"wffffffffffffffw",
+		"wfsffffffffffsfw",
+		"wwwwwwwXwwwwwwww",
+	],
+	"small_house": [
+		"wwwwwwwwwwwwwwwwww",
+		"wfsffffffwbbffffhw",
+		"wffffffffwfffffffw",
+		"wffFfffffwwwfffffw",
+		"wfffffffffffsfTffw",
+		"wfsffffffffffffffw",
+		"wwwwwwwwXwwwwwwwww",
+	],
+	"penthouse": [
+		"wwwwwwwwwwwwwwwwwwwwww",
+		"wfsfffffffffwbbfffffhw",
+		"wffffTfffffffffffffffw",
+		"wffffffwwwwfffffffFffw",
+		"wffffffffffffffffffffw",
+		"wfsfffffffffffffffssfw",
+		"wwwwwwwwwXwwwwwwwwwwww",
 	],
 }
 
@@ -133,9 +189,50 @@ const DECOR_BY_LOCATION := {
 	],
 }
 
+const HOME_DECOR_BY_HOUSING := {
+	"shelter_cot": [
+		{"kind": "chair", "cell": Vector2i(4, 1)},
+		{"kind": "chair", "cell": Vector2i(7, 1)},
+		{"kind": "table", "cell": Vector2i(9, 4)},
+	],
+	"weekly_motel": [
+		{"kind": "table", "cell": Vector2i(4, 3)},
+		{"kind": "chair", "cell": Vector2i(5, 3)},
+	],
+	"bricks_unit": [
+		{"kind": "table", "cell": Vector2i(4, 2)},
+		{"kind": "chair", "cell": Vector2i(3, 2)},
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+		{"kind": "plant", "cell": Vector2i(12, 5)},
+	],
+	"decent_apartment": [
+		{"kind": "table", "cell": Vector2i(4, 4)},
+		{"kind": "chair", "cell": Vector2i(5, 4)},
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+		{"kind": "plant", "cell": Vector2i(14, 5)},
+	],
+	"small_house": [
+		{"kind": "table", "cell": Vector2i(5, 5)},
+		{"kind": "chair", "cell": Vector2i(6, 5)},
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+		{"kind": "plant", "cell": Vector2i(16, 1)},
+		{"kind": "plant", "cell": Vector2i(15, 5)},
+	],
+	"penthouse": [
+		{"kind": "table", "cell": Vector2i(5, 2)},
+		{"kind": "chair", "cell": Vector2i(6, 2)},
+		{"kind": "table", "cell": Vector2i(14, 5)},
+		{"kind": "chair", "cell": Vector2i(15, 5)},
+		{"kind": "plant", "cell": Vector2i(1, 1)},
+		{"kind": "plant", "cell": Vector2i(18, 1)},
+		{"kind": "plant", "cell": Vector2i(18, 5)},
+	],
+}
+
 
 func _ready() -> void:
-	var map: Array = MAPS.get(location_id, MAPS["loc_diner"])
+	layout_id = _layout_id()
+	var map: Array = HOME_MAPS.get(layout_id, MAPS.get(location_id, MAPS["loc_diner"]))
 	var fridge_scene: PackedScene = load("res://scenes/props/Fridge.tscn")
 	for y in map.size():
 		var row: String = map[y]
@@ -220,6 +317,14 @@ func _ready() -> void:
 		npc_spawn_points.append(entry_point)
 
 
+func _layout_id() -> String:
+	if location_id == "loc_bricks" and WorldState.player_sheet != null:
+		var housing_id := str(WorldState.player_sheet.housing_id)
+		if HOME_MAPS.has(housing_id):
+			return housing_id
+	return location_id
+
+
 func get_npc_spawn_position(_npc) -> Vector2:
 	if npc_spawn_points.is_empty():
 		return entry_point
@@ -230,7 +335,7 @@ func get_npc_spawn_position(_npc) -> Vector2:
 
 
 func _place_decor() -> void:
-	var decor: Array = DECOR_BY_LOCATION.get(location_id, [])
+	var decor: Array = HOME_DECOR_BY_HOUSING.get(layout_id, DECOR_BY_LOCATION.get(location_id, []))
 	var index := 0
 	for item in decor:
 		var kind := str(item.get("kind", ""))

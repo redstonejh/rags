@@ -48,6 +48,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
    - Continued 2026-06-12: generated street furniture now covers benches, street lamps, trash cans, dumpsters, and news boxes. Benches reuse `Amenity` rest behavior; decorative street props are non-colliding sprites. Organic layout, district-specific clutter, roof/player depth behavior, and broader prop density remain.
    - Continued 2026-06-12: generated bus-stop shelter/sign art now anchors the Off the Bus opening marker in the exterior screenshot. More origin-specific opening anchors and district clutter remain.
    - Continued 2026-06-12: generated street-camp/tarp art now anchors the Rock Bottom gas-station-rear opening marker, with real-scene smoke coverage for both Off the Bus and Rock Bottom starts. More origin-specific opening anchors and richer back-lot composition remain.
+   - Continued 2026-06-12: doors now have physical closed collision while preserving click/press-to-enter interaction, so the player cannot walk through closed doorways. More explicit door open/close animation remains.
    - Continued 2026-06-12: generated apartment sign art now anchors the Fired Exec decent-apartment start, and opening smoke coverage verifies all three first-pass start markers. More origin-specific opening anchors and richer residential composition remain.
    - Continued 2026-06-12: `Town.gd` now paints sidewalks along road edges/building approaches and dirt service lots near Site 9/back-lot areas. More organic road geometry, district-specific clutter, roof/player depth behavior, and broader prop density remain.
 3. **Characters:** `npc_agent.gd` and `Player.tscn` render paper-doll animated sprites (4-direction walk); NPC looks derive from `appearance_tags`; the player's outfit changes the sprite.
@@ -143,6 +144,7 @@ Every phase ends with: headless suites green, scripted interactive playthrough p
 ### Phase 4 — Housing + furnishing to 100%
 - Per-tier home interiors (cot hall → motel room → Bricks unit → decent apartment → house → penthouse), furniture placement mode in owned homes, furniture sprites per tier, comfort visualized.
   - Started 2026-06-12: the phone Home tab now visualizes total comfort, furniture contribution, and bed/TV quality; furniture rows preview comfort gains, purchases use the shared `Housing` helper, and duplicate furniture entries are blocked from stacking comfort.
+  - Continued 2026-06-12: the home doorway now resolves to tier-specific walkable interiors for shelter cot, weekly motel, Bricks unit, decent apartment, small house, and penthouse, with visible beds and decor verified through the real amenity smoke test.
 
 ### Phase 5 — Body + substances to 100%
 - Visible states: drunk wobble and tint, LSD palette/post-FX, weight and age reflected on the paper-doll; clinic and hospital interiors; recovery meetings as scheduled place-events; withdrawal events.

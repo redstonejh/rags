@@ -4,6 +4,14 @@ extends Node
 ##   godot --headless --path <repo> res://scenes/dev/RestAmenitySmokeTest.tscn
 
 const MAIN_SCENE := preload("res://scenes/main/Main.tscn")
+const HOME_LAYOUT_IDS := [
+	"shelter_cot",
+	"weekly_motel",
+	"bricks_unit",
+	"decent_apartment",
+	"small_house",
+	"penthouse",
+]
 
 var failures := 0
 var _main: Node = null
@@ -13,6 +21,7 @@ var _player: Node = null
 func _ready() -> void:
 	_setup_world()
 	await _instantiate_main()
+	await _test_home_layouts_by_tier()
 	await _test_bed_sleep_interaction()
 	await _test_shower_interaction()
 	await _test_tv_interaction()
@@ -43,6 +52,31 @@ func _instantiate_main() -> void:
 	await get_tree().physics_frame
 	_player = _main.get_node("Player")
 	_check(_player != null, "main scene has a player")
+
+
+func _test_home_layouts_by_tier() -> void:
+	var seen := {}
+	var sheet := WorldState.player_sheet
+	for housing_id in HOME_LAYOUT_IDS:
+		sheet.housing_id = housing_id
+		EventBus.travel_requested.emit("loc_bricks")
+		await get_tree().process_frame
+		await get_tree().physics_frame
+		var world = _main.get("current_world")
+		var layout_id := str(world.get("layout_id")) if world != null else ""
+		seen[layout_id] = true
+		_check(layout_id == housing_id,
+				"%s home resolves to its own interior layout" % housing_id)
+		_check(_find_amenity("bed") != null,
+				"%s home has a visible sleep spot" % housing_id)
+		_check(_current_world_name_prefix_count("DecorSprite") > 0,
+				"%s home has visible decor" % housing_id)
+	_check(seen.size() == HOME_LAYOUT_IDS.size(),
+			"housing tier interiors are visually distinct")
+	sheet.housing_id = "bricks_unit"
+	EventBus.travel_requested.emit("loc_bricks")
+	await get_tree().process_frame
+	await get_tree().physics_frame
 
 
 func _test_bed_sleep_interaction() -> void:
@@ -135,6 +169,20 @@ func _find_amenity_in(node: Node, kind: String) -> Amenity:
 		if found != null:
 			return found
 	return null
+
+
+func _current_world_name_prefix_count(prefix: String) -> int:
+	var current_world: Node = _main.get("current_world")
+	return _count_name_prefix_descendants(current_world, prefix)
+
+
+func _count_name_prefix_descendants(node: Node, prefix: String) -> int:
+	if node == null:
+		return 0
+	var count := 1 if str(node.name).begins_with(prefix) else 0
+	for child in node.get_children():
+		count += _count_name_prefix_descendants(child, prefix)
+	return count
 
 
 func _survival_feedback_kind() -> String:

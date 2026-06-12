@@ -16,6 +16,16 @@ func _init() -> void:
 	circle.radius = 20.0
 	shape.shape = circle
 	add_child(shape)
+
+	var solid := StaticBody2D.new()
+	solid.name = "ClosedDoorBody"
+	var solid_shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(26, 18)
+	solid_shape.shape = rect
+	solid.add_child(solid_shape)
+	add_child(solid)
+
 	var texture: Texture2D = load(DOOR_TEXTURE_PATH)
 	if texture:
 		var sprite := Sprite2D.new()
