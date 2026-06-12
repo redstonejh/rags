@@ -20,6 +20,7 @@ const PICKPOCKET_FOUNDER_DAY_BONUS := 0.10
 const PICKPOCKET_EYE_PENALTY := 0.03
 const PICKPOCKET_COP_EYE_PENALTY := 0.08
 const PICKPOCKET_MAX_EYE_PENALTY := 0.18
+const WITNESS_BRIBE_BASE_CENTS_PER_SEVERITY := 2500
 const PICKPOCKET_DISTRACTED_ACTIVITIES := [
 	"shopping", "drinking", "eating", "loitering", "wandering", "working", "date",
 ]
@@ -37,6 +38,8 @@ const ACTIONS := {
 	"insult": {"label": "Insult", "roll": false},
 	"threaten": {"label": "Threaten", "roll": true,
 		"atk_stat": "STR", "atk_skill": "streetwise", "def_stat": "STR", "def_bravery": true},
+	"bribe_witness": {"label": "Bribe witness", "roll": true,
+		"atk_stat": "CHA", "atk_skill": "persuasion", "def_stat": "WIS"},
 	"intimidate_witness": {"label": "Lean on witness", "roll": true,
 		"atk_stat": "STR", "atk_skill": "streetwise", "def_stat": "STR", "def_bravery": true},
 	"pickpocket": {"label": "Pickpocket", "roll": true,
@@ -87,7 +90,7 @@ static func available_actions(sheet: CharacterSheet, npc: NPCRecord) -> Array:
 		var a: Dictionary = ACTIONS[id]
 		if rel < float(a.get("min_rel", -1000.0)):
 			continue
-		if id == "intimidate_witness" and _witness_case_id(npc) == "":
+		if id in ["bribe_witness", "intimidate_witness"] and _witness_case_id(npc) == "":
 			continue
 		if id == "ask_out" and npc.flags.get("dating_player", false):
 			continue
@@ -125,7 +128,11 @@ static func _chance(sheet: CharacterSheet, npc: NPCRecord, action: String, def_s
 		def += float(npc.personality.get("bravery", 50)) * 0.4
 	var rel_bonus := npc.rel("player") * 0.002
 	var perk_bonus := 0.05 if sheet.has_perk("silver_tongue") else 0.0
-	var context_bonus := pickpocket_context_modifier(npc) if action == "pickpocket" else 0.0
+	var context_bonus := 0.0
+	if action == "pickpocket":
+		context_bonus = pickpocket_context_modifier(npc)
+	elif action == "bribe_witness":
+		context_bonus = _witness_bribe_context_modifier(npc)
 	return clampf(0.5 + (atk - def) / ODDS_SPREAD + rel_bonus + perk_bonus + context_bonus,
 			0.05, 0.95)
 
@@ -302,6 +309,30 @@ static func interact(sheet: CharacterSheet, npc: NPCRecord, action: String, forc
 				sheet.needs.change("energy", -8.0)
 				npc.add_memory("threat_failed", "player", "tried to threaten you; it went badly for them", -0.5, 7.0)
 				result.text = "They look down at you — when did they get taller? — and shove you into next week."
+		"bribe_witness":
+			var case_id := _witness_case_id(npc)
+			var price := _witness_bribe_cents(npc, case_id)
+			if sheet.cash_cents + sheet.dirty_cents < price:
+				result.success = false
+				result.text = "You name a number. Your wallet disagrees."
+			elif success and case_id != "":
+				_pay_street_cash(sheet, price)
+				npc.change_rel("player", -5.0 + float(npc.personality.get("greed", 50)) * 0.04)
+				npc.add_memory("witness_bribed", "player",
+						"paid you to forget what you saw", -0.2, 6.5)
+				var suppressed := CrimeSystem.suppress_witness_report(npc, case_id)
+				result.text = "$%.2f buys a shorter memory." % (price / 100.0) \
+						if suppressed else "$%.2f changes hands. The case barely notices." % (price / 100.0)
+			else:
+				npc.change_rel("player", -8.0)
+				npc.add_memory("bribe_refused", "player",
+						"tried to buy your silence", -0.5, 7.0)
+				if int(npc.personality.get("civic_duty", 50)) >= 80 and case_id != "":
+					CrimeSystem.commit("bribery", npc.current_location_id, npc,
+							npc.abstract_position(GameClock.total_minutes), case_id)
+					result.text = "They refuse the money and remember the offer professionally."
+				else:
+					result.text = "They refuse the money. For now, pride is expensive."
 
 		"intimidate_witness":
 			var case_id := _witness_case_id(npc)
@@ -500,6 +531,30 @@ static func _witness_case_id(npc: NPCRecord) -> String:
 			best_day = memory_day
 			best_case_id = case_id
 	return best_case_id
+
+
+static func _witness_bribe_context_modifier(npc: NPCRecord) -> float:
+	var greed := float(npc.personality.get("greed", 50))
+	var civic := float(npc.personality.get("civic_duty", 50))
+	return clampf((greed - 50.0) * 0.004 - (civic - 50.0) * 0.003, -0.25, 0.25)
+
+
+static func _witness_bribe_cents(npc: NPCRecord, case_id: String) -> int:
+	var case: CrimeCase = WorldState.crime_cases.get(case_id)
+	var severity := 1.0
+	if case != null and case.def() != null:
+		severity = float(case.def().severity)
+	var greed_factor := 0.75 + float(npc.personality.get("greed", 50)) / 100.0
+	return maxi(500, roundi(WITNESS_BRIBE_BASE_CENTS_PER_SEVERITY * severity * greed_factor))
+
+
+static func _pay_street_cash(sheet: CharacterSheet, cents: int) -> void:
+	var from_dirty: int = mini(sheet.dirty_cents, cents)
+	if from_dirty > 0:
+		sheet.add_dirty_cash(-from_dirty)
+	var from_clean := cents - from_dirty
+	if from_clean > 0:
+		sheet.add_cash(-from_clean)
 
 
 ## Everyone else in the room remembers what they saw. Outside, only people

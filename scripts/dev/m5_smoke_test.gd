@@ -124,8 +124,44 @@ func _test_witness_pipeline() -> void:
 
 
 func _test_witness_intimidation() -> void:
-	print("[Witness intervention: intimidation]")
+	print("[Witness intervention: bribe / intimidate]")
 	var sheet := _fresh_sheet()
+	WorldState.crime_cases.clear()
+	var bribed := _mk_npc("w_bribed", "loc_bribe", 90, 6, 10)
+	bribed.personality["greed"] = 90
+	_mk_npc("w_bribed2", "loc_bribe", 90, 6, 10)
+	var bribe_case := CrimeSystem.commit("shoplift", "loc_bribe")
+	_check("bribe_witness" in Social.available_actions(sheet, bribed),
+			"crime witness exposes bribe action")
+	var bribe_price := Social._witness_bribe_cents(bribed, bribe_case.id)
+	sheet.cash_cents = 5000
+	sheet.dirty_cents = bribe_price
+	var bribe_result := Social.interact(sheet, bribed, "bribe_witness", 0.0)
+	_check(bribe_result.success, "successful witness bribe resolves")
+	_check(sheet.dirty_cents == 0 and sheet.cash_cents == 5000,
+			"witness bribe spends dirty cash before clean cash")
+	_check(bribe_case.status == CrimeCase.OPEN and bribe_case.evidence < CrimeCase.WARRANT_EVIDENCE,
+			"witness bribe can thin a warrant back to an open case")
+
+	WorldState.crime_cases.clear()
+	var civic := _mk_npc("w_civic_bribe", "loc_bribe_fail", 95, 10, 50)
+	civic.personality["greed"] = 10
+	var bribe_parent := CrimeSystem.commit("shoplift", "loc_bribe_fail")
+	var bribe_fail_count := WorldState.crime_cases.size()
+	sheet.cash_cents = 50000
+	sheet.dirty_cents = 0
+	var refused := Social.interact(sheet, civic, "bribe_witness", 0.999)
+	_check(not refused.success, "failed witness bribe resolves as failure")
+	_check(WorldState.crime_cases.size() == bribe_fail_count + 1,
+			"high-civic witness reports the bribe")
+	var bribery_case: CrimeCase = null
+	for c in WorldState.crime_cases.values():
+		if c.crime_id == "bribery":
+			bribery_case = c
+	_check(bribery_case != null and bribery_case.spawned_by_case_id == bribe_parent.id,
+			"reported bribe links back to the original crime")
+
+	sheet = _fresh_sheet()
 	sheet.base_stats["STR"] = 18
 	sheet.skills["streetwise"] = 100.0
 	WorldState.crime_cases.clear()
